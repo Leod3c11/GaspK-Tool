@@ -11,6 +11,7 @@ import com.exynosbess.app.boot.BootUnpackManager
 import com.exynosbess.app.boot.DtbScanner
 import com.exynosbess.app.boot.DtbExtractor
 import com.exynosbess.app.boot.DtbDecompiler
+import com.exynosbess.app.boot.BootRebuildManager
 
 class MainActivity : Activity() {
 
@@ -22,6 +23,7 @@ class MainActivity : Activity() {
     private lateinit var dtbScanStatus: TextView
     private lateinit var dtbExtractStatus: TextView
     private lateinit var decompileDtbStatus: TextView
+    private lateinit var rebuildBootStatus: TextView
 
     private lateinit var checkRootButton: Button
     private lateinit var detectBootButton: Button
@@ -30,6 +32,7 @@ class MainActivity : Activity() {
     private lateinit var scanDtbButton: Button
     private lateinit var extractDtbButton: Button
     private lateinit var decompileDtbButton: Button
+    private lateinit var rebuildBootButton: Button
     private lateinit var openDts0Button: Button
     private lateinit var openDts1Button: Button
 
@@ -50,6 +53,7 @@ class MainActivity : Activity() {
         dtbScanStatus = findViewById(R.id.dtbScanStatus)
         dtbExtractStatus = findViewById(R.id.dtbExtractStatus)
         decompileDtbStatus = findViewById(R.id.decompileDtbStatus)
+        rebuildBootStatus = findViewById(R.id.rebuildBootStatus)
 
         checkRootButton = findViewById(R.id.checkRootButton)
         detectBootButton = findViewById(R.id.detectBootButton)
@@ -58,6 +62,7 @@ class MainActivity : Activity() {
         scanDtbButton = findViewById(R.id.scanDtbButton)
         extractDtbButton = findViewById(R.id.extractDtbButton)
         decompileDtbButton = findViewById(R.id.decompileDtbButton)
+        rebuildBootButton = findViewById(R.id.rebuildBootButton)
         openDts0Button = findViewById(R.id.openDts0Button)
         openDts1Button = findViewById(R.id.openDts1Button)
 
@@ -87,6 +92,10 @@ class MainActivity : Activity() {
 
         decompileDtbButton.setOnClickListener {
             decompileDtbs()
+        }
+
+        rebuildBootButton.setOnClickListener {
+            rebuildBoot()
         }
 
         openDts0Button.setOnClickListener {
@@ -408,6 +417,9 @@ class MainActivity : Activity() {
                     openDts1Button.isEnabled =
                         result.files.any { it.index == 1 }
 
+                    rebuildBootButton.isEnabled =
+                        result.files.isNotEmpty()
+
                 } else {
 
                     decompileDtbStatus.text =
@@ -431,6 +443,45 @@ class MainActivity : Activity() {
         )
 
         startActivity(intent)
+    }
+
+
+    private fun rebuildBoot() {
+
+        rebuildBootStatus.text =
+            "Reconstruindo extra e boot.img..."
+
+        rebuildBootButton.isEnabled =
+            false
+
+        Thread {
+
+            val result =
+                BootRebuildManager.rebuild(
+                    this
+                )
+
+            runOnUiThread {
+
+                rebuildBootButton.isEnabled =
+                    true
+
+                if (result.success) {
+
+                    rebuildBootStatus.text =
+                        "✓ Boot reconstruído com sucesso\n\n" +
+                        result.message +
+                        "\n\nArquivo:\n" +
+                        result.bootPath
+
+                } else {
+
+                    rebuildBootStatus.text =
+                        "✗ Falha na reconstrução\n\n" +
+                        result.message
+                }
+            }
+        }.start()
     }
 
 }

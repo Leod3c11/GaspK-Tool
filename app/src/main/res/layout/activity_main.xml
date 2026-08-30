@@ -165,6 +165,23 @@
             android:enabled="false"
             android:layout_marginTop="8dp" />
 
+
+        <Button
+            android:id="@+id/rebuildBootButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Gerar boot_modified.img"
+            android:enabled="false"
+            android:layout_marginTop="24dp" />
+
+        <TextView
+            android:id="@+id/rebuildBootStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="15sp"
+            android:layout_marginTop="12dp" />
+
     </LinearLayout>
 
 </ScrollView>
