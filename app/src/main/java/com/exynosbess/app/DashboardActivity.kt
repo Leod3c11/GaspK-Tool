@@ -67,6 +67,25 @@ class DashboardActivity : Activity() {
                 R.id.dashboardGpuCompatible
             )
 
+        gpu.setOnClickListener {
+            startActivity(
+                android.content.Intent(
+                    this,
+                    GpuEditorActivity::class.java
+                )
+            )
+        }
+
+        gpuCompatible.setOnClickListener {
+            startActivity(
+                android.content.Intent(
+                    this,
+                    GpuEditorActivity::class.java
+                )
+            )
+        }
+
+
         rootStatus =
             findViewById(
                 R.id.dashboardRoot
@@ -219,7 +238,7 @@ class DashboardActivity : Activity() {
                     generalInfo.gpu
 
                 gpuCompatible.text =
-                    "DTB: ${generalInfo.gpuCompatible}"
+                    "DTB: ${generalInfo.gpuCompatible}   ›"
 
                 availableDtbs =
                     DtbCatalogDetector.detectAll(
