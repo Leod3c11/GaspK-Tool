@@ -4,7 +4,9 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.exynosbess.app.startup.AutoSetupManager
 import com.exynosbess.app.startup.DeviceTreeInfoDetector
@@ -21,8 +23,7 @@ class DashboardActivity : Activity() {
     private lateinit var bootStatus: TextView
     private lateinit var dashboardStatus: TextView
 
-    private lateinit var editDts0: Button
-    private lateinit var editDts1: Button
+    private lateinit var dtbContainer: LinearLayout
     private lateinit var advanced: Button
 
     override fun onCreate(
@@ -74,31 +75,15 @@ class DashboardActivity : Activity() {
                 R.id.dashboardStatus
             )
 
-        editDts0 =
+        dtbContainer =
             findViewById(
-                R.id.dashboardEditDts0
-            )
-
-        editDts1 =
-            findViewById(
-                R.id.dashboardEditDts1
+                R.id.dashboardDtbContainer
             )
 
         advanced =
             findViewById(
                 R.id.dashboardAdvanced
             )
-
-        editDts0.isEnabled = false
-        editDts1.isEnabled = false
-
-        editDts0.setOnClickListener {
-            openEditor(0)
-        }
-
-        editDts1.setOnClickListener {
-            openEditor(1)
-        }
 
         advanced.setOnClickListener {
 
@@ -168,6 +153,8 @@ class DashboardActivity : Activity() {
                 bootStatus.text =
                     "Boot: ${result.bootPath ?: "não encontrado"}"
 
+                dtbContainer.removeAllViews()
+
                 if (
                     !result.success ||
                     result.workspacePath == null
@@ -197,17 +184,107 @@ class DashboardActivity : Activity() {
                 gpuCompatible.text =
                     "DTB: ${info.gpuCompatible}"
 
-                editDts0.isEnabled =
-                    result.dtbCount >= 1
-
-                editDts1.isEnabled =
-                    result.dtbCount >= 2
+                createDtbButtons(
+                    result.dtbCount
+                )
 
                 dashboardStatus.text =
                     "✓ Ambiente preparado automaticamente"
             }
 
         }.start()
+    }
+
+    private fun createDtbButtons(
+        count: Int
+    ) {
+
+        dtbContainer.removeAllViews()
+
+        if (count <= 0) {
+
+            val empty =
+                TextView(this)
+
+            empty.text =
+                "Nenhum Device Tree disponível"
+
+            empty.setTextColor(
+                getColor(
+                    R.color.exynos_text_secondary
+                )
+            )
+
+            empty.textSize =
+                13f
+
+            empty.setPadding(
+                4,
+                12,
+                4,
+                12
+            )
+
+            dtbContainer.addView(
+                empty
+            )
+
+            return
+        }
+
+        for (index in 0 until count) {
+
+            val button =
+                Button(this)
+
+            button.text =
+                "Editar Device Tree $index"
+
+            button.isAllCaps =
+                false
+
+            button.textSize =
+                14f
+
+            button.setTextColor(
+                getColor(
+                    R.color.exynos_text
+                )
+            )
+
+            button.setBackgroundResource(
+                R.drawable.bg_button_secondary
+            )
+
+            button.setPadding(
+                16,
+                0,
+                16,
+                0
+            )
+
+            val params =
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    dpToPx(50)
+                )
+
+            if (index > 0) {
+                params.topMargin =
+                    dpToPx(8)
+            }
+
+            button.layoutParams =
+                params
+
+            button.setOnClickListener {
+                openEditor(index)
+            }
+
+            dtbContainer.addView(
+                button
+            )
+        }
     }
 
     private fun openEditor(
@@ -226,5 +303,15 @@ class DashboardActivity : Activity() {
         )
 
         startActivity(intent)
+    }
+
+    private fun dpToPx(
+        dp: Int
+    ): Int {
+
+        return (
+            dp *
+                resources.displayMetrics.density
+            ).toInt()
     }
 }

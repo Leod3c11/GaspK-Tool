@@ -148,26 +148,22 @@
 
         </LinearLayout>
 
-        <Button
-            android:id="@+id/dashboardEditDts0"
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/bg_button_primary"
-            android:text="Editar Device Tree 0"
-            android:textAllCaps="false"
+            android:layout_height="wrap_content"
+            android:text="DEVICE TREES DISPONÍVEIS"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="10sp"
             android:textStyle="bold"
-            android:textColor="#081018" />
+            android:letterSpacing="0.08"
+            android:layout_marginTop="22dp"
+            android:layout_marginBottom="8dp" />
 
-        <Button
-            android:id="@+id/dashboardEditDts1"
+        <LinearLayout
+            android:id="@+id/dashboardDtbContainer"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_button_secondary"
-            android:text="Editar Device Tree 1"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
 
         <Button
             android:id="@+id/dashboardAdvanced"
