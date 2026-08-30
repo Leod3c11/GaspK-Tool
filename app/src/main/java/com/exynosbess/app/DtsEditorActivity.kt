@@ -397,8 +397,7 @@ class DtsEditorActivity : Activity() {
             loadingDts = false
 
             editorStatus.text =
-                "✓ DTS carregado\n" +
-                "${content.length} caracteres"
+                "✓ DTS carregado"
 
         } catch (e: Exception) {
 
@@ -416,8 +415,7 @@ class DtsEditorActivity : Activity() {
             )
 
             editorStatus.text =
-                "✓ DTS salvo\n" +
-                "${dtsFile.length()} bytes"
+                "✓ DTS salvo"
 
             invalidateBootFlow()
 
@@ -536,14 +534,7 @@ class DtsEditorActivity : Activity() {
                 ) {
 
                     editorStatus.text =
-                        "✓ DTS válido\n\n" +
-                        "DTB de teste criado:\n" +
-                        "${validatedDtb.absolutePath}\n\n" +
-                        "Tamanho: ${validatedDtb.length()} bytes\n\n" +
-                        if (result.output.isNotBlank())
-                            result.output
-                        else
-                            "dtc concluiu sem erros"
+                        "✓ DTS válido"
 
                     validatedContent =
                         dtsEditor.text.toString()
@@ -576,10 +567,17 @@ class DtsEditorActivity : Activity() {
                         validatedDtb.delete()
                     }
 
-                    editorStatus.text =
-                        "✗ DTS inválido\n\n" +
-                        "Erro do dtc:\n" +
+                    val errorLine =
                         result.output
+                            .lineSequence()
+                            .firstOrNull {
+                                it.isNotBlank()
+                            }
+                            ?.take(180)
+                            ?: "Erro de compilação"
+
+                    editorStatus.text =
+                        "✗ DTS inválido: $errorLine"
                 }
             }
         }.start()
