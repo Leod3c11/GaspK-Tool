@@ -17,7 +17,7 @@ object DtbScanner {
         val message: String
     )
 
-    private const val FDT_MAGIC = 0xD00DFEEDL
+    private const val BUFFER_SIZE = 1024 * 1024
 
     fun scan(workspacePath: String): ScanResult {
 
@@ -36,33 +36,37 @@ object DtbScanner {
             File(workspace, "extra"),
             File(workspace, "dtb"),
             File(workspace, "kernel_dtb")
-        ).filter { it.exists() && it.isFile }
+        ).filter {
+            it.exists() &&
+            it.isFile &&
+            it.length() >= 8
+        }
 
         if (targets.isEmpty()) {
             return ScanResult(
                 false,
                 emptyList(),
-                "Nenhum arquivo compatível encontrado"
+                "Nenhum arquivo para analisar"
             )
         }
 
-        val entries = mutableListOf<DtbEntry>()
+        val results = mutableListOf<DtbEntry>()
 
-        for (file in targets) {
-            scanFile(file, entries)
+        targets.forEach { file ->
+            scanFile(file, results)
         }
 
-        return if (entries.isNotEmpty()) {
+        return if (results.isNotEmpty()) {
             ScanResult(
                 true,
-                entries,
-                "${entries.size} DTB(s) válido(s) encontrado(s)"
+                results,
+                "${results.size} DTB(s) encontrado(s)"
             )
         } else {
             ScanResult(
                 false,
                 emptyList(),
-                "Nenhum cabeçalho DTB válido encontrado"
+                "Nenhum DTB encontrado em kernel/extra"
             )
         }
     }
@@ -74,43 +78,98 @@ object DtbScanner {
 
         RandomAccessFile(file, "r").use { raf ->
 
-            val length = raf.length()
+            val fileLength = raf.length()
 
-            if (length < 8) return
+            val buffer = ByteArray(
+                BUFFER_SIZE + 7
+            )
 
-            var offset = 0L
+            var absoluteOffset = 0L
+            var carry = 0
 
-            while (offset <= length - 8) {
+            while (absoluteOffset < fileLength) {
 
-                raf.seek(offset)
+                raf.seek(absoluteOffset)
 
-                val magic =
-                    raf.readInt().toLong() and 0xFFFFFFFFL
+                val wanted =
+                    minOf(
+                        BUFFER_SIZE,
+                        (fileLength - absoluteOffset).toInt()
+                    )
 
-                if (magic == FDT_MAGIC) {
+                val read =
+                    raf.read(
+                        buffer,
+                        carry,
+                        wanted
+                    )
 
-                    val totalSize =
-                        raf.readInt().toLong() and 0xFFFFFFFFL
-
-                    if (
-                        totalSize >= 40 &&
-                        offset + totalSize <= length
-                    ) {
-
-                        results.add(
-                            DtbEntry(
-                                sourceFile = file.name,
-                                offset = offset,
-                                size = totalSize
-                            )
-                        )
-
-                        offset += totalSize
-                        continue
-                    }
+                if (read <= 0) {
+                    break
                 }
 
-                offset++
+                val available =
+                    carry + read
+
+                var i = 0
+
+                while (i <= available - 8) {
+
+                    if (
+                        (buffer[i].toInt() and 0xFF) == 0xD0 &&
+                        (buffer[i + 1].toInt() and 0xFF) == 0x0D &&
+                        (buffer[i + 2].toInt() and 0xFF) == 0xFE &&
+                        (buffer[i + 3].toInt() and 0xFF) == 0xED
+                    ) {
+
+                        val totalSize =
+                            ((buffer[i + 4].toLong() and 0xFF) shl 24) or
+                            ((buffer[i + 5].toLong() and 0xFF) shl 16) or
+                            ((buffer[i + 6].toLong() and 0xFF) shl 8) or
+                            (buffer[i + 7].toLong() and 0xFF)
+
+                        val realOffset =
+                            absoluteOffset -
+                            carry +
+                            i
+
+                        if (
+                            totalSize >= 40 &&
+                            realOffset >= 0 &&
+                            realOffset + totalSize <= fileLength
+                        ) {
+
+                            results.add(
+                                DtbEntry(
+                                    sourceFile = file.name,
+                                    offset = realOffset,
+                                    size = totalSize
+                                )
+                            )
+                        }
+                    }
+
+                    i++
+                }
+
+                /*
+                 * Preserva os últimos 7 bytes para detectar
+                 * um cabeçalho que atravesse dois buffers.
+                 */
+                carry = minOf(
+                    7,
+                    available
+                )
+
+                System.arraycopy(
+                    buffer,
+                    available - carry,
+                    buffer,
+                    0,
+                    carry
+                )
+
+                absoluteOffset += read
             }
         }
     }
