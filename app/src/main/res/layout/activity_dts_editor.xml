@@ -202,4 +202,67 @@
         android:textSize="11sp"
         android:layout_marginTop="4dp" />
 
+
+        <!-- Fluxo pós-edição -->
+        <LinearLayout
+            android:id="@+id/bootActionsPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="PÓS-EDIÇÃO"
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08" />
+
+            <TextView
+                android:id="@+id/bootActionStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="✓ DTS validado"
+                android:textColor="@color/exynos_text"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/rebuildFromEditorButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_button_primary"
+                android:text="1. Gerar novo boot"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textColor="#081018" />
+
+            <Button
+                android:id="@+id/verifyFromEditorButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_button_secondary"
+                android:enabled="false"
+                android:text="2. Verificar boot"
+                android:textAllCaps="false"
+                android:textColor="@color/exynos_text" />
+
+            <Button
+                android:id="@+id/flashFromEditorButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_button_secondary"
+                android:enabled="false"
+                android:text="3. Flash boot"
+                android:textAllCaps="false"
+                android:textColor="@color/exynos_text" />
+
+        </LinearLayout>
+
 </LinearLayout>

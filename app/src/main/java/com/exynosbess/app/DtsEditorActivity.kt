@@ -1,12 +1,20 @@
 package com.exynosbess.app
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.os.Bundle
 import android.os.Process
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.widget.LinearLayout
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import com.exynosbess.app.boot.ShellExecutor
+import com.exynosbess.app.boot.BootRebuildManager
+import com.exynosbess.app.boot.BootRoundTripVerifier
+import com.exynosbess.app.boot.BootFlashManager
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
 
@@ -24,6 +32,17 @@ class DtsEditorActivity : Activity() {
     private lateinit var saveDtsButton: Button
     private lateinit var validateDtsButton: Button
     private lateinit var editorStatus: TextView
+
+    private lateinit var bootActionsPanel: LinearLayout
+    private lateinit var bootActionStatus: TextView
+    private lateinit var rebuildFromEditorButton: Button
+    private lateinit var verifyFromEditorButton: Button
+    private lateinit var flashFromEditorButton: Button
+
+    private var loadingDts = false
+    private var validatedContent: String? = null
+    private var bootGenerated = false
+    private var bootVerified = false
 
     private var dtbIndex: Int = 0
     private lateinit var dtsFile: File
@@ -72,6 +91,21 @@ class DtsEditorActivity : Activity() {
         editorStatus =
             findViewById(R.id.editorStatus)
 
+        bootActionsPanel =
+            findViewById(R.id.bootActionsPanel)
+
+        bootActionStatus =
+            findViewById(R.id.bootActionStatus)
+
+        rebuildFromEditorButton =
+            findViewById(R.id.rebuildFromEditorButton)
+
+        verifyFromEditorButton =
+            findViewById(R.id.verifyFromEditorButton)
+
+        flashFromEditorButton =
+            findViewById(R.id.flashFromEditorButton)
+
         dtbIndex =
             intent.getIntExtra(
                 "dtb_index",
@@ -107,6 +141,45 @@ class DtsEditorActivity : Activity() {
         validateDtsButton.setOnClickListener {
             validateDts()
         }
+
+        rebuildFromEditorButton.setOnClickListener {
+            rebuildBoot()
+        }
+
+        verifyFromEditorButton.setOnClickListener {
+            verifyBoot()
+        }
+
+        flashFromEditorButton.setOnClickListener {
+            confirmFlash()
+        }
+
+        dtsEditor.addTextChangedListener(
+            object : TextWatcher {
+
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) = Unit
+
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int
+                ) {
+                    if (!loadingDts) {
+                        invalidateBootFlowIfNeeded()
+                    }
+                }
+
+                override fun afterTextChanged(
+                    s: Editable?
+                ) = Unit
+            }
+        )
     }
 
     private fun startSearch() {
@@ -304,7 +377,9 @@ class DtsEditorActivity : Activity() {
             val content =
                 dtsFile.readText()
 
+            loadingDts = true
             dtsEditor.setText(content)
+            loadingDts = false
 
             editorStatus.text =
                 "✓ DTS carregado\n" +
@@ -328,6 +403,8 @@ class DtsEditorActivity : Activity() {
             editorStatus.text =
                 "✓ DTS salvo\n" +
                 "${dtsFile.length()} bytes"
+
+            invalidateBootFlow()
 
         } catch (e: Exception) {
 
@@ -453,6 +530,31 @@ class DtsEditorActivity : Activity() {
                         else
                             "dtc concluiu sem erros"
 
+                    validatedContent =
+                        dtsEditor.text.toString()
+
+                    bootGenerated =
+                        false
+
+                    bootVerified =
+                        false
+
+                    bootActionsPanel.visibility =
+                        View.VISIBLE
+
+                    rebuildFromEditorButton.isEnabled =
+                        true
+
+                    verifyFromEditorButton.isEnabled =
+                        false
+
+                    flashFromEditorButton.isEnabled =
+                        false
+
+                    bootActionStatus.text =
+                        "✓ DTS $dtbIndex validado\n" +
+                        "○ Novo boot ainda não gerado"
+
                 } else {
 
                     if (validatedDtb.exists()) {
@@ -467,4 +569,317 @@ class DtsEditorActivity : Activity() {
             }
         }.start()
     }
+
+    private fun invalidateBootFlowIfNeeded() {
+
+        val validated =
+            validatedContent
+                ?: return
+
+        if (
+            dtsEditor.text.toString() !=
+            validated
+        ) {
+            invalidateBootFlow()
+
+            bootActionsPanel.visibility =
+                View.VISIBLE
+
+            bootActionStatus.text =
+                "⚠ DTS modificado após a validação\n" +
+                "Valide novamente antes de gerar ou gravar o boot."
+        }
+    }
+
+    private fun invalidateBootFlow() {
+
+        validatedContent =
+            null
+
+        bootGenerated =
+            false
+
+        bootVerified =
+            false
+
+        rebuildFromEditorButton.isEnabled =
+            false
+
+        verifyFromEditorButton.isEnabled =
+            false
+
+        flashFromEditorButton.isEnabled =
+            false
+    }
+
+    private fun rebuildBoot() {
+
+        if (
+            validatedContent == null ||
+            dtsEditor.text.toString() != validatedContent
+        ) {
+
+            invalidateBootFlow()
+
+            bootActionsPanel.visibility =
+                View.VISIBLE
+
+            bootActionStatus.text =
+                "⚠ DTS precisa ser validado novamente."
+
+            return
+        }
+
+        setBootActionsBusy(true)
+
+        bootActionStatus.text =
+            "Gerando boot_modified.img...\n" +
+            "Recompilando todos os Device Trees."
+
+        Thread {
+
+            val result =
+                BootRebuildManager.rebuild(
+                    this
+                )
+
+            runOnUiThread {
+
+                setBootActionsBusy(false)
+
+                if (result.success) {
+
+                    bootGenerated =
+                        true
+
+                    bootVerified =
+                        false
+
+                    rebuildFromEditorButton.isEnabled =
+                        true
+
+                    verifyFromEditorButton.isEnabled =
+                        true
+
+                    flashFromEditorButton.isEnabled =
+                        false
+
+                    bootActionStatus.text =
+                        "✓ DTS validado\n" +
+                        "✓ Novo boot gerado\n" +
+                        "○ Aguardando verificação\n\n" +
+                        "${result.bootPath ?: ""}"
+
+                } else {
+
+                    bootGenerated =
+                        false
+
+                    bootVerified =
+                        false
+
+                    rebuildFromEditorButton.isEnabled =
+                        true
+
+                    verifyFromEditorButton.isEnabled =
+                        false
+
+                    flashFromEditorButton.isEnabled =
+                        false
+
+                    bootActionStatus.text =
+                        "✗ Falha ao gerar boot\n\n" +
+                        result.message
+                }
+            }
+
+        }.start()
+    }
+
+    private fun verifyBoot() {
+
+        if (!bootGenerated) {
+
+            bootActionStatus.text =
+                "Gere o novo boot antes da verificação."
+
+            return
+        }
+
+        setBootActionsBusy(true)
+
+        bootActionStatus.text =
+            "Verificando boot...\n" +
+            "Executando round-trip dos Device Trees."
+
+        Thread {
+
+            val result =
+                BootRoundTripVerifier.verify(
+                    this
+                )
+
+            runOnUiThread {
+
+                setBootActionsBusy(false)
+
+                if (result.success) {
+
+                    bootVerified =
+                        true
+
+                    rebuildFromEditorButton.isEnabled =
+                        true
+
+                    verifyFromEditorButton.isEnabled =
+                        true
+
+                    flashFromEditorButton.isEnabled =
+                        true
+
+                    val checks =
+                        result.checks.joinToString(
+                            separator = "\n"
+                        ) {
+                            check ->
+
+                            if (check.equal) {
+                                "✓ DTB ${check.index}: OK"
+                            } else {
+                                "✗ DTB ${check.index}: diferente"
+                            }
+                        }
+
+                    bootActionStatus.text =
+                        "✓ DTS validado\n" +
+                        "✓ Novo boot gerado\n" +
+                        "✓ Round-trip verificado\n\n" +
+                        checks
+
+                } else {
+
+                    bootVerified =
+                        false
+
+                    rebuildFromEditorButton.isEnabled =
+                        true
+
+                    verifyFromEditorButton.isEnabled =
+                        true
+
+                    flashFromEditorButton.isEnabled =
+                        false
+
+                    bootActionStatus.text =
+                        "✗ Verificação falhou\n\n" +
+                        result.message
+                }
+            }
+
+        }.start()
+    }
+
+    private fun confirmFlash() {
+
+        if (!bootVerified) {
+
+            bootActionStatus.text =
+                "Flash bloqueado.\n" +
+                "Verifique o novo boot primeiro."
+
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                "Gravar novo boot?"
+            )
+            .setMessage(
+                "O boot modificado será gravado na partição boot.\n\n" +
+                "Antes da gravação será criado um backup pré-flash e, " +
+                "depois, a imagem gravada será verificada por SHA-256.\n\n" +
+                "O aparelho NÃO será reiniciado automaticamente."
+            )
+            .setNegativeButton(
+                "Cancelar",
+                null
+            )
+            .setPositiveButton(
+                "FLASH"
+            ) { _, _ ->
+
+                executeFlash()
+            }
+            .show()
+    }
+
+    private fun executeFlash() {
+
+        if (!bootVerified) {
+            return
+        }
+
+        setBootActionsBusy(true)
+
+        bootActionStatus.text =
+            "Gravando boot...\n" +
+            "Não feche o aplicativo e não reinicie o aparelho."
+
+        Thread {
+
+            val result =
+                BootFlashManager.flash(
+                    this
+                )
+
+            runOnUiThread {
+
+                setBootActionsBusy(false)
+
+                rebuildFromEditorButton.isEnabled =
+                    true
+
+                verifyFromEditorButton.isEnabled =
+                    true
+
+                flashFromEditorButton.isEnabled =
+                    result.success
+
+                if (result.success) {
+
+                    bootActionStatus.text =
+                        "✓ BOOT GRAVADO E VERIFICADO\n\n" +
+                        result.message
+
+                } else {
+
+                    flashFromEditorButton.isEnabled =
+                        false
+
+                    bootActionStatus.text =
+                        "✗ FLASH NÃO CONCLUÍDO\n\n" +
+                        result.message
+                }
+            }
+
+        }.start()
+    }
+
+    private fun setBootActionsBusy(
+        busy: Boolean
+    ) {
+
+        rebuildFromEditorButton.isEnabled =
+            !busy &&
+            validatedContent != null
+
+        verifyFromEditorButton.isEnabled =
+            !busy &&
+            bootGenerated
+
+        flashFromEditorButton.isEnabled =
+            !busy &&
+            bootVerified
+    }
+
 }
