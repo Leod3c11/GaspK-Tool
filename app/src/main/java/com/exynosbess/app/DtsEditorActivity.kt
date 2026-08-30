@@ -17,6 +17,7 @@ import com.exynosbess.app.boot.BootRoundTripVerifier
 import com.exynosbess.app.boot.BootFlashManager
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
+import java.math.BigInteger
 
 class DtsEditorActivity : Activity() {
 
@@ -32,6 +33,10 @@ class DtsEditorActivity : Activity() {
     private lateinit var saveDtsButton: Button
     private lateinit var validateDtsButton: Button
     private lateinit var editorStatus: TextView
+
+    private lateinit var numericBaseButton: Button
+
+    private var decimalMode = false
 
     private lateinit var bootActionsPanel: LinearLayout
     private lateinit var bootActionStatus: TextView
@@ -90,6 +95,9 @@ class DtsEditorActivity : Activity() {
 
         editorStatus =
             findViewById(R.id.editorStatus)
+
+        numericBaseButton =
+            findViewById(R.id.numericBaseButton)
 
         bootActionsPanel =
             findViewById(R.id.bootActionsPanel)
@@ -155,6 +163,10 @@ class DtsEditorActivity : Activity() {
 
         validateDtsButton.setOnClickListener {
             validateDts()
+        }
+
+        numericBaseButton.setOnClickListener {
+            toggleNumericBase()
         }
 
         rebuildFromEditorButton.setOnClickListener {
@@ -408,6 +420,8 @@ class DtsEditorActivity : Activity() {
 
     private fun saveDts() {
 
+        ensureHexModeBeforePersistence()
+
         try {
 
             dtsFile.writeText(
@@ -427,6 +441,8 @@ class DtsEditorActivity : Activity() {
     }
 
     private fun validateDts() {
+
+        ensureHexModeBeforePersistence()
 
         editorStatus.text =
             "Validando DTS..."
@@ -893,6 +909,173 @@ class DtsEditorActivity : Activity() {
         flashFromEditorButton.isEnabled =
             !busy &&
             bootVerified
+    }
+
+
+    private fun toggleNumericBase() {
+
+        val current =
+            dtsEditor.text.toString()
+
+        val cursor =
+            dtsEditor.selectionStart
+                .coerceAtLeast(0)
+
+        val converted =
+            if (decimalMode) {
+                convertCellsDecimalToHex(current)
+            } else {
+                convertCellsHexToDecimal(current)
+            }
+
+        loadingDts = true
+
+        dtsEditor.setText(converted)
+
+        dtsEditor.setSelection(
+            minOf(
+                cursor,
+                converted.length
+            )
+        )
+
+        loadingDts = false
+
+        decimalMode =
+            !decimalMode
+
+        numericBaseButton.text =
+            if (decimalMode)
+                "HEX"
+            else
+                "DEC"
+
+        editorStatus.text =
+            if (decimalMode)
+                "Modo decimal"
+            else
+                "Modo hexadecimal"
+    }
+
+
+    private fun ensureHexModeBeforePersistence() {
+
+        if (!decimalMode) {
+            return
+        }
+
+        val current =
+            dtsEditor.text.toString()
+
+        val converted =
+            convertCellsDecimalToHex(
+                current
+            )
+
+        val cursor =
+            dtsEditor.selectionStart
+                .coerceAtLeast(0)
+
+        loadingDts =
+            true
+
+        dtsEditor.setText(
+            converted
+        )
+
+        dtsEditor.setSelection(
+            minOf(
+                cursor,
+                converted.length
+            )
+        )
+
+        loadingDts =
+            false
+
+        decimalMode =
+            false
+
+        numericBaseButton.text =
+            "DEC"
+    }
+
+
+    private fun convertCellsHexToDecimal(
+        source: String
+    ): String {
+
+        val cellRegex =
+            Regex("""<([^<>]*)>""")
+
+        val hexRegex =
+            Regex("""0[xX]([0-9a-fA-F]+)""")
+
+        return cellRegex.replace(source) { cell ->
+
+            val content =
+                cell.groupValues[1]
+
+            val converted =
+                hexRegex.replace(content) { number ->
+
+                    try {
+
+                        BigInteger(
+                            number.groupValues[1],
+                            16
+                        ).toString(10)
+
+                    } catch (_: Exception) {
+
+                        number.value
+                    }
+                }
+
+            "<$converted>"
+        }
+    }
+
+
+    private fun convertCellsDecimalToHex(
+        source: String
+    ): String {
+
+        val cellRegex =
+            Regex("""<([^<>]*)>""")
+
+        val decimalRegex =
+            Regex(
+                """(?<![A-Za-z0-9_])([0-9]+)(?![A-Za-z0-9_])"""
+            )
+
+        return cellRegex.replace(source) { cell ->
+
+            val content =
+                cell.groupValues[1]
+
+            val converted =
+                decimalRegex.replace(content) { number ->
+
+                    try {
+
+                        val value =
+                            BigInteger(
+                                number.groupValues[1],
+                                10
+                            )
+
+                        "0x" +
+                            value.toString(16)
+
+                    } catch (_: Exception) {
+
+                        number.value
+                    }
+                }
+
+            "<$converted>"
+        }
     }
 
 }
