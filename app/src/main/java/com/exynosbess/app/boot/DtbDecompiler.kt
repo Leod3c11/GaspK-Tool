@@ -1,6 +1,7 @@
 package com.exynosbess.app.boot
 
 import android.content.Context
+import android.os.Process
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
 
@@ -25,15 +26,9 @@ object DtbDecompiler {
     ): DecompileResult {
 
         val tool =
-            ToolManager.installDtc(
-                context
-            )
+            ToolManager.installDtc(context)
 
-        if (
-            !tool.success ||
-            tool.path == null
-        ) {
-
+        if (!tool.success || tool.path == null) {
             return DecompileResult(
                 false,
                 emptyList(),
@@ -48,7 +43,6 @@ object DtbDecompiler {
             )
 
         if (!dtbDir.exists()) {
-
             return DecompileResult(
                 false,
                 emptyList(),
@@ -57,8 +51,7 @@ object DtbDecompiler {
         }
 
         val dtbs =
-            dtbDir
-                .listFiles()
+            dtbDir.listFiles()
                 ?.filter {
                     it.isFile &&
                     it.name.endsWith(".dtb")
@@ -69,7 +62,6 @@ object DtbDecompiler {
                 ?: emptyList()
 
         if (dtbs.isEmpty()) {
-
             return DecompileResult(
                 false,
                 emptyList(),
@@ -80,17 +72,21 @@ object DtbDecompiler {
         val outputFiles =
             mutableListOf<DecompiledFile>()
 
-        for (
-            (index, dtb)
-            in dtbs.withIndex()
-        ) {
+        val appUid = Process.myUid()
+
+        for ((index, dtb) in dtbs.withIndex()) {
 
             val dts =
                 File(
                     dtbDir,
-                    dtb.nameWithoutExtension +
-                        ".dts"
+                    dtb.nameWithoutExtension + ".dts"
                 )
+
+            if (dts.exists()) {
+                ShellExecutor.root(
+                    "rm -f '${dts.absolutePath}'"
+                )
+            }
 
             val command =
                 "'${tool.path}' " +
@@ -100,12 +96,9 @@ object DtbDecompiler {
                 "'${dtb.absolutePath}'"
 
             val result =
-                ShellExecutor.root(
-                    command
-                )
+                ShellExecutor.root(command)
 
             if (!result.success) {
-
                 return DecompileResult(
                     false,
                     outputFiles,
@@ -113,11 +106,7 @@ object DtbDecompiler {
                 )
             }
 
-            if (
-                !dts.exists() ||
-                dts.length() == 0L
-            ) {
-
+            if (!dts.exists() || dts.length() == 0L) {
                 return DecompileResult(
                     false,
                     outputFiles,
@@ -125,15 +114,32 @@ object DtbDecompiler {
                 )
             }
 
+            /*
+             * O dtc foi executado como root.
+             * Devolvemos o arquivo ao UID do aplicativo
+             * para que o editor consiga salvá-lo normalmente.
+             */
+            val permissionResult =
+                ShellExecutor.root(
+                    "chown $appUid:$appUid '${dts.absolutePath}' && " +
+                    "chmod 600 '${dts.absolutePath}'"
+                )
+
+            if (!permissionResult.success) {
+                return DecompileResult(
+                    false,
+                    outputFiles,
+                    "DTS criado, mas não foi possível ajustar permissões:\n" +
+                    permissionResult.output
+                )
+            }
+
             outputFiles.add(
                 DecompiledFile(
                     index = index,
-                    dtbPath =
-                        dtb.absolutePath,
-                    dtsPath =
-                        dts.absolutePath,
-                    dtsSize =
-                        dts.length()
+                    dtbPath = dtb.absolutePath,
+                    dtsPath = dts.absolutePath,
+                    dtsSize = dts.length()
                 )
             )
         }

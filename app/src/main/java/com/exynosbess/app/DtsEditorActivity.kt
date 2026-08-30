@@ -2,6 +2,7 @@ package com.exynosbess.app
 
 import android.app.Activity
 import android.os.Bundle
+import android.os.Process
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -183,6 +184,19 @@ class DtsEditorActivity : Activity() {
                 ShellExecutor.root(
                     command
                 )
+
+            if (
+                result.success &&
+                validatedDtb.exists() &&
+                validatedDtb.length() > 0
+            ) {
+                val appUid = Process.myUid()
+
+                ShellExecutor.root(
+                    "chown $appUid:$appUid '${validatedDtb.absolutePath}' && " +
+                    "chmod 600 '${validatedDtb.absolutePath}'"
+                )
+            }
 
             runOnUiThread {
 
