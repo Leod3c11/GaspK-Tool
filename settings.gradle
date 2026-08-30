@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ExynosBess"
+rootProject.name = "GaspKernel-Editor"
 include(":app")

@@ -3,7 +3,7 @@
 
     <application
         android:allowBackup="false"
-        android:label="ExynosBess"
+        android:label="GaspKernel Editor"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExynosBess">
 
