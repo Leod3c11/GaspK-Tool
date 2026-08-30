@@ -248,10 +248,9 @@ object BootRebuildManager {
                 modifiedBoot.absolutePath,
                 "boot_modified.img criado e " +
                 "descompactado novamente com sucesso.\n\n" +
-                "DTBs substituídos: ${extraEntries.size}\n" +
-                "Extra original: ${originalExtra.length()} bytes\n" +
-                "Extra modificado: ${modifiedExtra.length()} bytes\n" +
-                "Boot original: ${originalBoot.length()} bytes\n" +
+                "Componentes DTB reconstruídos: " +
+                rebuiltComponents.keys.joinToString(", ") +
+                "\nBoot original: ${originalBoot.length()} bytes\n" +
                 "Boot modificado: ${modifiedBoot.length()} bytes\n\n" +
                 "magiskboot:\n${repack.output}"
             )

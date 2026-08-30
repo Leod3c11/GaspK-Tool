@@ -35,7 +35,7 @@ object BootDtbComponentRebuilder {
                     )
 
             if (sourceEntries.isEmpty()) {
-                return fail(
+                throw IllegalStateException(
                     "Nenhum DTB pertencente ao boot foi encontrado"
                 )
             }
@@ -51,7 +51,7 @@ object BootDtbComponentRebuilder {
                     }
 
             if (unsupported.isNotEmpty()) {
-                return fail(
+                throw IllegalStateException(
                     "Origem DTB de boot não suportada: " +
                         unsupported.joinToString()
                 )
@@ -66,7 +66,7 @@ object BootDtbComponentRebuilder {
                 !dtc.success ||
                 dtc.path == null
             ) {
-                return fail(
+                throw IllegalStateException(
                     "Falha preparando dtc:\n${dtc.message}"
                 )
             }
@@ -115,7 +115,7 @@ object BootDtbComponentRebuilder {
                         !original.exists() ||
                         original.length() == 0L
                     ) {
-                        return fail(
+                        throw IllegalStateException(
                             "Componente $sourceName não encontrado"
                         )
                     }
@@ -142,7 +142,7 @@ object BootDtbComponentRebuilder {
                                 entry.size >
                                 original.length()
                         ) {
-                            return fail(
+                            throw IllegalStateException(
                                 "Mapa DTB inválido em $sourceName"
                             )
                         }
@@ -164,7 +164,7 @@ object BootDtbComponentRebuilder {
                             )
 
                         if (!dts.exists()) {
-                            return fail(
+                            throw IllegalStateException(
                                 "dtb_${entry.index}.dts não encontrado"
                             )
                         }
@@ -192,7 +192,7 @@ object BootDtbComponentRebuilder {
                             !dtb.exists() ||
                             dtb.length() == 0L
                         ) {
-                            return fail(
+                            throw IllegalStateException(
                                 "Falha recompilando dtb_${entry.index} " +
                                     "de $sourceName:\n${compile.output}"
                             )
@@ -212,7 +212,7 @@ object BootDtbComponentRebuilder {
                                 magic !=
                                 0xD00DFEEDL
                             ) {
-                                return fail(
+                                throw IllegalStateException(
                                     "dtb_${entry.index} possui magic inválido"
                                 )
                             }
@@ -305,7 +305,7 @@ object BootDtbComponentRebuilder {
                         !modified.exists() ||
                         modified.length() == 0L
                     ) {
-                        return fail(
+                        throw IllegalStateException(
                             "Falha reconstruindo $sourceName"
                         )
                     }
@@ -325,7 +325,7 @@ object BootDtbComponentRebuilder {
             e: Exception
         ) {
 
-            return fail(
+            throw IllegalStateException(
                 e.message
                     ?: "Erro reconstruindo componentes DTB"
             )
