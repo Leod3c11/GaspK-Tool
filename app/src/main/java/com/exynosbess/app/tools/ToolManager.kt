@@ -11,49 +11,85 @@ object ToolManager {
         val message: String
     )
 
-    fun installMagiskBoot(context: Context): ToolResult {
+    fun installMagiskBoot(
+        context: Context
+    ): ToolResult {
+        return installTool(
+            context,
+            "magiskboot"
+        )
+    }
+
+    fun installDtc(
+        context: Context
+    ): ToolResult {
+        return installTool(
+            context,
+            "dtc"
+        )
+    }
+
+    private fun installTool(
+        context: Context,
+        toolName: String
+    ): ToolResult {
 
         return try {
 
-            val toolsDir = File(
-                context.filesDir,
-                "tools"
-            )
+            val toolsDir =
+                File(
+                    context.filesDir,
+                    "tools"
+                )
 
             if (!toolsDir.exists()) {
                 toolsDir.mkdirs()
             }
 
-            val output = File(
-                toolsDir,
-                "magiskboot"
-            )
+            val output =
+                File(
+                    toolsDir,
+                    toolName
+                )
 
             context.assets
-                .open("tools/magiskboot")
+                .open("tools/$toolName")
                 .use { input ->
 
-                    output.outputStream().use { out ->
-                        input.copyTo(out)
-                    }
+                    output
+                        .outputStream()
+                        .use { out ->
+
+                            input.copyTo(out)
+                        }
                 }
 
-            if (!output.exists() || output.length() == 0L) {
+            if (
+                !output.exists() ||
+                output.length() == 0L
+            ) {
+
                 return ToolResult(
                     false,
                     null,
-                    "Falha ao copiar magiskboot"
+                    "$toolName não pôde ser instalado"
                 )
             }
 
-            output.setExecutable(true, false)
-            output.setReadable(true, false)
-            output.setWritable(true, true)
+            output.setReadable(
+                true,
+                false
+            )
+
+            output.setExecutable(
+                true,
+                false
+            )
 
             ToolResult(
                 true,
                 output.absolutePath,
-                "magiskboot instalado"
+                "$toolName instalado"
             )
 
         } catch (e: Exception) {
@@ -61,7 +97,8 @@ object ToolManager {
             ToolResult(
                 false,
                 null,
-                e.message ?: "Erro ao instalar magiskboot"
+                e.message
+                    ?: "Erro ao instalar $toolName"
             )
         }
     }

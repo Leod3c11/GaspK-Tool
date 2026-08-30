@@ -9,6 +9,7 @@ import com.exynosbess.app.boot.BootPartitionResolver
 import com.exynosbess.app.boot.BootUnpackManager
 import com.exynosbess.app.boot.DtbScanner
 import com.exynosbess.app.boot.DtbExtractor
+import com.exynosbess.app.boot.DtbDecompiler
 
 class MainActivity : Activity() {
 
@@ -19,6 +20,7 @@ class MainActivity : Activity() {
     private lateinit var unpackStatus: TextView
     private lateinit var dtbScanStatus: TextView
     private lateinit var dtbExtractStatus: TextView
+    private lateinit var decompileDtbStatus: TextView
 
     private lateinit var checkRootButton: Button
     private lateinit var detectBootButton: Button
@@ -26,6 +28,7 @@ class MainActivity : Activity() {
     private lateinit var unpackBootButton: Button
     private lateinit var scanDtbButton: Button
     private lateinit var extractDtbButton: Button
+    private lateinit var decompileDtbButton: Button
 
     private var bootPartitionPath: String? = null
     private var workspacePath: String? = null
@@ -43,6 +46,7 @@ class MainActivity : Activity() {
         unpackStatus = findViewById(R.id.unpackStatus)
         dtbScanStatus = findViewById(R.id.dtbScanStatus)
         dtbExtractStatus = findViewById(R.id.dtbExtractStatus)
+        decompileDtbStatus = findViewById(R.id.decompileDtbStatus)
 
         checkRootButton = findViewById(R.id.checkRootButton)
         detectBootButton = findViewById(R.id.detectBootButton)
@@ -50,6 +54,7 @@ class MainActivity : Activity() {
         unpackBootButton = findViewById(R.id.unpackBootButton)
         scanDtbButton = findViewById(R.id.scanDtbButton)
         extractDtbButton = findViewById(R.id.extractDtbButton)
+        decompileDtbButton = findViewById(R.id.decompileDtbButton)
 
         checkRootButton.setOnClickListener {
             verifyRoot()
@@ -73,6 +78,10 @@ class MainActivity : Activity() {
 
         extractDtbButton.setOnClickListener {
             extractDtbs()
+        }
+
+        decompileDtbButton.setOnClickListener {
+            decompileDtbs()
         }
     }
 
@@ -318,6 +327,8 @@ class MainActivity : Activity() {
 
                 if (result.success) {
 
+                    decompileDtbButton.isEnabled = true
+
                     val list =
                         result.files.joinToString("\n\n") { file ->
 
@@ -334,6 +345,53 @@ class MainActivity : Activity() {
                 } else {
 
                     dtbExtractStatus.text =
+                        "✗ ${result.message}"
+                }
+            }
+        }.start()
+    }
+
+
+    private fun decompileDtbs() {
+
+        val workspace =
+            workspacePath ?: return
+
+        decompileDtbStatus.text =
+            "Convertendo DTB para DTS..."
+
+        decompileDtbButton.isEnabled =
+            false
+
+        Thread {
+
+            val result =
+                DtbDecompiler.decompileAll(
+                    this,
+                    workspace
+                )
+
+            runOnUiThread {
+
+                decompileDtbButton.isEnabled =
+                    true
+
+                if (result.success) {
+
+                    val list =
+                        result.files.joinToString("\n\n") { file ->
+
+                            "DTS ${file.index}\n" +
+                            "Arquivo: ${file.dtsPath}\n" +
+                            "Tamanho: ${file.dtsSize} bytes"
+                        }
+
+                    decompileDtbStatus.text =
+                        "✓ ${result.message}\n\n$list"
+
+                } else {
+
+                    decompileDtbStatus.text =
                         "✗ ${result.message}"
                 }
             }

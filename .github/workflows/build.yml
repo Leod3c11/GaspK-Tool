@@ -27,10 +27,52 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK
+      - name: Install Android SDK and NDK
         run: |
           yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            "ndk;27.2.12479018"
+
+      - name: Install dtc build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            flex \
+            bison \
+            make \
+            git \
+            file
+
+      - name: Build Android ARM64 dtc
+        run: |
+          git clone \
+            --depth=1 \
+            --branch standalone \
+            https://github.com/libxzr/dtc-aosp.git \
+            /tmp/dtc-aosp
+
+          export NDK="$ANDROID_SDK_ROOT/ndk/27.2.12479018"
+          export TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+
+          cd /tmp/dtc-aosp
+
+          make clean || true
+
+          make \
+            NO_PYTHON=1 \
+            CC="$TOOLCHAIN/bin/aarch64-linux-android26-clang" \
+            AR="$TOOLCHAIN/bin/llvm-ar" \
+            STRIP="$TOOLCHAIN/bin/llvm-strip" \
+            dtc
+
+          file dtc
+
+          mkdir -p "$GITHUB_WORKSPACE/app/src/main/assets/tools"
+
+          cp dtc \
+            "$GITHUB_WORKSPACE/app/src/main/assets/tools/dtc"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
