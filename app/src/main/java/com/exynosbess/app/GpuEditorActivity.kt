@@ -15,6 +15,7 @@ import com.exynosbess.app.boot.ShellExecutor
 import com.exynosbess.app.gpu.MaliGpuParser
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
+import java.math.BigInteger
 
 class GpuEditorActivity : Activity() {
 
@@ -26,6 +27,7 @@ class GpuEditorActivity : Activity() {
     private lateinit var searchInput: EditText
     private lateinit var searchStatus: TextView
 
+    private lateinit var numericBaseButton: Button
     private lateinit var previousButton: Button
     private lateinit var nextButton: Button
 
@@ -53,6 +55,8 @@ class GpuEditorActivity : Activity() {
         emptyList<Int>()
 
     private var searchPosition = -1
+
+    private var decimalMode = false
 
 
     override fun onCreate(
@@ -97,6 +101,11 @@ class GpuEditorActivity : Activity() {
                 R.id.gpuSearchStatus
             )
 
+        numericBaseButton =
+            findViewById(
+                R.id.gpuNumericBaseButton
+            )
+
         previousButton =
             findViewById(
                 R.id.gpuPreviousDtbButton
@@ -135,6 +144,10 @@ class GpuEditorActivity : Activity() {
 
 
     private fun setupListeners() {
+
+        numericBaseButton.setOnClickListener {
+            toggleNumericBase()
+        }
 
         previousButton.setOnClickListener {
             switchDtb(-1)
@@ -300,6 +313,11 @@ class GpuEditorActivity : Activity() {
 
         loadingEditor = false
 
+        decimalMode = false
+
+        numericBaseButton.text =
+            "DEC"
+
         subtitle.text =
             "${file.name} • ${node.name}"
 
@@ -395,6 +413,8 @@ class GpuEditorActivity : Activity() {
 
 
     private fun saveGpuNode() {
+
+        ensureHexModeBeforePersistence()
 
         if (gpuDtsFiles.isEmpty())
             return
@@ -498,6 +518,8 @@ class GpuEditorActivity : Activity() {
 
 
     private fun validateCurrentDts() {
+
+        ensureHexModeBeforePersistence()
 
         if (hasUnsavedChanges()) {
 
@@ -888,6 +910,179 @@ class GpuEditorActivity : Activity() {
 
         searchStatus.text =
             "${searchPosition + 1}/${searchMatches.size}"
+    }
+
+
+
+    private fun toggleNumericBase() {
+
+        val current =
+            editor.text
+                .toString()
+
+        val converted =
+            if (!decimalMode) {
+                convertCellsHexToDecimal(
+                    current
+                )
+            } else {
+                convertCellsDecimalToHex(
+                    current
+                )
+            }
+
+        val selection =
+            editor.selectionStart
+                .coerceAtLeast(0)
+
+        loadingEditor = true
+
+        editor.setText(
+            converted
+        )
+
+        editor.setSelection(
+            selection.coerceAtMost(
+                converted.length
+            )
+        )
+
+        loadingEditor = false
+
+        decimalMode =
+            !decimalMode
+
+        numericBaseButton.text =
+            if (decimalMode) {
+                "HEX"
+            } else {
+                "DEC"
+            }
+
+        status.text =
+            if (decimalMode) {
+                "Visualização decimal"
+            } else {
+                "Visualização hexadecimal"
+            }
+    }
+
+
+    private fun ensureHexModeBeforePersistence() {
+
+        if (!decimalMode)
+            return
+
+        val converted =
+            convertCellsDecimalToHex(
+                editor.text
+                    .toString()
+            )
+
+        loadingEditor = true
+
+        editor.setText(
+            converted
+        )
+
+        loadingEditor = false
+
+        decimalMode = false
+
+        numericBaseButton.text =
+            "DEC"
+    }
+
+
+    private fun convertCellsHexToDecimal(
+        source: String
+    ): String {
+
+        val cellRegex =
+            Regex(
+                """<([^<>]*)>"""
+            )
+
+        val hexRegex =
+            Regex(
+                """0[xX]([0-9a-fA-F]+)"""
+            )
+
+        return cellRegex.replace(
+            source
+        ) {
+            cellMatch ->
+
+            val content =
+                cellMatch.groupValues[1]
+
+            val converted =
+                hexRegex.replace(
+                    content
+                ) {
+                    hexMatch ->
+
+                    try {
+                        BigInteger(
+                            hexMatch.groupValues[1],
+                            16
+                        ).toString(10)
+
+                    } catch (_: Exception) {
+                        hexMatch.value
+                    }
+                }
+
+            "<$converted>"
+        }
+    }
+
+
+    private fun convertCellsDecimalToHex(
+        source: String
+    ): String {
+
+        val cellRegex =
+            Regex(
+                """<([^<>]*)>"""
+            )
+
+        val decimalRegex =
+            Regex(
+                """(?<![A-Za-z0-9_])([0-9]+)(?![A-Za-z0-9_])"""
+            )
+
+        return cellRegex.replace(
+            source
+        ) {
+            cellMatch ->
+
+            val content =
+                cellMatch.groupValues[1]
+
+            val converted =
+                decimalRegex.replace(
+                    content
+                ) {
+                    decimalMatch ->
+
+                    try {
+                        val value =
+                            BigInteger(
+                                decimalMatch.groupValues[1],
+                                10
+                            )
+
+                        "0x" +
+                            value.toString(16)
+
+                    } catch (_: Exception) {
+                        decimalMatch.value
+                    }
+                }
+
+            "<$converted>"
+        }
     }
 
 
