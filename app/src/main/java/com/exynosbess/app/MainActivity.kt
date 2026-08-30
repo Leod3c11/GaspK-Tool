@@ -12,6 +12,7 @@ import com.exynosbess.app.boot.DtbScanner
 import com.exynosbess.app.boot.DtbExtractor
 import com.exynosbess.app.boot.DtbDecompiler
 import com.exynosbess.app.boot.BootRebuildManager
+import com.exynosbess.app.boot.BootRoundTripVerifier
 
 class MainActivity : Activity() {
 
@@ -24,6 +25,7 @@ class MainActivity : Activity() {
     private lateinit var dtbExtractStatus: TextView
     private lateinit var decompileDtbStatus: TextView
     private lateinit var rebuildBootStatus: TextView
+    private lateinit var roundTripStatus: TextView
 
     private lateinit var checkRootButton: Button
     private lateinit var detectBootButton: Button
@@ -33,6 +35,7 @@ class MainActivity : Activity() {
     private lateinit var extractDtbButton: Button
     private lateinit var decompileDtbButton: Button
     private lateinit var rebuildBootButton: Button
+    private lateinit var verifyRoundTripButton: Button
     private lateinit var openDts0Button: Button
     private lateinit var openDts1Button: Button
 
@@ -54,6 +57,7 @@ class MainActivity : Activity() {
         dtbExtractStatus = findViewById(R.id.dtbExtractStatus)
         decompileDtbStatus = findViewById(R.id.decompileDtbStatus)
         rebuildBootStatus = findViewById(R.id.rebuildBootStatus)
+        roundTripStatus = findViewById(R.id.roundTripStatus)
 
         checkRootButton = findViewById(R.id.checkRootButton)
         detectBootButton = findViewById(R.id.detectBootButton)
@@ -63,6 +67,7 @@ class MainActivity : Activity() {
         extractDtbButton = findViewById(R.id.extractDtbButton)
         decompileDtbButton = findViewById(R.id.decompileDtbButton)
         rebuildBootButton = findViewById(R.id.rebuildBootButton)
+        verifyRoundTripButton = findViewById(R.id.verifyRoundTripButton)
         openDts0Button = findViewById(R.id.openDts0Button)
         openDts1Button = findViewById(R.id.openDts1Button)
 
@@ -96,6 +101,10 @@ class MainActivity : Activity() {
 
         rebuildBootButton.setOnClickListener {
             rebuildBoot()
+        }
+
+        verifyRoundTripButton.setOnClickListener {
+            verifyRoundTrip()
         }
 
         openDts0Button.setOnClickListener {
@@ -468,6 +477,8 @@ class MainActivity : Activity() {
 
                 if (result.success) {
 
+                    verifyRoundTripButton.isEnabled = true
+
                     rebuildBootStatus.text =
                         "✓ Boot reconstruído com sucesso\n\n" +
                         result.message +
@@ -479,6 +490,62 @@ class MainActivity : Activity() {
                     rebuildBootStatus.text =
                         "✗ Falha na reconstrução\n\n" +
                         result.message
+                }
+            }
+        }.start()
+    }
+
+
+    private fun verifyRoundTrip() {
+
+        roundTripStatus.text =
+            "Verificando round-trip..."
+
+        verifyRoundTripButton.isEnabled =
+            false
+
+        Thread {
+
+            val result =
+                BootRoundTripVerifier.verify(
+                    this
+                )
+
+            runOnUiThread {
+
+                verifyRoundTripButton.isEnabled =
+                    true
+
+                val details =
+                    result.checks.joinToString(
+                        "\n\n"
+                    ) { check ->
+
+                        "DTB ${check.index}: " +
+                            if (check.equal)
+                                "✓ OK"
+                            else
+                                "✗ DIFERENTE"
+                    }
+
+                if (result.success) {
+
+                    roundTripStatus.text =
+                        "✓ VERIFICAÇÃO FINAL OK\n\n" +
+                        result.message +
+                        "\n\n" +
+                        details +
+                        "\n\nBoot apto para próxima etapa."
+
+                } else {
+
+                    roundTripStatus.text =
+                        "✗ VERIFICAÇÃO FALHOU\n\n" +
+                        result.message +
+                        if (details.isNotBlank())
+                            "\n\n$details"
+                        else
+                            ""
                 }
             }
         }.start()
