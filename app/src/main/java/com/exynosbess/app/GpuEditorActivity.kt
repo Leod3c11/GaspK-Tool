@@ -7,7 +7,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import android.app.Activity
 import com.exynosbess.app.boot.BootFlashManager
 import com.exynosbess.app.boot.BootRebuildManager
 import com.exynosbess.app.boot.BootRoundTripVerifier
@@ -17,7 +17,7 @@ import com.exynosbess.app.gpu.MaliGpuParser
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
 
-class GpuEditorActivity : AppCompatActivity() {
+class GpuEditorActivity : Activity() {
 
     private lateinit var subtitle: TextView
     private lateinit var status: TextView

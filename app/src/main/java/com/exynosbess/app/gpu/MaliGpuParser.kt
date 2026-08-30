@@ -387,18 +387,23 @@ object MaliGpuParser {
                 """(?m)(\b${Regex.escape(property)}\s*=\s*<\s*)(0[xX][0-9a-fA-F]+|\d+)(\s*>\s*;)"""
             )
 
-        if (!regex.containsMatchIn(node))
-            return node
+        val match =
+            regex.find(node)
+                ?: return node
 
-        return regex.replaceFirst(
-            node
-        ) {
-            match ->
-
+        val replacement =
             match.groupValues[1] +
                 toHex(value) +
                 match.groupValues[3]
-        }
+
+        return node.substring(
+            0,
+            match.range.first
+        ) +
+            replacement +
+            node.substring(
+                match.range.last + 1
+            )
     }
 
 
@@ -413,8 +418,9 @@ object MaliGpuParser {
                 """(?s)(\b${Regex.escape(property)}\s*=\s*<)(.*?)(>\s*;)"""
             )
 
-        if (!regex.containsMatchIn(node))
-            return node
+        val match =
+            regex.find(node)
+                ?: return node
 
         val formatted =
             values.joinToString(
@@ -423,15 +429,19 @@ object MaliGpuParser {
                 toHex(it)
             }
 
-        return regex.replaceFirst(
-            node
-        ) {
-            match ->
-
+        val replacement =
             match.groupValues[1] +
                 formatted +
                 match.groupValues[3]
-        }
+
+        return node.substring(
+            0,
+            match.range.first
+        ) +
+            replacement +
+            node.substring(
+                match.range.last + 1
+            )
     }
 
 
