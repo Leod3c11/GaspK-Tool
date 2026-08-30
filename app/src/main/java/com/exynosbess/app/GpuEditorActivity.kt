@@ -1,18 +1,17 @@
 package com.exynosbess.app
 
+import android.app.Activity
 import android.app.AlertDialog
-import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
-import android.app.Activity
 import com.exynosbess.app.boot.BootFlashManager
 import com.exynosbess.app.boot.BootRebuildManager
 import com.exynosbess.app.boot.BootRoundTripVerifier
 import com.exynosbess.app.boot.ShellExecutor
-import com.exynosbess.app.gpu.GpuProfile
 import com.exynosbess.app.gpu.MaliGpuParser
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
@@ -22,35 +21,38 @@ class GpuEditorActivity : Activity() {
     private lateinit var subtitle: TextView
     private lateinit var status: TextView
 
-    private lateinit var maxClock: EditText
-    private lateinit var maxClockLimit: EditText
-    private lateinit var minClock: EditText
-    private lateinit var startClock: EditText
-    private lateinit var bootClock: EditText
+    private lateinit var editor: EditText
 
-    private lateinit var defaultVoltage: EditText
-    private lateinit var voltageMargin: EditText
+    private lateinit var searchInput: EditText
+    private lateinit var searchStatus: TextView
 
-    private lateinit var dvfsContainer: LinearLayout
-    private lateinit var throttleContainer: LinearLayout
+    private lateinit var previousButton: Button
+    private lateinit var nextButton: Button
 
-    private lateinit var prepareButton: Button
+    private lateinit var saveButton: Button
+    private lateinit var validateButton: Button
+    private lateinit var rebuildButton: Button
+    private lateinit var verifyButton: Button
     private lateinit var flashButton: Button
-    private lateinit var openDtsButton: Button
 
-    private val dvfsInputs =
-        mutableListOf<EditText>()
-
-    private val throttleInputs =
-        mutableListOf<EditText>()
-
-    private var sourceDtbIndex = 0
-
-    private var baseProfile: GpuProfile? =
-        null
-
-    private var supportedDtsFiles =
+    private var gpuDtsFiles =
         emptyList<File>()
+
+    private var currentFileIndex = 0
+
+    private var loadedNodeStart = -1
+    private var loadedNodeEnd = -1
+
+    private var loadingEditor = false
+
+    private var validated = false
+    private var bootGenerated = false
+    private var bootVerified = false
+
+    private var searchMatches =
+        emptyList<Int>()
+
+    private var searchPosition = -1
 
 
     override fun onCreate(
@@ -63,28 +65,8 @@ class GpuEditorActivity : Activity() {
         )
 
         bindViews()
-        loadGpu()
-
-        prepareButton.setOnClickListener {
-            prepareBoot()
-        }
-
-        flashButton.setOnClickListener {
-            confirmFlash()
-        }
-
-        openDtsButton.setOnClickListener {
-
-            startActivity(
-                Intent(
-                    this,
-                    DtsEditorActivity::class.java
-                ).putExtra(
-                    "dtb_index",
-                    sourceDtbIndex
-                )
-            )
-        }
+        setupListeners()
+        discoverGpuDtbs()
     }
 
 
@@ -100,69 +82,132 @@ class GpuEditorActivity : Activity() {
                 R.id.gpuEditorStatus
             )
 
-        maxClock =
+        editor =
             findViewById(
-                R.id.gpuMaxClock
+                R.id.gpuNodeEditor
             )
 
-        maxClockLimit =
+        searchInput =
             findViewById(
-                R.id.gpuMaxClockLimit
+                R.id.gpuSearchInput
             )
 
-        minClock =
+        searchStatus =
             findViewById(
-                R.id.gpuMinClock
+                R.id.gpuSearchStatus
             )
 
-        startClock =
+        previousButton =
             findViewById(
-                R.id.gpuStartClock
+                R.id.gpuPreviousDtbButton
             )
 
-        bootClock =
+        nextButton =
             findViewById(
-                R.id.gpuBootClock
+                R.id.gpuNextDtbButton
             )
 
-        defaultVoltage =
+        saveButton =
             findViewById(
-                R.id.gpuDefaultVoltage
+                R.id.gpuSaveButton
             )
 
-        voltageMargin =
+        validateButton =
             findViewById(
-                R.id.gpuVoltageMargin
+                R.id.gpuValidateButton
             )
 
-        dvfsContainer =
+        rebuildButton =
             findViewById(
-                R.id.gpuDvfsContainer
+                R.id.gpuRebuildButton
             )
 
-        throttleContainer =
+        verifyButton =
             findViewById(
-                R.id.gpuThrottleContainer
-            )
-
-        prepareButton =
-            findViewById(
-                R.id.gpuPrepareBootButton
+                R.id.gpuVerifyButton
             )
 
         flashButton =
             findViewById(
                 R.id.gpuFlashButton
             )
-
-        openDtsButton =
-            findViewById(
-                R.id.gpuOpenDtsButton
-            )
     }
 
 
-    private fun loadGpu() {
+    private fun setupListeners() {
+
+        previousButton.setOnClickListener {
+            switchDtb(-1)
+        }
+
+        nextButton.setOnClickListener {
+            switchDtb(1)
+        }
+
+        saveButton.setOnClickListener {
+            saveGpuNode()
+        }
+
+        validateButton.setOnClickListener {
+            validateCurrentDts()
+        }
+
+        rebuildButton.setOnClickListener {
+            rebuildBoot()
+        }
+
+        verifyButton.setOnClickListener {
+            verifyBoot()
+        }
+
+        flashButton.setOnClickListener {
+            confirmFlash()
+        }
+
+        findViewById<Button>(
+            R.id.gpuSearchButton
+        ).setOnClickListener {
+            startSearch()
+        }
+
+        findViewById<Button>(
+            R.id.gpuSearchNextButton
+        ).setOnClickListener {
+            nextSearchResult()
+        }
+
+        editor.addTextChangedListener(
+            object : TextWatcher {
+
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                }
+
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int
+                ) {
+                    if (!loadingEditor) {
+                        invalidateBootState()
+                    }
+                }
+
+                override fun afterTextChanged(
+                    s: Editable?
+                ) {
+                }
+            }
+        )
+    }
+
+
+    private fun discoverGpuDtbs() {
 
         val dtbDir =
             File(
@@ -170,7 +215,7 @@ class GpuEditorActivity : Activity() {
                 "workspace/dtbs"
             )
 
-        supportedDtsFiles =
+        gpuDtsFiles =
             dtbDir.listFiles()
                 ?.filter {
                     it.isFile &&
@@ -192,490 +237,255 @@ class GpuEditorActivity : Activity() {
                 }
                 ?: emptyList()
 
-        if (
-            supportedDtsFiles.isEmpty()
-        ) {
+        if (gpuDtsFiles.isEmpty()) {
+
             subtitle.text =
-                "GPU Mali compatível não encontrada"
+                "GPU Mali não encontrada"
 
             status.text =
-                "Nenhum nó mali@... foi encontrado nos DTS."
+                "Nenhum nó mali@... encontrado"
 
-            prepareButton.isEnabled =
-                false
-
-            openDtsButton.isEnabled =
-                false
+            setEditorEnabled(false)
 
             return
         }
 
-        val source =
-            supportedDtsFiles.first()
+        currentFileIndex = 0
 
-        sourceDtbIndex =
-            dtbIndex(source)
+        loadCurrentGpuNode()
+    }
 
-        val profile =
+
+    private fun loadCurrentGpuNode() {
+
+        val file =
+            gpuDtsFiles[currentFileIndex]
+
+        val dts =
             try {
-                MaliGpuParser.parse(
-                    source.readText()
-                )
-            } catch (_: Exception) {
-                null
-            }
-
-        if (profile == null) {
-
-            subtitle.text =
-                "Falha ao interpretar GPU Mali"
-
-            prepareButton.isEnabled =
-                false
-
-            return
-        }
-
-        baseProfile =
-            profile
-
-        subtitle.text =
-            "${profile.vendor} • ${profile.nodeName} • " +
-                "${supportedDtsFiles.size} DTB(s)"
-
-        populateProfile(profile)
-    }
-
-
-    private fun populateProfile(
-        profile: GpuProfile
-    ) {
-
-        maxClock.setText(
-            khzToMhz(
-                profile.maxClockKhz
-            ).toString()
-        )
-
-        maxClockLimit.setText(
-            khzToMhz(
-                profile.maxClockLimitKhz
-            ).toString()
-        )
-
-        minClock.setText(
-            khzToMhz(
-                profile.minClockKhz
-            ).toString()
-        )
-
-        startClock.setText(
-            khzToMhz(
-                profile.startClockKhz
-            ).toString()
-        )
-
-        bootClock.setText(
-            khzToMhz(
-                profile.bootClockKhz
-            ).toString()
-        )
-
-        defaultVoltage.setText(
-            profile.defaultVoltageUv
-                .toString()
-        )
-
-        voltageMargin.setText(
-            profile.voltageMarginUv
-                .toString()
-        )
-
-        dvfsContainer.removeAllViews()
-        dvfsInputs.clear()
-
-        profile.dvfsLevels
-            .forEachIndexed {
-                index,
-                level ->
-
-                val input =
-                    createNumericInput(
-                        "Nível ${index + 1} (MHz)",
-                        khzToMhz(
-                            level.frequencyKhz
-                        )
-                    )
-
-                dvfsContainer.addView(
-                    input
-                )
-
-                dvfsInputs += input
-            }
-
-        throttleContainer
-            .removeAllViews()
-
-        throttleInputs.clear()
-
-        profile.throttlingKhz
-            .forEachIndexed {
-                index,
-                frequency ->
-
-                val input =
-                    createNumericInput(
-                        "Throttling ${index + 1} (MHz)",
-                        khzToMhz(
-                            frequency
-                        )
-                    )
-
-                throttleContainer.addView(
-                    input
-                )
-
-                throttleInputs += input
-            }
-    }
-
-
-    private fun createNumericInput(
-        hint: String,
-        value: Long
-    ): EditText {
-
-        val input =
-            EditText(this)
-
-        input.layoutParams =
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(44)
-            ).apply {
-                topMargin =
-                    dp(5)
-            }
-
-        input.setBackgroundResource(
-            R.drawable.bg_search_field
-        )
-
-        input.hint =
-            hint
-
-        input.setText(
-            value.toString()
-        )
-
-        input.inputType =
-            android.text.InputType.TYPE_CLASS_NUMBER
-
-        input.setTextColor(
-            getColor(
-                R.color.exynos_text
-            )
-        )
-
-        input.setHintTextColor(
-            getColor(
-                R.color.exynos_text_secondary
-            )
-        )
-
-        input.setPadding(
-            dp(12),
-            0,
-            dp(12),
-            0
-        )
-
-        return input
-    }
-
-
-    private fun prepareBoot() {
-
-        val requested =
-            readRequestedValues()
-                ?: return
-
-        setBusy(true)
-
-        status.text =
-            "Salvando alterações..."
-
-        flashButton.isEnabled =
-            false
-
-        Thread {
-
-            val originals =
-                linkedMapOf<File, String>()
-
-            try {
-
-                supportedDtsFiles
-                    .forEach {
-                        file ->
-
-                        val original =
-                            file.readText()
-
-                        originals[file] =
-                            original
-
-                        val profile =
-                            MaliGpuParser.parse(
-                                original
-                            ) ?: error(
-                                "Não foi possível interpretar ${file.name}"
-                            )
-
-                        applyRequestedValues(
-                            profile,
-                            requested
-                        )
-
-                        val modified =
-                            MaliGpuParser.apply(
-                                original,
-                                profile
-                            )
-
-                        if (
-                            modified == original
-                        ) {
-                            error(
-                                "Nenhuma alteração aplicada em ${file.name}"
-                            )
-                        }
-
-                        file.writeText(
-                            modified
-                        )
-                    }
-
-                runOnUiThread {
-                    status.text =
-                        "Validando DTS..."
-                }
-
-                validateModifiedDts()
-
-                runOnUiThread {
-                    status.text =
-                        "Reconstruindo boot..."
-                }
-
-                val rebuild =
-                    BootRebuildManager.rebuild(
-                        this
-                    )
-
-                if (!rebuild.success) {
-                    error(
-                        rebuild.message
-                    )
-                }
-
-                runOnUiThread {
-                    status.text =
-                        "Verificando round-trip..."
-                }
-
-                val verify =
-                    BootRoundTripVerifier.verify(
-                        this
-                    )
-
-                if (!verify.success) {
-                    error(
-                        verify.message
-                    )
-                }
-
-                runOnUiThread {
-
-                    status.text =
-                        "✓ DTS validado\n" +
-                        "✓ Boot reconstruído\n" +
-                        "✓ Round-trip verificado"
-
-                    flashButton.isEnabled =
-                        true
-
-                    setBusy(false)
-                }
-
+                file.readText()
             } catch (
                 e: Exception
             ) {
+                status.text =
+                    "✗ ${e.message}"
 
-                originals.forEach {
-                    file,
-                    content ->
-
-                    try {
-                        file.writeText(
-                            content
-                        )
-                    } catch (_: Exception) {
-                    }
-                }
-
-                runOnUiThread {
-
-                    status.text =
-                        "✗ ${e.message ?: "Falha ao preparar boot"}"
-
-                    flashButton.isEnabled =
-                        false
-
-                    setBusy(false)
-                }
+                return
             }
 
-        }.start()
+        val node =
+            extractMaliNode(dts)
+
+        if (node == null) {
+
+            status.text =
+                "✗ Nó Mali não encontrado em ${file.name}"
+
+            return
+        }
+
+        loadedNodeStart =
+            node.start
+
+        loadedNodeEnd =
+            node.end
+
+        loadingEditor = true
+
+        editor.setText(
+            node.text
+        )
+
+        editor.setSelection(0)
+
+        loadingEditor = false
+
+        subtitle.text =
+            "${file.name} • ${node.name}"
+
+        status.text =
+            "✓ Bloco completo da GPU carregado"
+
+        searchInput.setText("")
+        searchStatus.text = ""
+
+        updateNavigationButtons()
+        invalidateBootState()
     }
 
 
-    private data class RequestedValues(
-        val maxClockKhz: Long,
-        val maxClockLimitKhz: Long,
-        val minClockKhz: Long,
-        val startClockKhz: Long,
-        val bootClockKhz: Long,
-        val defaultVoltageUv: Long,
-        val voltageMarginUv: Long,
-        val dvfsKhz: List<Long>,
-        val throttlingKhz: List<Long>
-    )
+    private fun switchDtb(
+        direction: Int
+    ) {
 
+        if (gpuDtsFiles.size <= 1)
+            return
 
-    private fun readRequestedValues():
-        RequestedValues? {
+        val target =
+            currentFileIndex +
+                direction
 
-        fun mhz(
-            input: EditText,
-            name: String
-        ): Long {
-
-            val value =
-                input.text
-                    .toString()
-                    .trim()
-                    .toLongOrNull()
-                    ?: error(
-                        "$name inválido"
-                    )
-
-            if (value <= 0) {
-                error(
-                    "$name deve ser maior que zero"
-                )
-            }
-
-            return value * 1000L
+        if (
+            target < 0 ||
+            target >= gpuDtsFiles.size
+        ) {
+            return
         }
 
-        fun number(
-            input: EditText,
-            name: String
-        ): Long {
+        if (hasUnsavedChanges()) {
 
-            val value =
-                input.text
-                    .toString()
-                    .trim()
-                    .toLongOrNull()
-                    ?: error(
-                        "$name inválido"
-                    )
-
-            if (value < 0) {
-                error(
-                    "$name inválido"
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Alterações não salvas"
                 )
+                .setMessage(
+                    "Deseja trocar de DTB e descartar as alterações atuais?"
+                )
+                .setNegativeButton(
+                    "Cancelar",
+                    null
+                )
+                .setPositiveButton(
+                    "Descartar"
+                ) {
+                    _,
+                    _ ->
+
+                    currentFileIndex =
+                        target
+
+                    loadCurrentGpuNode()
+                }
+                .show()
+
+        } else {
+
+            currentFileIndex =
+                target
+
+            loadCurrentGpuNode()
+        }
+    }
+
+
+    private fun hasUnsavedChanges():
+        Boolean {
+
+        if (gpuDtsFiles.isEmpty())
+            return false
+
+        val file =
+            gpuDtsFiles[currentFileIndex]
+
+        val dts =
+            try {
+                file.readText()
+            } catch (_: Exception) {
+                return false
             }
 
-            return value
+        val node =
+            extractMaliNode(dts)
+                ?: return false
+
+        return editor.text
+            .toString() !=
+            node.text
+    }
+
+
+    private fun saveGpuNode() {
+
+        if (gpuDtsFiles.isEmpty())
+            return
+
+        val file =
+            gpuDtsFiles[currentFileIndex]
+
+        val original =
+            try {
+                file.readText()
+            } catch (
+                e: Exception
+            ) {
+                status.text =
+                    "✗ ${e.message}"
+
+                return
+            }
+
+        val originalNode =
+            extractMaliNode(original)
+
+        if (originalNode == null) {
+
+            status.text =
+                "✗ Nó Mali original não encontrado"
+
+            return
         }
 
-        return try {
+        val edited =
+            editor.text
+                .toString()
 
-            val dvfs =
-                dvfsInputs.mapIndexed {
-                    index,
-                    input ->
+        if (
+            !edited.trimStart()
+                .startsWith(
+                    originalNode.name
+                )
+        ) {
 
-                    mhz(
-                        input,
-                        "DVFS ${index + 1}"
-                    )
-                }
+            status.text =
+                "✗ O nó raiz da GPU foi alterado"
 
-            val throttling =
-                throttleInputs.mapIndexed {
-                    index,
-                    input ->
+            return
+        }
 
-                    mhz(
-                        input,
-                        "Throttling ${index + 1}"
-                    )
-                }
+        val editedNode =
+            extractMaliNode(edited)
 
-            RequestedValues(
-                maxClockKhz =
-                    mhz(
-                        maxClock,
-                        "Clock máximo"
-                    ),
+        if (editedNode == null) {
 
-                maxClockLimitKhz =
-                    mhz(
-                        maxClockLimit,
-                        "Limite máximo"
-                    ),
+            status.text =
+                "✗ Estrutura do nó GPU inválida"
 
-                minClockKhz =
-                    mhz(
-                        minClock,
-                        "Clock mínimo"
-                    ),
+            return
+        }
 
-                startClockKhz =
-                    mhz(
-                        startClock,
-                        "Clock inicial"
-                    ),
-
-                bootClockKhz =
-                    mhz(
-                        bootClock,
-                        "Clock de boot"
-                    ),
-
-                defaultVoltageUv =
-                    number(
-                        defaultVoltage,
-                        "Tensão padrão"
-                    ),
-
-                voltageMarginUv =
-                    number(
-                        voltageMargin,
-                        "Margem de tensão"
-                    ),
-
-                dvfsKhz =
-                    dvfs,
-
-                throttlingKhz =
-                    throttling
+        val replacement =
+            edited.substring(
+                editedNode.start,
+                editedNode.end
             )
+
+        val modified =
+            original.substring(
+                0,
+                originalNode.start
+            ) +
+                replacement +
+                original.substring(
+                    originalNode.end
+                )
+
+        try {
+
+            file.writeText(
+                modified
+            )
+
+            loadedNodeStart =
+                originalNode.start
+
+            loadedNodeEnd =
+                originalNode.start +
+                    replacement.length
+
+            status.text =
+                "✓ GPU salva em ${file.name}"
+
+            invalidateBootState()
 
         } catch (
             e: Exception
@@ -683,160 +493,245 @@ class GpuEditorActivity : Activity() {
 
             status.text =
                 "✗ ${e.message}"
-
-            null
         }
     }
 
 
-    private fun applyRequestedValues(
-        profile: GpuProfile,
-        requested: RequestedValues
-    ) {
+    private fun validateCurrentDts() {
 
-        profile.maxClockKhz =
-            requested.maxClockKhz
+        if (hasUnsavedChanges()) {
 
-        profile.maxClockLimitKhz =
-            requested.maxClockLimitKhz
+            status.text =
+                "Salvando antes da validação..."
 
-        profile.minClockKhz =
-            requested.minClockKhz
+            saveGpuNode()
 
-        profile.startClockKhz =
-            requested.startClockKhz
-
-        profile.bootClockKhz =
-            requested.bootClockKhz
-
-        profile.defaultVoltageUv =
-            requested.defaultVoltageUv
-
-        profile.voltageMarginUv =
-            requested.voltageMarginUv
-
-
-        if (
-            profile.dvfsLevels.size !=
-            requested.dvfsKhz.size
-        ) {
-            error(
-                "A tabela DVFS difere entre os DTBs"
-            )
+            if (hasUnsavedChanges())
+                return
         }
 
-        profile.dvfsLevels
-            .forEachIndexed {
-                index,
-                level ->
+        val file =
+            gpuDtsFiles.getOrNull(
+                currentFileIndex
+            ) ?: return
 
-                level.frequencyKhz =
-                    requested.dvfsKhz[index]
+        setBusy(true)
+
+        status.text =
+            "Validando ${file.name}..."
+
+        Thread {
+
+            val tool =
+                ToolManager.installDtc(
+                    this
+                )
+
+            if (
+                !tool.success ||
+                tool.path == null
+            ) {
+
+                runOnUiThread {
+
+                    status.text =
+                        "✗ dtc indisponível: ${tool.message}"
+
+                    setBusy(false)
+                }
+
+                return@Thread
             }
 
+            val validationDir =
+                File(
+                    filesDir,
+                    "gpu_validation"
+                )
 
-        if (
-            profile.throttlingKhz.size !=
-            requested.throttlingKhz.size
-        ) {
-            error(
-                "A tabela de throttling difere entre os DTBs"
-            )
-        }
+            validationDir.mkdirs()
 
-        requested.throttlingKhz
-            .forEachIndexed {
-                index,
-                value ->
+            val output =
+                File(
+                    validationDir,
+                    "${file.nameWithoutExtension}.dtb"
+                )
 
-                profile.throttlingKhz[index] =
-                    value
+            if (output.exists()) {
+                output.delete()
             }
-    }
 
+            val result =
+                ShellExecutor.root(
+                    "'${tool.path}' " +
+                        "-I dts -O dtb " +
+                        "-o '${output.absolutePath}' " +
+                        "'${file.absolutePath}'"
+                )
 
-    private fun validateModifiedDts() {
-
-        val tool =
-            ToolManager.installDtc(
-                this
-            )
-
-        if (
-            !tool.success ||
-            tool.path == null
-        ) {
-            error(
-                "dtc indisponível: ${tool.message}"
-            )
-        }
-
-        val validationDir =
-            File(
-                filesDir,
-                "gpu_validation"
-            )
-
-        ShellExecutor.root(
-            "rm -rf '${validationDir.absolutePath}'"
-        )
-
-        validationDir.mkdirs()
-
-        supportedDtsFiles
-            .forEach {
-                file ->
-
-                val output =
-                    File(
-                        validationDir,
-                        file.nameWithoutExtension +
-                            ".dtb"
-                    )
-
-                val result =
-                    ShellExecutor.root(
-                        "'${tool.path}' " +
-                            "-I dts -O dtb " +
-                            "-o '${output.absolutePath}' " +
-                            "'${file.absolutePath}'"
-                    )
+            runOnUiThread {
 
                 if (
-                    !result.success ||
-                    !output.exists() ||
-                    output.length() == 0L
+                    result.success &&
+                    output.exists() &&
+                    output.length() > 0L
                 ) {
 
-                    val detail =
+                    validated = true
+
+                    rebuildButton.isEnabled =
+                        true
+
+                    status.text =
+                        "✓ DTS válido"
+
+                } else {
+
+                    validated = false
+
+                    rebuildButton.isEnabled =
+                        false
+
+                    val error =
                         result.output
                             .lineSequence()
                             .firstOrNull {
                                 it.isNotBlank()
                             }
-                            ?: "Erro desconhecido"
+                            ?.take(180)
+                            ?: "Erro de compilação"
 
-                    error(
-                        "${file.name}: $detail"
-                    )
+                    status.text =
+                        "✗ DTS inválido: $error"
                 }
+
+                setBusy(false)
             }
+
+        }.start()
+    }
+
+
+    private fun rebuildBoot() {
+
+        if (!validated) {
+
+            status.text =
+                "Valide o DTS primeiro"
+
+            return
+        }
+
+        setBusy(true)
+
+        status.text =
+            "Reconstruindo boot..."
+
+        Thread {
+
+            val result =
+                BootRebuildManager.rebuild(
+                    this
+                )
+
+            runOnUiThread {
+
+                if (result.success) {
+
+                    bootGenerated =
+                        true
+
+                    verifyButton.isEnabled =
+                        true
+
+                    status.text =
+                        "✓ Boot reconstruído"
+
+                } else {
+
+                    bootGenerated =
+                        false
+
+                    verifyButton.isEnabled =
+                        false
+
+                    status.text =
+                        "✗ ${result.message}"
+                }
+
+                setBusy(false)
+            }
+
+        }.start()
+    }
+
+
+    private fun verifyBoot() {
+
+        if (!bootGenerated) {
+
+            status.text =
+                "Gere o boot primeiro"
+
+            return
+        }
+
+        setBusy(true)
+
+        status.text =
+            "Verificando boot..."
+
+        Thread {
+
+            val result =
+                BootRoundTripVerifier.verify(
+                    this
+                )
+
+            runOnUiThread {
+
+                if (result.success) {
+
+                    bootVerified =
+                        true
+
+                    flashButton.isEnabled =
+                        true
+
+                    status.text =
+                        "✓ Boot verificado"
+
+                } else {
+
+                    bootVerified =
+                        false
+
+                    flashButton.isEnabled =
+                        false
+
+                    status.text =
+                        "✗ ${result.message}"
+                }
+
+                setBusy(false)
+            }
+
+        }.start()
     }
 
 
     private fun confirmFlash() {
 
-        if (!flashButton.isEnabled)
+        if (!bootVerified)
             return
 
         AlertDialog.Builder(this)
             .setTitle(
-                "Flash do novo boot"
+                "Gravar boot"
             )
             .setMessage(
-                "O boot já foi reconstruído e verificado.\n\n" +
-                    "Será criado um backup pré-flash e a gravação será " +
-                    "verificada por SHA-256.\n\n" +
+                "O boot foi reconstruído e verificado.\n\n" +
+                    "Deseja gravá-lo na partição de boot?\n\n" +
                     "O aparelho não será reiniciado automaticamente."
             )
             .setNegativeButton(
@@ -874,21 +769,153 @@ class GpuEditorActivity : Activity() {
 
             runOnUiThread {
 
-                status.text =
-                    if (result.success) {
-                        "✓ Boot gravado e verificado\n" +
-                            "Reinicialização não executada"
-                    } else {
+                if (result.success) {
+
+                    status.text =
+                        "✓ Boot gravado e verificado"
+
+                } else {
+
+                    status.text =
                         "✗ ${result.message}"
-                    }
+
+                    flashButton.isEnabled =
+                        true
+                }
 
                 setBusy(false)
-
-                flashButton.isEnabled =
-                    result.success
             }
 
         }.start()
+    }
+
+
+    private fun startSearch() {
+
+        val query =
+            searchInput.text
+                .toString()
+
+        if (query.isBlank()) {
+
+            searchStatus.text =
+                "Digite algo para buscar"
+
+            return
+        }
+
+        val content =
+            editor.text
+                .toString()
+
+        searchMatches =
+            Regex(
+                Regex.escape(query),
+                RegexOption.IGNORE_CASE
+            )
+                .findAll(content)
+                .map {
+                    it.range.first
+                }
+                .toList()
+
+        if (searchMatches.isEmpty()) {
+
+            searchPosition = -1
+
+            searchStatus.text =
+                "Nenhum resultado"
+
+            return
+        }
+
+        searchPosition = 0
+
+        showSearchResult()
+    }
+
+
+    private fun nextSearchResult() {
+
+        if (searchMatches.isEmpty()) {
+
+            startSearch()
+
+            return
+        }
+
+        searchPosition =
+            (
+                searchPosition + 1
+            ) % searchMatches.size
+
+        showSearchResult()
+    }
+
+
+    private fun showSearchResult() {
+
+        if (
+            searchPosition !in
+            searchMatches.indices
+        ) {
+            return
+        }
+
+        val start =
+            searchMatches[
+                searchPosition
+            ]
+
+        val queryLength =
+            searchInput.text
+                .length
+
+        val end =
+            (
+                start +
+                    queryLength
+            ).coerceAtMost(
+                editor.text.length
+            )
+
+        editor.requestFocus()
+
+        editor.setSelection(
+            start,
+            end
+        )
+
+        searchStatus.text =
+            "${searchPosition + 1}/${searchMatches.size}"
+    }
+
+
+    private fun invalidateBootState() {
+
+        validated = false
+        bootGenerated = false
+        bootVerified = false
+
+        rebuildButton.isEnabled =
+            false
+
+        verifyButton.isEnabled =
+            false
+
+        flashButton.isEnabled =
+            false
+    }
+
+
+    private fun updateNavigationButtons() {
+
+        previousButton.isEnabled =
+            currentFileIndex > 0
+
+        nextButton.isEnabled =
+            currentFileIndex <
+                gpuDtsFiles.lastIndex
     }
 
 
@@ -896,11 +923,173 @@ class GpuEditorActivity : Activity() {
         busy: Boolean
     ) {
 
-        prepareButton.isEnabled =
+        saveButton.isEnabled =
             !busy
 
-        openDtsButton.isEnabled =
+        validateButton.isEnabled =
             !busy
+
+        previousButton.isEnabled =
+            !busy &&
+                currentFileIndex > 0
+
+        nextButton.isEnabled =
+            !busy &&
+                currentFileIndex <
+                gpuDtsFiles.lastIndex
+    }
+
+
+    private fun setEditorEnabled(
+        enabled: Boolean
+    ) {
+
+        editor.isEnabled =
+            enabled
+
+        saveButton.isEnabled =
+            enabled
+
+        validateButton.isEnabled =
+            enabled
+
+        previousButton.isEnabled =
+            false
+
+        nextButton.isEnabled =
+            false
+    }
+
+
+    private data class GpuNode(
+        val name: String,
+        val start: Int,
+        val end: Int,
+        val text: String
+    )
+
+
+    private fun extractMaliNode(
+        source: String
+    ): GpuNode? {
+
+        val match =
+            Regex(
+                """(?i)\bmali@[0-9a-f]+\s*\{"""
+            ).find(source)
+                ?: return null
+
+        val openBrace =
+            source.indexOf(
+                '{',
+                match.range.first
+            )
+
+        if (openBrace < 0)
+            return null
+
+        var depth = 0
+        var index = openBrace
+
+        var inString = false
+        var escaped = false
+
+        while (
+            index < source.length
+        ) {
+
+            val c =
+                source[index]
+
+            if (inString) {
+
+                if (escaped) {
+
+                    escaped = false
+
+                } else if (
+                    c == '\\'
+                ) {
+
+                    escaped = true
+
+                } else if (
+                    c == '"'
+                ) {
+
+                    inString = false
+                }
+
+            } else {
+
+                when (c) {
+
+                    '"' -> {
+                        inString = true
+                    }
+
+                    '{' -> {
+                        depth++
+                    }
+
+                    '}' -> {
+
+                        depth--
+
+                        if (depth == 0) {
+
+                            var end =
+                                index + 1
+
+                            while (
+                                end <
+                                source.length &&
+                                source[end]
+                                    .isWhitespace()
+                            ) {
+                                end++
+                            }
+
+                            if (
+                                end <
+                                source.length &&
+                                source[end] == ';'
+                            ) {
+                                end++
+                            }
+
+                            val nodeName =
+                                match.value
+                                    .substringBefore(
+                                        '{'
+                                    )
+                                    .trim()
+
+                            return GpuNode(
+                                name =
+                                    nodeName,
+
+                                start =
+                                    match.range.first,
+
+                                end =
+                                    end,
+
+                                text =
+                                    source.substring(
+                                        match.range.first,
+                                        end
+                                    )
+                            )
+                        }
+                    }
+                }
+            }
+
+            index++
+        }
+
+        return null
     }
 
 
@@ -911,29 +1100,12 @@ class GpuEditorActivity : Activity() {
         return Regex(
             """dtb_(\d+)\.dts"""
         )
-            .find(file.name)
+            .find(
+                file.name
+            )
             ?.groupValues
             ?.getOrNull(1)
             ?.toIntOrNull()
             ?: 0
-    }
-
-
-    private fun khzToMhz(
-        value: Long
-    ): Long {
-
-        return value / 1000L
-    }
-
-
-    private fun dp(
-        value: Int
-    ): Int {
-
-        return (
-            value *
-                resources.displayMetrics.density
-            ).toInt()
     }
 }

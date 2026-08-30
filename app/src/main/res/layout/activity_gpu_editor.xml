@@ -1,236 +1,221 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ScrollView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/exynos_bg"
-    android:fillViewport="true">
+    android:padding="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="GPU EDITOR"
-            android:textColor="@color/exynos_text"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/gpuEditorSubtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Detectando GPU..."
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="12sp" />
-
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="LIMITES"
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
-
-        <EditText
-            android:id="@+id/gpuMaxClock"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_search_field"
-            android:hint="Clock máximo (MHz)"
-            android:inputType="number"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/exynos_text"
-            android:textColorHint="@color/exynos_text_secondary" />
-
-        <EditText
-            android:id="@+id/gpuMaxClockLimit"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/bg_search_field"
-            android:hint="Limite máximo (MHz)"
-            android:inputType="number"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/exynos_text"
-            android:textColorHint="@color/exynos_text_secondary" />
-
-        <EditText
-            android:id="@+id/gpuMinClock"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/bg_search_field"
-            android:hint="Clock mínimo (MHz)"
-            android:inputType="number"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/exynos_text"
-            android:textColorHint="@color/exynos_text_secondary" />
-
-        <EditText
-            android:id="@+id/gpuStartClock"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/bg_search_field"
-            android:hint="Clock inicial (MHz)"
-            android:inputType="number"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/exynos_text"
-            android:textColorHint="@color/exynos_text_secondary" />
-
-        <EditText
-            android:id="@+id/gpuBootClock"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/bg_search_field"
-            android:hint="Clock de boot (MHz)"
-            android:inputType="number"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/exynos_text"
-            android:textColorHint="@color/exynos_text_secondary" />
-
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="TENSÃO"
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
-
-        <EditText
-            android:id="@+id/gpuDefaultVoltage"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_search_field"
-            android:hint="Tensão padrão (µV)"
-            android:inputType="number"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/exynos_text"
-            android:textColorHint="@color/exynos_text_secondary" />
-
-        <EditText
-            android:id="@+id/gpuVoltageMargin"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/bg_search_field"
-            android:hint="Margem de tensão (µV)"
-            android:inputType="number"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:textColor="@color/exynos_text"
-            android:textColorHint="@color/exynos_text_secondary" />
-
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="TABELA DVFS"
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Frequências em MHz. As demais colunas da tabela original são preservadas."
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="10sp" />
+        android:layout_height="42dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <LinearLayout
-            android:id="@+id/gpuDvfsContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="vertical" />
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="GPU"
+                android:textColor="@color/exynos_text"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="THROTTLING"
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
+            <TextView
+                android:id="@+id/gpuEditorSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Carregando..."
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="10sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
 
-        <LinearLayout
-            android:id="@+id/gpuThrottleContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="vertical" />
-
-
-        <TextView
-            android:id="@+id/gpuEditorStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text=""
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="11sp" />
-
+        </LinearLayout>
 
         <Button
-            android:id="@+id/gpuPrepareBootButton"
-            android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_button_primary"
-            android:text="Salvar, validar e preparar boot"
-            android:textAllCaps="false"
-            android:textColor="#081018"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/gpuFlashButton"
-            android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:layout_marginTop="8dp"
+            android:id="@+id/gpuPreviousDtbButton"
+            android:layout_width="42dp"
+            android:layout_height="34dp"
             android:background="@drawable/bg_button_secondary"
-            android:enabled="false"
-            android:text="Flash boot verificado"
-            android:textAllCaps="false"
+            android:text="‹"
             android:textColor="@color/exynos_text"
-            android:textStyle="bold" />
+            android:textSize="18sp"
+            android:padding="0dp" />
 
         <Button
-            android:id="@+id/gpuOpenDtsButton"
-            android:layout_width="match_parent"
-            android:layout_height="42dp"
-            android:layout_marginTop="8dp"
+            android:id="@+id/gpuNextDtbButton"
+            android:layout_width="42dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="4dp"
             android:background="@drawable/bg_button_secondary"
-            android:text="Editar DTS completo"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text" />
+            android:text="›"
+            android:textColor="@color/exynos_text"
+            android:textSize="18sp"
+            android:padding="0dp" />
 
     </LinearLayout>
 
-</ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/gpuSearchInput"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_search_field"
+            android:hint="Buscar propriedade..."
+            android:singleLine="true"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:textColor="@color/exynos_text"
+            android:textColorHint="@color/exynos_text_secondary"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/gpuSearchButton"
+            android:layout_width="54dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Ir"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="11sp" />
+
+        <Button
+            android:id="@+id/gpuSearchNextButton"
+            android:layout_width="62dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Próx."
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="11sp" />
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/gpuSearchStatus"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:gravity="center_vertical"
+        android:text=""
+        android:textColor="@color/exynos_text_secondary"
+        android:textSize="9sp" />
+
+
+    <EditText
+        android:id="@+id/gpuNodeEditor"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/bg_editor_panel"
+        android:gravity="top|start"
+        android:fontFamily="monospace"
+        android:inputType="textMultiLine|textNoSuggestions"
+        android:padding="9dp"
+        android:scrollbars="vertical|horizontal"
+        android:overScrollMode="always"
+        android:textColor="@color/exynos_text"
+        android:textSize="11sp" />
+
+
+    <TextView
+        android:id="@+id/gpuEditorStatus"
+        android:layout_width="match_parent"
+        android:layout_height="22dp"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text=""
+        android:textColor="@color/exynos_text_secondary"
+        android:textSize="10sp" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/gpuSaveButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Salvar"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/gpuValidateButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Validar"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/gpuRebuildButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_button_secondary"
+            android:enabled="false"
+            android:text="Gerar"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/gpuVerifyButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_button_secondary"
+            android:enabled="false"
+            android:text="Verificar"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/gpuFlashButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_button_primary"
+            android:enabled="false"
+            android:text="Flash"
+            android:textAllCaps="false"
+            android:textColor="#081018"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</LinearLayout>
