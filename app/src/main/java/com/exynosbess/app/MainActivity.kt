@@ -7,6 +7,7 @@ import android.widget.TextView
 import com.exynosbess.app.boot.BootBackupManager
 import com.exynosbess.app.boot.BootPartitionResolver
 import com.exynosbess.app.boot.BootUnpackManager
+import com.exynosbess.app.boot.DtbScanner
 
 class MainActivity : Activity() {
 
@@ -15,13 +16,16 @@ class MainActivity : Activity() {
     private lateinit var bootStatus: TextView
     private lateinit var backupStatus: TextView
     private lateinit var unpackStatus: TextView
+    private lateinit var dtbScanStatus: TextView
 
     private lateinit var checkRootButton: Button
     private lateinit var detectBootButton: Button
     private lateinit var backupBootButton: Button
     private lateinit var unpackBootButton: Button
+    private lateinit var scanDtbButton: Button
 
     private var bootPartitionPath: String? = null
+    private var workspacePath: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,11 +37,13 @@ class MainActivity : Activity() {
         bootStatus = findViewById(R.id.bootStatus)
         backupStatus = findViewById(R.id.backupStatus)
         unpackStatus = findViewById(R.id.unpackStatus)
+        dtbScanStatus = findViewById(R.id.dtbScanStatus)
 
         checkRootButton = findViewById(R.id.checkRootButton)
         detectBootButton = findViewById(R.id.detectBootButton)
         backupBootButton = findViewById(R.id.backupBootButton)
         unpackBootButton = findViewById(R.id.unpackBootButton)
+        scanDtbButton = findViewById(R.id.scanDtbButton)
 
         checkRootButton.setOnClickListener {
             verifyRoot()
@@ -54,45 +60,72 @@ class MainActivity : Activity() {
         unpackBootButton.setOnClickListener {
             unpackBoot()
         }
+
+        scanDtbButton.setOnClickListener {
+            scanDtb()
+        }
     }
 
     private fun verifyRoot() {
+
         rootStatus.text = "Solicitando acesso root..."
         rootOutput.text = ""
 
         checkRootButton.isEnabled = false
 
         Thread {
+
             val result = RootManager.checkRoot()
 
             runOnUiThread {
+
                 checkRootButton.isEnabled = true
 
                 if (result.granted) {
-                    rootStatus.text = "✓ Acesso root concedido"
+
+                    rootStatus.text =
+                        "✓ Acesso root concedido"
+
                     detectBootButton.isEnabled = true
+
                 } else {
-                    rootStatus.text = "✗ Acesso root não concedido"
+
+                    rootStatus.text =
+                        "✗ Acesso root não concedido"
+
                     detectBootButton.isEnabled = false
                     backupBootButton.isEnabled = false
                     unpackBootButton.isEnabled = false
+                    scanDtbButton.isEnabled = false
                 }
 
-                rootOutput.text = "Resultado:\n${result.output}"
+                rootOutput.text =
+                    "Resultado:\n${result.output}"
             }
         }.start()
     }
 
     private fun detectBootPartition() {
-        bootStatus.text = "Procurando partição boot..."
+
+        bootStatus.text =
+            "Procurando partição boot..."
+
         backupBootButton.isEnabled = false
 
         Thread {
-            val result = BootPartitionResolver.detect()
+
+            val result =
+                BootPartitionResolver.detect()
 
             runOnUiThread {
-                if (result.found && result.path != null) {
-                    bootPartitionPath = result.path
+
+                if (
+                    result.found &&
+                    result.path != null
+                ) {
+
+                    bootPartitionPath =
+                        result.path
 
                     bootStatus.text =
                         "✓ Partição boot encontrada\n\n" +
@@ -100,9 +133,14 @@ class MainActivity : Activity() {
                         "Dispositivo real:\n${result.details}"
 
                     backupBootButton.isEnabled = true
+
                 } else {
+
                     bootPartitionPath = null
-                    bootStatus.text = "✗ ${result.details}"
+
+                    bootStatus.text =
+                        "✗ ${result.details}"
+
                     backupBootButton.isEnabled = false
                 }
             }
@@ -110,24 +148,37 @@ class MainActivity : Activity() {
     }
 
     private fun createBootBackup() {
-        val bootPath = bootPartitionPath ?: return
 
-        backupStatus.text = "Criando backup do boot.img..."
+        val bootPath =
+            bootPartitionPath ?: return
+
+        backupStatus.text =
+            "Criando backup do boot.img..."
+
         backupBootButton.isEnabled = false
 
         Thread {
-            val result = BootBackupManager.backup(this, bootPath)
+
+            val result =
+                BootBackupManager.backup(
+                    this,
+                    bootPath
+                )
 
             runOnUiThread {
+
                 backupBootButton.isEnabled = true
 
                 if (result.success) {
+
                     backupStatus.text =
                         "✓ ${result.message}\n\n" +
                         "Arquivo:\n${result.outputPath}"
 
                     unpackBootButton.isEnabled = true
+
                 } else {
+
                     backupStatus.text =
                         "✗ Falha no backup\n\n${result.message}"
 
@@ -138,27 +189,87 @@ class MainActivity : Activity() {
     }
 
     private fun unpackBoot() {
-        unpackStatus.text = "Descompactando boot.img..."
+
+        unpackStatus.text =
+            "Descompactando boot.img..."
+
         unpackBootButton.isEnabled = false
+        scanDtbButton.isEnabled = false
 
         Thread {
-            val result = BootUnpackManager.unpack(this)
+
+            val result =
+                BootUnpackManager.unpack(this)
 
             runOnUiThread {
+
                 unpackBootButton.isEnabled = true
 
                 if (result.success) {
-                    val fileList = result.files.joinToString("\n")
+
+                    workspacePath =
+                        result.workspace
+
+                    val fileList =
+                        result.files.joinToString("\n")
 
                     unpackStatus.text =
                         "✓ Boot.img descompactado\n\n" +
                         "Workspace:\n${result.workspace}\n\n" +
                         "Arquivos encontrados:\n$fileList\n\n" +
                         "magiskboot:\n${result.output}"
+
+                    scanDtbButton.isEnabled = true
+
                 } else {
+
+                    workspacePath = null
+
                     unpackStatus.text =
                         "✗ Falha ao descompactar\n\n" +
                         result.output
+                }
+            }
+        }.start()
+    }
+
+    private fun scanDtb() {
+
+        val workspace =
+            workspacePath ?: return
+
+        dtbScanStatus.text =
+            "Procurando Device Trees..."
+
+        scanDtbButton.isEnabled = false
+
+        Thread {
+
+            val result =
+                DtbScanner.scan(workspace)
+
+            runOnUiThread {
+
+                scanDtbButton.isEnabled = true
+
+                if (result.success) {
+
+                    val list =
+                        result.entries.joinToString("\n\n") { entry ->
+
+                            "Arquivo: ${entry.sourceFile}\n" +
+                            "Offset: 0x${entry.offset.toString(16).uppercase()}\n" +
+                            "Offset decimal: ${entry.offset}\n" +
+                            "Tamanho: ${entry.size} bytes"
+                        }
+
+                    dtbScanStatus.text =
+                        "✓ ${result.message}\n\n$list"
+
+                } else {
+
+                    dtbScanStatus.text =
+                        "✗ ${result.message}"
                 }
             }
         }.start()
