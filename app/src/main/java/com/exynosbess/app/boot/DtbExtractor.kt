@@ -171,6 +171,27 @@ object DtbExtractor {
                 )
             }
 
+            /*
+             * Persistir a origem de cada DTB.
+             *
+             * Formato:
+             * index|sourceFile|offset|size
+             */
+            val sourceMap =
+                File(
+                    outputDir,
+                    "dtb_sources.txt"
+                )
+
+            sourceMap.writeText(
+                extracted.joinToString(
+                    separator = "\n",
+                    postfix = "\n"
+                ) { dtb ->
+                    "${dtb.index}|${dtb.sourceFile}|${dtb.offset}|${dtb.size}"
+                }
+            )
+
             return ExtractResult(
                 true,
                 extracted,

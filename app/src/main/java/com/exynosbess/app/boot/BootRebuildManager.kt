@@ -73,17 +73,6 @@ object BootRebuildManager {
             }
 
             /*
-             * Neste estágio do ExynosBess todos os
-             * DTBs encontrados devem estar no extra.
-             */
-            if (extraEntries.size != scan.entries.size) {
-                return fail(
-                    "Foram encontrados DTBs fora do extra. " +
-                    "Rebuild cancelado por segurança."
-                )
-            }
-
-            /*
              * 2. Preparar dtc.
              */
             val dtc =
@@ -111,9 +100,40 @@ object BootRebuildManager {
                 mutableListOf<File>()
 
             /*
-             * 3. Recompilar cada DTS atual.
+             * Obter índices GLOBAIS dos DTBs pertencentes
+             * ao extra.
              */
-            extraEntries.forEachIndexed { index, _ ->
+            val sourceMap =
+                DtbSourceMap.read(
+                    workspace.absolutePath
+                )
+
+            val extraSourceEntries =
+                sourceMap
+                    .filter {
+                        it.sourceFile == "extra"
+                    }
+                    .sortedBy {
+                        it.offset
+                    }
+
+            if (
+                extraSourceEntries.size !=
+                extraEntries.size
+            ) {
+                return fail(
+                    "Mapa de origem dos DTBs do extra é inconsistente"
+                )
+            }
+
+            /*
+             * 3. Recompilar somente os DTS pertencentes
+             * ao EXTRA, preservando o índice global.
+             */
+            extraSourceEntries.forEach { sourceEntry ->
+
+                val index =
+                    sourceEntry.index
 
                 val dts =
                     File(
