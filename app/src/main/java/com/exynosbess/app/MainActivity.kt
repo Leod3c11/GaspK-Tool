@@ -8,6 +8,7 @@ import com.exynosbess.app.boot.BootBackupManager
 import com.exynosbess.app.boot.BootPartitionResolver
 import com.exynosbess.app.boot.BootUnpackManager
 import com.exynosbess.app.boot.DtbScanner
+import com.exynosbess.app.boot.DtbExtractor
 
 class MainActivity : Activity() {
 
@@ -17,15 +18,18 @@ class MainActivity : Activity() {
     private lateinit var backupStatus: TextView
     private lateinit var unpackStatus: TextView
     private lateinit var dtbScanStatus: TextView
+    private lateinit var dtbExtractStatus: TextView
 
     private lateinit var checkRootButton: Button
     private lateinit var detectBootButton: Button
     private lateinit var backupBootButton: Button
     private lateinit var unpackBootButton: Button
     private lateinit var scanDtbButton: Button
+    private lateinit var extractDtbButton: Button
 
     private var bootPartitionPath: String? = null
     private var workspacePath: String? = null
+    private var lastDtbEntries: List<DtbScanner.DtbEntry> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,12 +42,14 @@ class MainActivity : Activity() {
         backupStatus = findViewById(R.id.backupStatus)
         unpackStatus = findViewById(R.id.unpackStatus)
         dtbScanStatus = findViewById(R.id.dtbScanStatus)
+        dtbExtractStatus = findViewById(R.id.dtbExtractStatus)
 
         checkRootButton = findViewById(R.id.checkRootButton)
         detectBootButton = findViewById(R.id.detectBootButton)
         backupBootButton = findViewById(R.id.backupBootButton)
         unpackBootButton = findViewById(R.id.unpackBootButton)
         scanDtbButton = findViewById(R.id.scanDtbButton)
+        extractDtbButton = findViewById(R.id.extractDtbButton)
 
         checkRootButton.setOnClickListener {
             verifyRoot()
@@ -63,6 +69,10 @@ class MainActivity : Activity() {
 
         scanDtbButton.setOnClickListener {
             scanDtb()
+        }
+
+        extractDtbButton.setOnClickListener {
+            extractDtbs()
         }
     }
 
@@ -254,6 +264,9 @@ class MainActivity : Activity() {
 
                 if (result.success) {
 
+                    lastDtbEntries = result.entries
+                    extractDtbButton.isEnabled = true
+
                     val list =
                         result.entries.joinToString("\n\n") { entry ->
 
@@ -274,4 +287,57 @@ class MainActivity : Activity() {
             }
         }.start()
     }
+
+    private fun extractDtbs() {
+
+        val workspace =
+            workspacePath ?: return
+
+        if (lastDtbEntries.isEmpty()) {
+            dtbExtractStatus.text =
+                "✗ Nenhum DTB disponível"
+            return
+        }
+
+        dtbExtractStatus.text =
+            "Extraindo DTBs..."
+
+        extractDtbButton.isEnabled = false
+
+        Thread {
+
+            val result =
+                DtbExtractor.extract(
+                    workspace,
+                    lastDtbEntries
+                )
+
+            runOnUiThread {
+
+                extractDtbButton.isEnabled = true
+
+                if (result.success) {
+
+                    val list =
+                        result.files.joinToString("\n\n") { file ->
+
+                            "DTB ${file.index}\n" +
+                            "Origem: ${file.sourceFile}\n" +
+                            "Offset: 0x${file.offset.toString(16).uppercase()}\n" +
+                            "Tamanho: ${file.size} bytes\n" +
+                            "Arquivo: ${file.outputPath}"
+                        }
+
+                    dtbExtractStatus.text =
+                        "✓ ${result.message}\n\n$list"
+
+                } else {
+
+                    dtbExtractStatus.text =
+                        "✗ ${result.message}"
+                }
+            }
+        }.start()
+    }
+
 }

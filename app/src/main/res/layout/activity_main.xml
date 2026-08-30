@@ -114,6 +114,23 @@
             android:textSize="15sp"
             android:layout_marginTop="12dp" />
 
+
+        <Button
+            android:id="@+id/extractDtbButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Extrair DTBs"
+            android:enabled="false"
+            android:layout_marginTop="24dp" />
+
+        <TextView
+            android:id="@+id/dtbExtractStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="15sp"
+            android:layout_marginTop="12dp" />
+
     </LinearLayout>
 
 </ScrollView>
