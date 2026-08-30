@@ -3,13 +3,16 @@ package com.exynosbess.app
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
+import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.exynosbess.app.startup.AutoSetupManager
 import com.exynosbess.app.startup.DeviceTreeInfoDetector
+import com.exynosbess.app.startup.DtbCatalogDetector
 
 class DashboardActivity : Activity() {
 
@@ -101,17 +104,18 @@ class DashboardActivity : Activity() {
     private fun runAutomaticSetup() {
 
         val progressText =
-            TextView(this)
+            TextView(this).apply {
 
-        progressText.setPadding(
-            48,
-            34,
-            48,
-            34
-        )
+                setPadding(
+                    dpToPx(24),
+                    dpToPx(18),
+                    dpToPx(24),
+                    dpToPx(18)
+                )
 
-        progressText.text =
-            "Inicializando..."
+                text =
+                    "Inicializando..."
+            }
 
         val dialog =
             AlertDialog.Builder(this)
@@ -132,6 +136,7 @@ class DashboardActivity : Activity() {
                 ) { status ->
 
                     runOnUiThread {
+
                         progressText.text =
                             status
                     }
@@ -142,13 +147,11 @@ class DashboardActivity : Activity() {
                 dialog.dismiss()
 
                 rootStatus.text =
-                    if (result.rootGranted)
+                    if (result.rootGranted) {
                         "Root: ✓ concedido"
-                    else
+                    } else {
                         "Root: ✗ indisponível"
-
-                dtbCount.text =
-                    "Device Trees: ${result.dtbCount}"
+                    }
 
                 bootStatus.text =
                     "Boot: ${result.bootPath ?: "não encontrado"}"
@@ -160,6 +163,9 @@ class DashboardActivity : Activity() {
                     result.workspacePath == null
                 ) {
 
+                    dtbCount.text =
+                        "Device Trees: 0"
+
                     dashboardStatus.text =
                         "Falha na preparação automática:\n" +
                             result.message
@@ -167,63 +173,82 @@ class DashboardActivity : Activity() {
                     return@runOnUiThread
                 }
 
-                val info =
+                val workspace =
+                    result.workspacePath
+
+                val generalInfo =
                     DeviceTreeInfoDetector.detect(
-                        result.workspacePath
+                        workspace
                     )
 
                 dtbModel.text =
-                    info.model
+                    generalInfo.model
 
                 compatible.text =
-                    info.compatible
+                    generalInfo.compatible
 
                 gpu.text =
-                    info.gpu
+                    generalInfo.gpu
 
                 gpuCompatible.text =
-                    "DTB: ${info.gpuCompatible}"
+                    "DTB: ${generalInfo.gpuCompatible}"
 
-                createDtbButtons(
-                    result.dtbCount
+                val dtbs =
+                    DtbCatalogDetector.detectAll(
+                        workspace
+                    )
+
+                dtbCount.text =
+                    "Device Trees: ${dtbs.size}"
+
+                createDtbCards(
+                    dtbs
                 )
 
                 dashboardStatus.text =
-                    "✓ Ambiente preparado automaticamente"
+                    if (dtbs.isNotEmpty()) {
+
+                        "✓ ${dtbs.size} Device Tree(s) preparados"
+
+                    } else {
+
+                        "Nenhum DTS disponível para edição"
+                    }
             }
 
         }.start()
     }
 
-    private fun createDtbButtons(
-        count: Int
+    private fun createDtbCards(
+        dtbs: List<DtbCatalogDetector.DtbInfo>
     ) {
 
         dtbContainer.removeAllViews()
 
-        if (count <= 0) {
+        if (dtbs.isEmpty()) {
 
             val empty =
-                TextView(this)
+                TextView(this).apply {
 
-            empty.text =
-                "Nenhum Device Tree disponível"
+                    text =
+                        "Nenhum Device Tree disponível"
 
-            empty.setTextColor(
-                getColor(
-                    R.color.exynos_text_secondary
-                )
-            )
+                    setTextColor(
+                        getColor(
+                            R.color.exynos_text_secondary
+                        )
+                    )
 
-            empty.textSize =
-                13f
+                    textSize =
+                        13f
 
-            empty.setPadding(
-                4,
-                12,
-                4,
-                12
-            )
+                    setPadding(
+                        dpToPx(4),
+                        dpToPx(12),
+                        dpToPx(4),
+                        dpToPx(12)
+                    )
+                }
 
             dtbContainer.addView(
                 empty
@@ -232,57 +257,234 @@ class DashboardActivity : Activity() {
             return
         }
 
-        for (index in 0 until count) {
+        for (dtb in dtbs) {
 
-            val button =
-                Button(this)
+            val card =
+                LinearLayout(this).apply {
 
-            button.text =
-                "Editar Device Tree $index"
+                    orientation =
+                        LinearLayout.VERTICAL
 
-            button.isAllCaps =
-                false
+                    setPadding(
+                        dpToPx(16),
+                        dpToPx(14),
+                        dpToPx(16),
+                        dpToPx(14)
+                    )
 
-            button.textSize =
-                14f
+                    setBackgroundResource(
+                        R.drawable.bg_dashboard_card
+                    )
 
-            button.setTextColor(
-                getColor(
-                    R.color.exynos_text
-                )
-            )
+                    isClickable =
+                        true
 
-            button.setBackgroundResource(
-                R.drawable.bg_button_secondary
-            )
+                    isFocusable =
+                        true
 
-            button.setPadding(
-                16,
-                0,
-                16,
-                0
-            )
+                    setOnClickListener {
+                        openEditor(
+                            dtb.index
+                        )
+                    }
+                }
 
             val params =
                 LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    dpToPx(50)
+                    ViewGroup.LayoutParams.WRAP_CONTENT
                 )
 
-            if (index > 0) {
-                params.topMargin =
-                    dpToPx(8)
-            }
+            params.bottomMargin =
+                dpToPx(10)
 
-            button.layoutParams =
+            card.layoutParams =
                 params
 
-            button.setOnClickListener {
-                openEditor(index)
-            }
+            val headerRow =
+                LinearLayout(this).apply {
+
+                    orientation =
+                        LinearLayout.HORIZONTAL
+
+                    gravity =
+                        Gravity.CENTER_VERTICAL
+                }
+
+            val title =
+                TextView(this).apply {
+
+                    text =
+                        "DTB ${dtb.index}"
+
+                    setTextColor(
+                        getColor(
+                            R.color.exynos_accent
+                        )
+                    )
+
+                    textSize =
+                        13f
+
+                    setTypeface(
+                        typeface,
+                        Typeface.BOLD
+                    )
+                }
+
+            headerRow.addView(
+                title,
+                LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            )
+
+            val editLabel =
+                TextView(this).apply {
+
+                    text =
+                        "EDITAR ›"
+
+                    setTextColor(
+                        getColor(
+                            R.color.exynos_accent
+                        )
+                    )
+
+                    textSize =
+                        12f
+
+                    setTypeface(
+                        typeface,
+                        Typeface.BOLD
+                    )
+                }
+
+            headerRow.addView(
+                editLabel
+            )
+
+            card.addView(
+                headerRow
+            )
+
+            val model =
+                TextView(this).apply {
+
+                    text =
+                        dtb.model
+
+                    setTextColor(
+                        getColor(
+                            R.color.exynos_text
+                        )
+                    )
+
+                    textSize =
+                        17f
+
+                    setTypeface(
+                        typeface,
+                        Typeface.BOLD
+                    )
+
+                    setPadding(
+                        0,
+                        dpToPx(8),
+                        0,
+                        0
+                    )
+                }
+
+            card.addView(
+                model
+            )
+
+            val compatibleView =
+                TextView(this).apply {
+
+                    text =
+                        dtb.compatible
+
+                    setTextColor(
+                        getColor(
+                            R.color.exynos_text_secondary
+                        )
+                    )
+
+                    textSize =
+                        12f
+
+                    setPadding(
+                        0,
+                        dpToPx(5),
+                        0,
+                        0
+                    )
+                }
+
+            card.addView(
+                compatibleView
+            )
+
+            val socView =
+                TextView(this).apply {
+
+                    text =
+                        "SoC: ${dtb.soc}"
+
+                    setTextColor(
+                        getColor(
+                            R.color.exynos_text_secondary
+                        )
+                    )
+
+                    textSize =
+                        11f
+
+                    setPadding(
+                        0,
+                        dpToPx(8),
+                        0,
+                        0
+                    )
+                }
+
+            card.addView(
+                socView
+            )
+
+            val fileView =
+                TextView(this).apply {
+
+                    text =
+                        "Arquivo: ${dtb.fileName}"
+
+                    setTextColor(
+                        getColor(
+                            R.color.exynos_text_secondary
+                        )
+                    )
+
+                    textSize =
+                        10f
+
+                    setPadding(
+                        0,
+                        dpToPx(3),
+                        0,
+                        0
+                    )
+                }
+
+            card.addView(
+                fileView
+            )
 
             dtbContainer.addView(
-                button
+                card
             )
         }
     }
@@ -302,7 +504,9 @@ class DashboardActivity : Activity() {
             index
         )
 
-        startActivity(intent)
+        startActivity(
+            intent
+        )
     }
 
     private fun dpToPx(
