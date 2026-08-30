@@ -1,48 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="ExynosBess"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Boot &amp; Device Tree Toolkit"
-        android:textSize="16sp"
-        android:layout_marginBottom="32dp" />
-
-    <TextView
-        android:id="@+id/rootStatus"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Root ainda não verificado."
-        android:textSize="18sp"
-        android:layout_marginBottom="24dp" />
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <Button
-        android:id="@+id/checkRootButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Verificar acesso root" />
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ExynosBess"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
 
-    <TextView
-        android:id="@+id/rootOutput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="14sp"
-        android:layout_marginTop="24dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Boot &amp; Device Tree Toolkit"
+            android:textSize="16sp"
+            android:layout_marginBottom="28dp" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/rootStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Root ainda não verificado."
+            android:textSize="18sp"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/checkRootButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Verificar acesso root" />
+
+        <TextView
+            android:id="@+id/rootOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/detectBootButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Detectar partição boot"
+            android:enabled="false" />
+
+        <TextView
+            android:id="@+id/bootStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="15sp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/backupBootButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Criar backup do boot.img"
+            android:enabled="false" />
+
+        <TextView
+            android:id="@+id/backupStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="15sp"
+            android:layout_marginTop="12dp" />
+
+    </LinearLayout>
+
+</ScrollView>
