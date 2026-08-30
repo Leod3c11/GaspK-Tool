@@ -9,6 +9,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import com.exynosbess.app.startup.AutoSetupManager
 import com.exynosbess.app.startup.DeviceTreeInfoDetector
@@ -26,8 +27,16 @@ class DashboardActivity : Activity() {
     private lateinit var bootStatus: TextView
     private lateinit var dashboardStatus: TextView
 
-    private lateinit var dtbContainer: LinearLayout
+    private lateinit var dtbSelector: LinearLayout
+    private lateinit var dtbSelectorCount: TextView
+
     private lateinit var advanced: Button
+
+    private var availableDtbs =
+        emptyList<DtbCatalogDetector.DtbInfo>()
+
+    private var dtbDialog: AlertDialog? =
+        null
 
     override fun onCreate(
         savedInstanceState: Bundle?
@@ -78,15 +87,30 @@ class DashboardActivity : Activity() {
                 R.id.dashboardStatus
             )
 
-        dtbContainer =
+        dtbSelector =
             findViewById(
-                R.id.dashboardDtbContainer
+                R.id.dashboardDtbSelector
+            )
+
+        dtbSelectorCount =
+            findViewById(
+                R.id.dashboardDtbSelectorCount
             )
 
         advanced =
             findViewById(
                 R.id.dashboardAdvanced
             )
+
+        dtbSelector.isEnabled =
+            false
+
+        dtbSelector.setOnClickListener {
+
+            if (availableDtbs.isNotEmpty()) {
+                showDtbSelector()
+            }
+        }
 
         advanced.setOnClickListener {
 
@@ -156,8 +180,6 @@ class DashboardActivity : Activity() {
                 bootStatus.text =
                     "Boot: ${result.bootPath ?: "não encontrado"}"
 
-                dtbContainer.removeAllViews()
-
                 if (
                     !result.success ||
                     result.workspacePath == null
@@ -165,6 +187,12 @@ class DashboardActivity : Activity() {
 
                     dtbCount.text =
                         "Device Trees: 0"
+
+                    dtbSelectorCount.text =
+                        "Nenhum disponível"
+
+                    dtbSelector.isEnabled =
+                        false
 
                     dashboardStatus.text =
                         "Falha na preparação automática:\n" +
@@ -193,22 +221,37 @@ class DashboardActivity : Activity() {
                 gpuCompatible.text =
                     "DTB: ${generalInfo.gpuCompatible}"
 
-                val dtbs =
+                availableDtbs =
                     DtbCatalogDetector.detectAll(
                         workspace
                     )
 
-                dtbCount.text =
-                    "Device Trees: ${dtbs.size}"
+                val count =
+                    availableDtbs.size
 
-                createDtbCards(
-                    dtbs
-                )
+                dtbCount.text =
+                    "Device Trees: $count"
+
+                dtbSelectorCount.text =
+                    when (count) {
+
+                        0 ->
+                            "Nenhum disponível"
+
+                        1 ->
+                            "1 Device Tree disponível"
+
+                        else ->
+                            "$count Device Trees disponíveis"
+                    }
+
+                dtbSelector.isEnabled =
+                    count > 0
 
                 dashboardStatus.text =
-                    if (dtbs.isNotEmpty()) {
+                    if (count > 0) {
 
-                        "✓ ${dtbs.size} Device Tree(s) preparados"
+                        "✓ Ambiente preparado automaticamente"
 
                     } else {
 
@@ -219,279 +262,337 @@ class DashboardActivity : Activity() {
         }.start()
     }
 
-    private fun createDtbCards(
-        dtbs: List<DtbCatalogDetector.DtbInfo>
-    ) {
+    private fun showDtbSelector() {
 
-        dtbContainer.removeAllViews()
-
-        if (dtbs.isEmpty()) {
-
-            val empty =
-                TextView(this).apply {
-
-                    text =
-                        "Nenhum Device Tree disponível"
-
-                    setTextColor(
-                        getColor(
-                            R.color.exynos_text_secondary
-                        )
-                    )
-
-                    textSize =
-                        13f
-
-                    setPadding(
-                        dpToPx(4),
-                        dpToPx(12),
-                        dpToPx(4),
-                        dpToPx(12)
-                    )
-                }
-
-            dtbContainer.addView(
-                empty
-            )
-
+        if (availableDtbs.isEmpty()) {
             return
         }
 
-        for (dtb in dtbs) {
+        val container =
+            LinearLayout(this).apply {
 
-            val card =
-                LinearLayout(this).apply {
+                orientation =
+                    LinearLayout.VERTICAL
 
-                    orientation =
-                        LinearLayout.VERTICAL
+                setPadding(
+                    dpToPx(18),
+                    dpToPx(8),
+                    dpToPx(18),
+                    dpToPx(12)
+                )
+            }
 
-                    setPadding(
-                        dpToPx(16),
-                        dpToPx(14),
-                        dpToPx(16),
-                        dpToPx(14)
-                    )
+        for (
+            (position, dtb)
+            in availableDtbs.withIndex()
+        ) {
 
-                    setBackgroundResource(
-                        R.drawable.bg_dashboard_card
-                    )
+            val item =
+                createDtbListItem(
+                    dtb
+                )
 
-                    isClickable =
-                        true
+            container.addView(
+                item
+            )
 
-                    isFocusable =
-                        true
+            if (
+                position <
+                availableDtbs.lastIndex
+            ) {
 
-                    setOnClickListener {
-                        openEditor(
-                            dtb.index
+                val separator =
+                    TextView(this).apply {
+
+                        setBackgroundColor(
+                            getColor(
+                                R.color.exynos_border
+                            )
                         )
                     }
-                }
 
-            val params =
-                LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-
-            params.bottomMargin =
-                dpToPx(10)
-
-            card.layoutParams =
-                params
-
-            val headerRow =
-                LinearLayout(this).apply {
-
-                    orientation =
-                        LinearLayout.HORIZONTAL
-
-                    gravity =
-                        Gravity.CENTER_VERTICAL
-                }
-
-            val title =
-                TextView(this).apply {
-
-                    text =
-                        "DTB ${dtb.index}"
-
-                    setTextColor(
-                        getColor(
-                            R.color.exynos_accent
-                        )
+                val separatorParams =
+                    LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        dpToPx(1)
                     )
 
-                    textSize =
-                        13f
-
-                    setTypeface(
-                        typeface,
-                        Typeface.BOLD
-                    )
-                }
-
-            headerRow.addView(
-                title,
-                LinearLayout.LayoutParams(
+                separatorParams.setMargins(
                     0,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    1f
+                    dpToPx(8),
+                    0,
+                    dpToPx(8)
                 )
-            )
 
-            val editLabel =
-                TextView(this).apply {
+                container.addView(
+                    separator,
+                    separatorParams
+                )
+            }
+        }
 
-                    text =
-                        "EDITAR ›"
+        val scroll =
+            ScrollView(this).apply {
 
-                    setTextColor(
-                        getColor(
-                            R.color.exynos_accent
+                addView(
+                    container
+                )
+
+                isFillViewport =
+                    true
+            }
+
+        val dialog =
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Device Trees disponíveis"
+                )
+                .setView(
+                    scroll
+                )
+                .setNegativeButton(
+                    "Fechar",
+                    null
+                )
+                .create()
+
+        dtbDialog =
+            dialog
+
+        dialog.setOnShowListener {
+
+            val maxHeight =
+                (
+                    resources
+                        .displayMetrics
+                        .heightPixels *
+                        0.70f
+                    ).toInt()
+
+            scroll.layoutParams =
+                scroll.layoutParams.apply {
+
+                    height =
+                        minOf(
+                            scroll.measuredHeight,
+                            maxHeight
                         )
+                }
+        }
+
+        dialog.show()
+    }
+
+    private fun createDtbListItem(
+        dtb: DtbCatalogDetector.DtbInfo
+    ): LinearLayout {
+
+        val item =
+            LinearLayout(this).apply {
+
+                orientation =
+                    LinearLayout.HORIZONTAL
+
+                gravity =
+                    Gravity.CENTER_VERTICAL
+
+                setPadding(
+                    0,
+                    dpToPx(7),
+                    0,
+                    dpToPx(7)
+                )
+            }
+
+        val info =
+            LinearLayout(this).apply {
+
+                orientation =
+                    LinearLayout.VERTICAL
+            }
+
+        val title =
+            TextView(this).apply {
+
+                text =
+                    "DTB ${dtb.index}"
+
+                setTextColor(
+                    getColor(
+                        R.color.exynos_accent
                     )
+                )
 
-                    textSize =
-                        12f
+                textSize =
+                    13f
 
-                    setTypeface(
-                        typeface,
-                        Typeface.BOLD
+                setTypeface(
+                    typeface,
+                    Typeface.BOLD
+                )
+            }
+
+        info.addView(
+            title
+        )
+
+        val model =
+            TextView(this).apply {
+
+                text =
+                    dtb.model
+
+                setTextColor(
+                    getColor(
+                        R.color.exynos_text
+                    )
+                )
+
+                textSize =
+                    14f
+
+                setTypeface(
+                    typeface,
+                    Typeface.BOLD
+                )
+
+                maxLines =
+                    2
+
+                setPadding(
+                    0,
+                    dpToPx(3),
+                    dpToPx(10),
+                    0
+                )
+            }
+
+        info.addView(
+            model
+        )
+
+        val soc =
+            TextView(this).apply {
+
+                text =
+                    dtb.soc
+
+                setTextColor(
+                    getColor(
+                        R.color.exynos_text_secondary
+                    )
+                )
+
+                textSize =
+                    11f
+
+                setPadding(
+                    0,
+                    dpToPx(3),
+                    dpToPx(10),
+                    0
+                )
+            }
+
+        info.addView(
+            soc
+        )
+
+        val compatibleView =
+            TextView(this).apply {
+
+                text =
+                    dtb.compatible
+
+                setTextColor(
+                    getColor(
+                        R.color.exynos_text_secondary
+                    )
+                )
+
+                textSize =
+                    10f
+
+                maxLines =
+                    2
+
+                setPadding(
+                    0,
+                    dpToPx(2),
+                    dpToPx(10),
+                    0
+                )
+            }
+
+        info.addView(
+            compatibleView
+        )
+
+        item.addView(
+            info,
+            LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        )
+
+        val editButton =
+            Button(this).apply {
+
+                text =
+                    "Editar"
+
+                isAllCaps =
+                    false
+
+                textSize =
+                    12f
+
+                setTextColor(
+                    getColor(
+                        R.color.exynos_text
+                    )
+                )
+
+                setBackgroundResource(
+                    R.drawable.bg_button_secondary
+                )
+
+                setOnClickListener {
+
+                    openEditor(
+                        dtb.index
                     )
                 }
+            }
 
-            headerRow.addView(
-                editLabel
+        item.addView(
+            editButton,
+            LinearLayout.LayoutParams(
+                dpToPx(84),
+                dpToPx(44)
             )
+        )
 
-            card.addView(
-                headerRow
-            )
+        item.setOnClickListener {
 
-            val model =
-                TextView(this).apply {
-
-                    text =
-                        dtb.model
-
-                    setTextColor(
-                        getColor(
-                            R.color.exynos_text
-                        )
-                    )
-
-                    textSize =
-                        17f
-
-                    setTypeface(
-                        typeface,
-                        Typeface.BOLD
-                    )
-
-                    setPadding(
-                        0,
-                        dpToPx(8),
-                        0,
-                        0
-                    )
-                }
-
-            card.addView(
-                model
-            )
-
-            val compatibleView =
-                TextView(this).apply {
-
-                    text =
-                        dtb.compatible
-
-                    setTextColor(
-                        getColor(
-                            R.color.exynos_text_secondary
-                        )
-                    )
-
-                    textSize =
-                        12f
-
-                    setPadding(
-                        0,
-                        dpToPx(5),
-                        0,
-                        0
-                    )
-                }
-
-            card.addView(
-                compatibleView
-            )
-
-            val socView =
-                TextView(this).apply {
-
-                    text =
-                        "SoC: ${dtb.soc}"
-
-                    setTextColor(
-                        getColor(
-                            R.color.exynos_text_secondary
-                        )
-                    )
-
-                    textSize =
-                        11f
-
-                    setPadding(
-                        0,
-                        dpToPx(8),
-                        0,
-                        0
-                    )
-                }
-
-            card.addView(
-                socView
-            )
-
-            val fileView =
-                TextView(this).apply {
-
-                    text =
-                        "Arquivo: ${dtb.fileName}"
-
-                    setTextColor(
-                        getColor(
-                            R.color.exynos_text_secondary
-                        )
-                    )
-
-                    textSize =
-                        10f
-
-                    setPadding(
-                        0,
-                        dpToPx(3),
-                        0,
-                        0
-                    )
-                }
-
-            card.addView(
-                fileView
-            )
-
-            dtbContainer.addView(
-                card
+            openEditor(
+                dtb.index
             )
         }
+
+        return item
     }
 
     private fun openEditor(
         index: Int
     ) {
+
+        dtbDialog?.dismiss()
+
+        dtbDialog =
+            null
 
         val intent =
             Intent(
