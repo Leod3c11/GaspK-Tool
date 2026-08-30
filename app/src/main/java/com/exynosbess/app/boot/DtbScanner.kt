@@ -35,7 +35,8 @@ object DtbScanner {
             File(workspace, "kernel"),
             File(workspace, "extra"),
             File(workspace, "dtb"),
-            File(workspace, "kernel_dtb")
+            File(workspace, "kernel_dtb"),
+            File(workspace, "dtb_partition")
         ).filter {
             it.exists() &&
             it.isFile &&
@@ -66,7 +67,7 @@ object DtbScanner {
             ScanResult(
                 false,
                 emptyList(),
-                "Nenhum DTB encontrado em kernel/extra"
+                "Nenhum DTB encontrado em kernel/extra/dtb/dtb_partition"
             )
         }
     }

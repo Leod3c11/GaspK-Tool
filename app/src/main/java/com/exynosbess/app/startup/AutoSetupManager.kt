@@ -8,6 +8,8 @@ import com.exynosbess.app.boot.BootUnpackManager
 import com.exynosbess.app.boot.DtbDecompiler
 import com.exynosbess.app.boot.DtbExtractor
 import com.exynosbess.app.boot.DtbScanner
+import com.exynosbess.app.boot.DtbPartitionResolver
+import com.exynosbess.app.boot.DtbPartitionBackupManager
 
 object AutoSetupManager {
 
@@ -112,6 +114,46 @@ object AutoSetupManager {
         }
 
         progress("Boot.img descompactado")
+
+        progress("Procurando partição DTB separada...")
+
+        val dtbPartition =
+            DtbPartitionResolver.detect()
+
+        if (
+            dtbPartition.found &&
+            dtbPartition.path != null
+        ) {
+
+            progress(
+                "Partição DTB encontrada\n${dtbPartition.path}"
+            )
+
+            val dtbBackup =
+                DtbPartitionBackupManager.backup(
+                    context,
+                    dtbPartition.path
+                )
+
+            if (dtbBackup.success) {
+
+                progress(
+                    "Partição DTB adicionada à análise"
+                )
+
+            } else {
+
+                progress(
+                    "Aviso: não foi possível copiar a partição DTB\n${dtbBackup.message}"
+                )
+            }
+
+        } else {
+
+            progress(
+                "Partição DTB separada não encontrada"
+            )
+        }
 
         progress("Procurando Device Trees...")
 
