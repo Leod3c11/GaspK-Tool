@@ -35,266 +35,32 @@ object BootRebuildManager {
                 return fail("boot_original.img não encontrado")
             }
 
-            val originalExtra =
-                File(workspace, "extra")
-
-            if (!originalExtra.exists()) {
-                return fail("Arquivo extra não encontrado")
-            }
-
             /*
-             * 1. Localizar novamente os DTBs dentro
-             *    do extra ORIGINAL.
-             */
-            val scan =
-                DtbScanner.scan(
-                    workspace.absolutePath
-                )
-
-            if (!scan.success) {
-                return fail(
-                    "Falha ao localizar DTBs:\n${scan.message}"
-                )
-            }
-
-            val extraEntries =
-                scan.entries
-                    .filter {
-                        it.sourceFile == "extra"
-                    }
-                    .sortedBy {
-                        it.offset
-                    }
-
-            if (extraEntries.isEmpty()) {
-                return fail(
-                    "Nenhum DTB localizado no extra"
-                )
-            }
-
-            /*
-             * 2. Preparar dtc.
-             */
-            val dtc =
-                ToolManager.installDtc(context)
-
-            if (!dtc.success || dtc.path == null) {
-                return fail(
-                    "Falha ao preparar dtc:\n${dtc.message}"
-                )
-            }
-
-            val rebuiltDtbDir =
-                File(
-                    workspace,
-                    "rebuilt_dtbs"
-                )
-
-            if (rebuiltDtbDir.exists()) {
-                rebuiltDtbDir.deleteRecursively()
-            }
-
-            rebuiltDtbDir.mkdirs()
-
-            val replacements =
-                mutableListOf<File>()
-
-            /*
-             * Obter índices GLOBAIS dos DTBs pertencentes
-             * ao extra.
-             */
-            val sourceMap =
-                DtbSourceMap.read(
-                    workspace.absolutePath
-                )
-
-            val extraSourceEntries =
-                sourceMap
-                    .filter {
-                        it.sourceFile == "extra"
-                    }
-                    .sortedBy {
-                        it.offset
-                    }
-
-            if (
-                extraSourceEntries.size !=
-                extraEntries.size
-            ) {
-                return fail(
-                    "Mapa de origem dos DTBs do extra é inconsistente"
-                )
-            }
-
-            /*
-             * 3. Recompilar somente os DTS pertencentes
-             * ao EXTRA, preservando o índice global.
-             */
-            extraSourceEntries.forEach { sourceEntry ->
-
-                val index =
-                    sourceEntry.index
-
-                val dts =
-                    File(
-                        workspace,
-                        "dtbs/dtb_${index}.dts"
-                    )
-
-                if (!dts.exists()) {
-                    return fail(
-                        "dtb_${index}.dts não encontrado"
-                    )
-                }
-
-                val rebuilt =
-                    File(
-                        rebuiltDtbDir,
-                        "dtb_${index}.dtb"
-                    )
-
-                val command =
-                    "'${dtc.path}' " +
-                    "-I dts " +
-                    "-O dtb " +
-                    "-o '${rebuilt.absolutePath}' " +
-                    "'${dts.absolutePath}'"
-
-                val compile =
-                    ShellExecutor.root(command)
-
-                if (
-                    !compile.success ||
-                    !rebuilt.exists() ||
-                    rebuilt.length() == 0L
-                ) {
-
-                    return fail(
-                        "Falha recompilando DTS $index:\n\n" +
-                        compile.output
-                    )
-                }
-
-                /*
-                 * Validação do magic.
-                 */
-                RandomAccessFile(
-                    rebuilt,
-                    "r"
-                ).use { raf ->
-
-                    val magic =
-                        raf.readInt()
-                            .toLong() and 0xFFFFFFFFL
-
-                    if (magic != 0xD00DFEEDL) {
-                        return fail(
-                            "DTB recompilado $index possui magic inválido"
-                        )
-                    }
-                }
-
-                replacements.add(rebuilt)
-            }
-
-            /*
-             * 4. Reconstruir EXTRA.
+             * Reconstruir dinamicamente todos os componentes
+             * do boot que realmente possuem DTBs.
              *
-             * IMPORTANTE:
-             * Não fazemos simplesmente:
+             * Nenhum componente é obrigatório:
              *
-             * dtb0 + dtb1
-             *
-             * Copiamos absolutamente todos os bytes
-             * originais existentes antes, entre e
-             * depois dos DTBs.
+             * kernel
+             * extra
+             * dtb
+             * kernel_dtb
              */
-            val modifiedExtra =
-                File(
-                    workspace,
-                    "extra_modified"
+            val componentRebuild =
+                BootDtbComponentRebuilder.rebuild(
+                    context,
+                    workspace
                 )
 
-            if (modifiedExtra.exists()) {
-                modifiedExtra.delete()
-            }
-
-            RandomAccessFile(
-                originalExtra,
-                "r"
-            ).use { input ->
-
-                modifiedExtra
-                    .outputStream()
-                    .buffered()
-                    .use { output ->
-
-                        var cursor = 0L
-
-                        extraEntries.forEachIndexed {
-                            index,
-                            entry ->
-
-                            /*
-                             * Copiar região original que
-                             * antecede este DTB.
-                             */
-                            copyRegion(
-                                input,
-                                output,
-                                cursor,
-                                entry.offset - cursor
-                            )
-
-                            /*
-                             * Inserir novo DTB.
-                             */
-                            replacements[index]
-                                .inputStream()
-                                .buffered()
-                                .use {
-                                    replacementInput ->
-
-                                    replacementInput
-                                        .copyTo(output)
-                                }
-
-                            /*
-                             * Pular o DTB antigo.
-                             */
-                            cursor =
-                                entry.offset +
-                                entry.size
-                        }
-
-                        /*
-                         * Preservar todo o restante
-                         * do EXTRA original.
-                         */
-                        if (
-                            cursor <
-                            originalExtra.length()
-                        ) {
-
-                            copyRegion(
-                                input,
-                                output,
-                                cursor,
-                                originalExtra.length() -
-                                    cursor
-                            )
-                        }
-                    }
-            }
-
-            if (
-                !modifiedExtra.exists() ||
-                modifiedExtra.length() == 0L
-            ) {
+            if (!componentRebuild.success) {
                 return fail(
-                    "Falha reconstruindo extra"
+                    "Falha reconstruindo Device Trees do boot:\n" +
+                        componentRebuild.message
                 )
             }
+
+            val rebuiltComponents =
+                componentRebuild.components
 
             /*
              * 5. Criar diretório LIMPO exclusivamente
@@ -314,6 +80,8 @@ object BootRebuildManager {
 
             /*
              * Componentes reconhecidos pelo magiskboot.
+             *
+             * EXTRA agora faz parte da lista normal.
              */
             val components =
                 listOf(
@@ -322,14 +90,25 @@ object BootRebuildManager {
                     "second",
                     "dtb",
                     "kernel_dtb",
+                    "extra",
                     "recovery_dtbo",
                     "header"
                 )
 
             components.forEach { name ->
 
+                /*
+                 * Se este componente possuía DTBs,
+                 * usamos a versão reconstruída.
+                 *
+                 * Caso contrário usamos exatamente o
+                 * componente original produzido pelo
+                 * magiskboot unpack.
+                 */
                 val source =
-                    File(
+                    rebuiltComponents[
+                        name
+                    ] ?: File(
                         workspace,
                         name
                     )
@@ -345,17 +124,6 @@ object BootRebuildManager {
                     )
                 }
             }
-
-            /*
-             * Usar EXTRA modificado no lugar do original.
-             */
-            modifiedExtra.copyTo(
-                File(
-                    repackDir,
-                    "extra"
-                ),
-                overwrite = true
-            )
 
             /*
              * 6. Preparar magiskboot.
