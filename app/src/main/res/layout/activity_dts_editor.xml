@@ -6,127 +6,158 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/exynos_bg"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingTop="16dp"
-    android:paddingBottom="12dp">
-
-    <!-- Cabeçalho -->
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="14dp">
-
-        <TextView
-            android:id="@+id/editorTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="DTS Editor"
-            android:textColor="@color/exynos_text"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/editorPath"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:ellipsize="middle"
-            android:maxLines="1"
-            android:text=""
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="11sp" />
-
-    </LinearLayout>
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
 
-    <!-- Busca -->
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="BUSCAR NO DEVICE TREE"
-        android:textColor="@color/exynos_text_secondary"
-        android:textSize="10sp"
-        android:textStyle="bold"
-        android:letterSpacing="0.08"
-        android:layout_marginBottom="6dp" />
-
-    <EditText
-        android:id="@+id/searchInput"
-        android:layout_width="match_parent"
-        android:layout_height="46dp"
-        android:background="@drawable/bg_search_field"
-        android:hint="Palavra, número, propriedade..."
-        android:textColorHint="@color/exynos_text_secondary"
-        android:textColor="@color/exynos_text"
-        android:textColorHighlight="@color/exynos_accent"
-        android:textCursorDrawable="@null"
-        android:singleLine="true"
-        android:inputType="text"
-        android:textSize="14sp"
-        android:fontFamily="sans"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp" />
-
-
-    <!-- Controles de busca -->
+    <!-- Cabeçalho compacto -->
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="40dp"
         android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/editorTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DTS 0"
+                android:textColor="@color/exynos_text"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/editorPath"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="8sp"
+                android:maxLines="1"
+                android:ellipsize="middle" />
+
+        </LinearLayout>
+
 
         <Button
-            android:id="@+id/searchButton"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_button_primary"
-            android:text="Buscar"
+            android:id="@+id/saveDtsButton"
+            android:layout_width="68dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Salvar"
             android:textAllCaps="false"
-            android:textColor="#081018"
+            android:textColor="@color/exynos_text"
+            android:textSize="10sp"
             android:textStyle="bold"
-            android:textSize="12sp"
             android:minHeight="0dp"
             android:minWidth="0dp"
             android:padding="0dp" />
 
-        <Space
-            android:layout_width="8dp"
-            android:layout_height="match_parent" />
+
+        <Button
+            android:id="@+id/validateDtsButton"
+            android:layout_width="70dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/bg_button_primary"
+            android:text="Validar"
+            android:textAllCaps="false"
+            android:textColor="#081018"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:padding="0dp" />
+
+    </LinearLayout>
+
+
+    <!-- Busca compacta -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/searchInput"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_search_field"
+            android:hint="Buscar no DTS..."
+            android:textColorHint="@color/exynos_text_secondary"
+            android:textColor="@color/exynos_text"
+            android:textColorHighlight="@color/exynos_accent"
+            android:textCursorDrawable="@null"
+            android:singleLine="true"
+            android:inputType="text"
+            android:textSize="11sp"
+            android:paddingStart="10dp"
+            android:paddingEnd="8dp" />
+
+
+        <Button
+            android:id="@+id/searchButton"
+            android:layout_width="54dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/bg_button_primary"
+            android:text="Ir"
+            android:textAllCaps="false"
+            android:textColor="#081018"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:padding="0dp" />
+
 
         <Button
             android:id="@+id/searchNextButton"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
+            android:layout_width="54dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/bg_button_secondary"
-            android:text="Próximo"
+            android:text="Próx."
             android:textAllCaps="false"
             android:textColor="@color/exynos_text"
-            android:textSize="12sp"
+            android:textSize="9sp"
+            android:enabled="false"
             android:minHeight="0dp"
             android:minWidth="0dp"
-            android:padding="0dp"
-            android:enabled="false" />
+            android:padding="0dp" />
 
     </LinearLayout>
+
 
     <TextView
         android:id="@+id/searchStatus"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="18dp"
         android:gravity="center_vertical"
         android:text=""
         android:textColor="@color/exynos_accent"
-        android:textSize="11sp" />
+        android:textSize="9sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
 
 
-    <!-- Editor -->
+    <!-- Editor: ocupa todo o espaço disponível -->
 
     <EditText
         android:id="@+id/dtsEditor"
@@ -136,7 +167,7 @@
         android:background="@drawable/bg_editor_panel"
         android:gravity="top|start"
         android:fontFamily="monospace"
-        android:textSize="12sp"
+        android:textSize="11sp"
         android:textColor="@color/exynos_text"
         android:textColorHighlight="@color/exynos_accent"
         android:textColorHint="@color/exynos_text_secondary"
@@ -144,125 +175,114 @@
         android:scrollbars="vertical|horizontal"
         android:fadeScrollbars="false"
         android:overScrollMode="always"
-        android:padding="14dp"
-        android:lineSpacingExtra="2dp"
+        android:padding="9dp"
+        android:lineSpacingExtra="1dp"
         android:textCursorDrawable="@null" />
 
 
-    <!-- Ações -->
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="46dp"
-        android:orientation="horizontal"
-        android:layout_marginTop="10dp">
-
-        <Button
-            android:id="@+id/saveDtsButton"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_button_secondary"
-            android:text="Salvar"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text"
-            android:textStyle="bold"
-            android:minHeight="0dp"
-            android:minWidth="0dp"
-            android:padding="0dp"     android:textSize="12sp" />
-
-        <Space
-            android:layout_width="8dp"
-            android:layout_height="match_parent" />
-
-        <Button
-            android:id="@+id/validateDtsButton"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_button_primary"
-            android:text="Validar"
-            android:textAllCaps="false"
-            android:textColor="#081018"
-            android:textStyle="bold"
-            android:minHeight="0dp"
-            android:minWidth="0dp"
-            android:padding="0dp"     android:textSize="12sp" />
-
-    </LinearLayout>
+    <!-- Status do editor -->
 
     <TextView
         android:id="@+id/editorStatus"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="28dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="3dp"
         android:gravity="center_vertical"
         android:text=""
         android:textColor="@color/exynos_text_secondary"
-        android:textSize="11sp"
-        android:layout_marginTop="4dp"     android:maxLines="2"     android:ellipsize="end" />
+        android:textSize="9sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
 
 
-        <!-- Fluxo pós-edição -->
-        <LinearLayout
-            android:id="@+id/bootActionsPanel"
+    <!-- Pós-edição compacto -->
+
+    <LinearLayout
+        android:id="@+id/bootActionsPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:id="@+id/bootActionStatus"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:orientation="vertical"
-            android:visibility="visible">
+            android:layout_height="20dp"
+            android:gravity="center_vertical"
+            android:text="○ Valide o DTS para continuar"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="9sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="PÓS-EDIÇÃO"
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08" />
 
-            <TextView
-                android:id="@+id/bootActionStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="○ Valide o DTS para continuar"
-                android:textColor="@color/exynos_text"
-                android:textSize="11sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/rebuildFromEditorButton"
-                android:layout_width="match_parent"
-                android:layout_height="42dp"
-                android:layout_marginTop="12dp"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_weight="1"
                 android:background="@drawable/bg_button_primary"
-                android:text="1. Gerar novo boot"
+                android:text="Gerar"
                 android:textAllCaps="false"
                 android:textStyle="bold"
-                android:textColor="#081018"     android:textSize="12sp" />
+                android:textColor="#081018"
+                android:textSize="9sp"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:padding="0dp"
+                android:enabled="false" />
+
+
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="match_parent" />
+
 
             <Button
                 android:id="@+id/verifyFromEditorButton"
-                android:layout_width="match_parent"
-                android:layout_height="42dp"
-                android:layout_marginTop="8dp"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_weight="1"
                 android:background="@drawable/bg_button_secondary"
-                android:enabled="false"
-                android:text="2. Verificar boot"
+                android:text="Verificar"
                 android:textAllCaps="false"
-                android:textColor="@color/exynos_text"     android:textSize="12sp" />
+                android:textColor="@color/exynos_text"
+                android:textSize="9sp"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:padding="0dp"
+                android:enabled="false" />
+
+
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="match_parent" />
+
 
             <Button
                 android:id="@+id/flashFromEditorButton"
-                android:layout_width="match_parent"
-                android:layout_height="42dp"
-                android:layout_marginTop="8dp"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_weight="1"
                 android:background="@drawable/bg_button_secondary"
-                android:enabled="false"
-                android:text="3. Flash boot"
+                android:text="Flash"
                 android:textAllCaps="false"
-                android:textColor="@color/exynos_text"     android:textSize="12sp" />
+                android:textColor="@color/exynos_text"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:padding="0dp"
+                android:enabled="false" />
 
         </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>
