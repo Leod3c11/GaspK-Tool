@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/exynos_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GaspKernel"
+            android:textColor="@color/exynos_text"
+            android:textSize="27sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Device Tree &amp; Kernel Editor"
+            android:textColor="@color/exynos_accent"
+            android:textSize="13sp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="22dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_dashboard_card"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEVICE TREE"
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08" />
+
+            <TextView
+                android:id="@+id/dashboardDtbModel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Detectando..."
+                android:textColor="@color/exynos_text"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="9dp" />
+
+            <TextView
+                android:id="@+id/dashboardCompatible"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="5dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_dashboard_card"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GPU"
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08" />
+
+            <TextView
+                android:id="@+id/dashboardGpu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Detectando..."
+                android:textColor="@color/exynos_text"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginTop="9dp" />
+
+            <TextView
+                android:id="@+id/dashboardGpuCompatible"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="5dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_dashboard_card"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AMBIENTE"
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08" />
+
+            <TextView
+                android:id="@+id/dashboardRoot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Root: —"
+                android:textColor="@color/exynos_text"
+                android:textSize="14sp"
+                android:layout_marginTop="9dp" />
+
+            <TextView
+                android:id="@+id/dashboardDtbCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DTBs: —"
+                android:textColor="@color/exynos_text"
+                android:textSize="14sp"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/dashboardBoot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Boot: —"
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="11sp"
+                android:layout_marginTop="6dp" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/dashboardEditDts0"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_button_primary"
+            android:text="Editar Device Tree 0"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textColor="#081018" />
+
+        <Button
+            android:id="@+id/dashboardEditDts1"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Editar Device Tree 1"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text" />
+
+        <Button
+            android:id="@+id/dashboardAdvanced"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Ferramentas avançadas"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text" />
+
+        <TextView
+            android:id="@+id/dashboardStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="11sp"
+            android:gravity="center"
+            android:layout_marginTop="14dp" />
+
+    </LinearLayout>
+
+</ScrollView>
