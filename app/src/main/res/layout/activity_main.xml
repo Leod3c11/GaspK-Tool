@@ -148,6 +148,23 @@
             android:textSize="15sp"
             android:layout_marginTop="12dp" />
 
+
+        <Button
+            android:id="@+id/openDts0Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Abrir DTS 0"
+            android:enabled="false"
+            android:layout_marginTop="24dp" />
+
+        <Button
+            android:id="@+id/openDts1Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Abrir DTS 1"
+            android:enabled="false"
+            android:layout_marginTop="8dp" />
+
     </LinearLayout>
 
 </ScrollView>

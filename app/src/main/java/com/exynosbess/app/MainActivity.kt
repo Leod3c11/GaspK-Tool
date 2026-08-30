@@ -1,6 +1,7 @@
 package com.exynosbess.app
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -29,6 +30,8 @@ class MainActivity : Activity() {
     private lateinit var scanDtbButton: Button
     private lateinit var extractDtbButton: Button
     private lateinit var decompileDtbButton: Button
+    private lateinit var openDts0Button: Button
+    private lateinit var openDts1Button: Button
 
     private var bootPartitionPath: String? = null
     private var workspacePath: String? = null
@@ -55,6 +58,8 @@ class MainActivity : Activity() {
         scanDtbButton = findViewById(R.id.scanDtbButton)
         extractDtbButton = findViewById(R.id.extractDtbButton)
         decompileDtbButton = findViewById(R.id.decompileDtbButton)
+        openDts0Button = findViewById(R.id.openDts0Button)
+        openDts1Button = findViewById(R.id.openDts1Button)
 
         checkRootButton.setOnClickListener {
             verifyRoot()
@@ -82,6 +87,14 @@ class MainActivity : Activity() {
 
         decompileDtbButton.setOnClickListener {
             decompileDtbs()
+        }
+
+        openDts0Button.setOnClickListener {
+            openDtsEditor(0)
+        }
+
+        openDts1Button.setOnClickListener {
+            openDtsEditor(1)
         }
     }
 
@@ -389,6 +402,12 @@ class MainActivity : Activity() {
                     decompileDtbStatus.text =
                         "✓ ${result.message}\n\n$list"
 
+                    openDts0Button.isEnabled =
+                        result.files.any { it.index == 0 }
+
+                    openDts1Button.isEnabled =
+                        result.files.any { it.index == 1 }
+
                 } else {
 
                     decompileDtbStatus.text =
@@ -396,6 +415,22 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
+    }
+
+
+    private fun openDtsEditor(index: Int) {
+
+        val intent = Intent(
+            this,
+            DtsEditorActivity::class.java
+        )
+
+        intent.putExtra(
+            "dtb_index",
+            index
+        )
+
+        startActivity(intent)
     }
 
 }
