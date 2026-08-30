@@ -106,6 +106,21 @@ class DtsEditorActivity : Activity() {
         flashFromEditorButton =
             findViewById(R.id.flashFromEditorButton)
 
+        bootActionsPanel.visibility =
+            View.VISIBLE
+
+        bootActionStatus.text =
+            "○ Valide o DTS para continuar"
+
+        rebuildFromEditorButton.isEnabled =
+            false
+
+        verifyFromEditorButton.isEnabled =
+            false
+
+        flashFromEditorButton.isEnabled =
+            false
+
         dtbIndex =
             intent.getIntExtra(
                 "dtb_index",
