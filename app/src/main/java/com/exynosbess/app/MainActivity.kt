@@ -1,6 +1,7 @@
 package com.exynosbess.app
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -13,6 +14,7 @@ import com.exynosbess.app.boot.DtbExtractor
 import com.exynosbess.app.boot.DtbDecompiler
 import com.exynosbess.app.boot.BootRebuildManager
 import com.exynosbess.app.boot.BootRoundTripVerifier
+import com.exynosbess.app.boot.BootFlashManager
 
 class MainActivity : Activity() {
 
@@ -26,6 +28,7 @@ class MainActivity : Activity() {
     private lateinit var decompileDtbStatus: TextView
     private lateinit var rebuildBootStatus: TextView
     private lateinit var roundTripStatus: TextView
+    private lateinit var flashBootStatus: TextView
 
     private lateinit var checkRootButton: Button
     private lateinit var detectBootButton: Button
@@ -36,6 +39,7 @@ class MainActivity : Activity() {
     private lateinit var decompileDtbButton: Button
     private lateinit var rebuildBootButton: Button
     private lateinit var verifyRoundTripButton: Button
+    private lateinit var flashBootButton: Button
     private lateinit var openDts0Button: Button
     private lateinit var openDts1Button: Button
 
@@ -58,6 +62,7 @@ class MainActivity : Activity() {
         decompileDtbStatus = findViewById(R.id.decompileDtbStatus)
         rebuildBootStatus = findViewById(R.id.rebuildBootStatus)
         roundTripStatus = findViewById(R.id.roundTripStatus)
+        flashBootStatus = findViewById(R.id.flashBootStatus)
 
         checkRootButton = findViewById(R.id.checkRootButton)
         detectBootButton = findViewById(R.id.detectBootButton)
@@ -68,6 +73,7 @@ class MainActivity : Activity() {
         decompileDtbButton = findViewById(R.id.decompileDtbButton)
         rebuildBootButton = findViewById(R.id.rebuildBootButton)
         verifyRoundTripButton = findViewById(R.id.verifyRoundTripButton)
+        flashBootButton = findViewById(R.id.flashBootButton)
         openDts0Button = findViewById(R.id.openDts0Button)
         openDts1Button = findViewById(R.id.openDts1Button)
 
@@ -105,6 +111,10 @@ class MainActivity : Activity() {
 
         verifyRoundTripButton.setOnClickListener {
             verifyRoundTrip()
+        }
+
+        flashBootButton.setOnClickListener {
+            confirmBootFlash()
         }
 
         openDts0Button.setOnClickListener {
@@ -530,6 +540,8 @@ class MainActivity : Activity() {
 
                 if (result.success) {
 
+                    flashBootButton.isEnabled = true
+
                     roundTripStatus.text =
                         "✓ VERIFICAÇÃO FINAL OK\n\n" +
                         result.message +
@@ -546,6 +558,65 @@ class MainActivity : Activity() {
                             "\n\n$details"
                         else
                             ""
+                }
+            }
+        }.start()
+    }
+
+
+    private fun confirmBootFlash() {
+
+        AlertDialog.Builder(this)
+            .setTitle("Instalar boot modificado?")
+            .setMessage(
+                "Esta operação irá gravar diretamente a partição boot.\n\n" +
+                "Um backup pré-flash será criado antes da gravação.\n\n" +
+                "O aparelho NÃO será reiniciado automaticamente."
+            )
+            .setNegativeButton(
+                "Cancelar",
+                null
+            )
+            .setPositiveButton(
+                "Instalar"
+            ) { _, _ ->
+
+                executeBootFlash()
+            }
+            .show()
+    }
+
+    private fun executeBootFlash() {
+
+        flashBootButton.isEnabled =
+            false
+
+        flashBootStatus.text =
+            "Criando backup e instalando boot..."
+
+        Thread {
+
+            val result =
+                BootFlashManager.flash(
+                    this
+                )
+
+            runOnUiThread {
+
+                flashBootButton.isEnabled =
+                    true
+
+                if (result.success) {
+
+                    flashBootStatus.text =
+                        "✓ BOOT INSTALADO E VERIFICADO\n\n" +
+                        result.message
+
+                } else {
+
+                    flashBootStatus.text =
+                        "✗ FALHA / ATENÇÃO\n\n" +
+                        result.message
                 }
             }
         }.start()
