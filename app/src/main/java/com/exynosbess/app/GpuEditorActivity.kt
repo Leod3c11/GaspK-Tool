@@ -1520,4 +1520,16 @@ class GpuEditorActivity : Activity() {
             ?.toIntOrNull()
             ?: 0
     }
+
+
+    private fun dpToPx(
+        dp: Int
+    ): Int {
+
+        return (
+            dp *
+                resources.displayMetrics.density
+            ).toInt()
+    }
+
 }
