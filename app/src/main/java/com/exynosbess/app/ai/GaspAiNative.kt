@@ -10,4 +10,18 @@ object GaspAiNative {
 
     external fun nativeVersion():
         String
+
+    external fun nativeLoadModel(
+        modelPath: String
+    ): Boolean
+
+    external fun nativeIsModelLoaded():
+        Boolean
+
+    external fun nativeUnloadModel()
+
+    external fun nativeGenerate(
+        prompt: String,
+        maxTokens: Int
+    ): String
 }
