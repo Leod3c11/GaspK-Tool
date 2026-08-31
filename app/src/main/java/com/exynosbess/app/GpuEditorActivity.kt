@@ -364,6 +364,110 @@ class GpuEditorActivity : Activity() {
     }
 
 
+    private fun showGaspAiModelDownloadDialog(
+        action: AiAction,
+        question: String?
+    ) {
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                "Instalar Gasp AI"
+            )
+            .setMessage(
+                "A Gasp AI funciona localmente no aparelho.\n\n" +
+                    "Modelo:\n" +
+                    "Qwen2.5-Coder-0.5B-Instruct Q4_K_M\n\n" +
+                    "Tamanho aproximado: 491 MB.\n\n" +
+                    "Após o download, a IA poderá funcionar offline."
+            )
+            .setNegativeButton(
+                "Cancelar",
+                null
+            )
+            .setPositiveButton(
+                "Baixar modelo"
+            ) {
+                _,
+                _ ->
+
+                startGaspAiModelDownload(
+                    action,
+                    question
+                )
+            }
+            .show()
+    }
+
+
+    private fun startGaspAiModelDownload(
+        action: AiAction,
+        question: String?
+    ) {
+
+        aiButton.isEnabled =
+            false
+
+        status.text =
+            "✦ Preparando download da Gasp AI..."
+
+        Thread {
+
+            val result =
+                com.exynosbess.app.ai
+                    .GaspAiModelDownloader
+                    .download(
+                        this@GpuEditorActivity
+                    ) {
+                        percent ->
+
+                        runOnUiThread {
+
+                            status.text =
+                                "✦ Baixando Gasp AI... $percent%"
+                        }
+                    }
+
+            runOnUiThread {
+
+                aiButton.isEnabled =
+                    true
+
+                if (result.success) {
+
+                    status.text =
+                        "✓ Modelo Gasp AI instalado"
+
+                    runGaspAi(
+                        action,
+                        question
+                    )
+
+                } else {
+
+                    status.text =
+                        "✗ ${result.message}"
+
+                    AlertDialog.Builder(
+                        this@GpuEditorActivity
+                    )
+                        .setTitle(
+                            "Falha ao instalar Gasp AI"
+                        )
+                        .setMessage(
+                            result.message
+                        )
+                        .setPositiveButton(
+                            "OK",
+                            null
+                        )
+                        .show()
+                }
+            }
+
+        }.start()
+    }
+
+
     private fun runGaspAi(
         action: AiAction,
         question: String? = null
@@ -384,15 +488,145 @@ class GpuEditorActivity : Activity() {
                     question
             )
 
-        val suggestion =
-            GaspAiLocalAnalyzer.analyze(
+        if (
+            !com.exynosbess.app.ai
+                .GaspAiModelManager
+                .isInstalled(
+                    this
+                )
+        ) {
+
+            showGaspAiModelDownloadDialog(
                 action,
-                context
+                question
             )
 
-        showGaspAiSuggestion(
-            suggestion
-        )
+            return
+        }
+
+        aiButton.isEnabled =
+            false
+
+        status.text =
+            "✦ Gasp AI carregando..."
+
+        Thread {
+
+            try {
+
+                if (
+                    !com.exynosbess.app.ai
+                        .GaspAiLocalEngine
+                        .isModelLoaded()
+                ) {
+
+                    val model =
+                        com.exynosbess.app.ai
+                            .GaspAiModelManager
+                            .modelFile(
+                                this@GpuEditorActivity
+                            )
+
+                    val loaded =
+                        com.exynosbess.app.ai
+                            .GaspAiLocalEngine
+                            .loadModel(
+                                model
+                            )
+
+                    if (!loaded) {
+                        throw IllegalStateException(
+                            "Falha ao carregar o modelo GGUF."
+                        )
+                    }
+                }
+
+                val prompt =
+                    com.exynosbess.app.ai
+                        .GaspAiPromptBuilder
+                        .build(
+                            action,
+                            context
+                        )
+
+                val result =
+                    com.exynosbess.app.ai
+                        .GaspAiLocalEngine
+                        .generate(
+                            prompt,
+                            256
+                        )
+
+                runOnUiThread {
+
+                    aiButton.isEnabled =
+                        true
+
+                    if (result.success) {
+
+                        status.text =
+                            "✓ Gasp AI respondeu"
+
+                        val risk =
+                            when (action) {
+
+                                AiAction.SUGGEST_GPU_TUNING ->
+                                    com.exynosbess.app.ai
+                                        .AiRiskLevel.HIGH
+
+                                AiAction.PERFORMANCE,
+                                AiAction.EFFICIENCY ->
+                                    com.exynosbess.app.ai
+                                        .AiRiskLevel.MEDIUM
+
+                                else ->
+                                    com.exynosbess.app.ai
+                                        .AiRiskLevel.LOW
+                            }
+
+                        showGaspAiSuggestion(
+                            AiSuggestion(
+                                title =
+                                    "Gasp AI",
+                                explanation =
+                                    result.text,
+                                risk =
+                                    risk,
+                                originalText =
+                                    null,
+                                proposedText =
+                                    null,
+                                canApply =
+                                    false
+                            )
+                        )
+
+                    } else {
+
+                        status.text =
+                            "✗ Gasp AI: ${result.error}"
+                    }
+                }
+
+            } catch (
+                e: Exception
+            ) {
+
+                runOnUiThread {
+
+                    aiButton.isEnabled =
+                        true
+
+                    status.text =
+                        "✗ Gasp AI: " +
+                            (
+                                e.message
+                                    ?: e.javaClass.simpleName
+                            )
+                }
+            }
+
+        }.start()
     }
 
 
