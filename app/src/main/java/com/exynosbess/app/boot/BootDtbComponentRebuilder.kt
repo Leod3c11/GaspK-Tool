@@ -325,7 +325,9 @@ object BootDtbComponentRebuilder {
             e: Exception
         ) {
 
-            throw IllegalStateException(
+            return Result(
+                false,
+                emptyMap(),
                 e.message
                     ?: "Erro reconstruindo componentes DTB"
             )
