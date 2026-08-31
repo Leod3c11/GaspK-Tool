@@ -8,6 +8,10 @@ import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import com.exynosbess.app.ai.AiAction
+import com.exynosbess.app.ai.AiSuggestion
+import com.exynosbess.app.ai.GaspAiContextBuilder
+import com.exynosbess.app.ai.GaspAiLocalAnalyzer
 import com.exynosbess.app.boot.BootFlashManager
 import com.exynosbess.app.boot.BootRebuildManager
 import com.exynosbess.app.boot.BootRoundTripVerifier
@@ -27,6 +31,7 @@ class GpuEditorActivity : Activity() {
     private lateinit var searchInput: EditText
     private lateinit var searchStatus: TextView
 
+    private lateinit var aiButton: Button
     private lateinit var numericBaseButton: Button
     private lateinit var previousButton: Button
     private lateinit var nextButton: Button
@@ -101,6 +106,11 @@ class GpuEditorActivity : Activity() {
                 R.id.gpuSearchStatus
             )
 
+        aiButton =
+            findViewById(
+                R.id.gpuAiButton
+            )
+
         numericBaseButton =
             findViewById(
                 R.id.gpuNumericBaseButton
@@ -144,6 +154,10 @@ class GpuEditorActivity : Activity() {
 
 
     private fun setupListeners() {
+
+        aiButton.setOnClickListener {
+            showGaspAiMenu()
+        }
 
         numericBaseButton.setOnClickListener {
             toggleNumericBase()
@@ -217,6 +231,209 @@ class GpuEditorActivity : Activity() {
                 }
             }
         )
+    }
+
+
+    private fun showGaspAiMenu() {
+
+        val file =
+            gpuDtsFiles.getOrNull(
+                currentFileIndex
+            )
+
+        if (file == null) {
+
+            status.text =
+                "Nenhum Device Tree GPU disponível"
+
+            return
+        }
+
+        val options =
+            arrayOf(
+                "Entender esta configuração",
+                "Analisar desempenho",
+                "Analisar consumo",
+                "Procurar inconsistências",
+                "Sugerir ajuste de GPU",
+                "Perguntar à Gasp AI"
+            )
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                "✦ Gasp AI"
+            )
+            .setItems(
+                options
+            ) {
+                _,
+                which ->
+
+                when (which) {
+
+                    0 ->
+                        runGaspAi(
+                            AiAction.EXPLAIN
+                        )
+
+                    1 ->
+                        runGaspAi(
+                            AiAction.PERFORMANCE
+                        )
+
+                    2 ->
+                        runGaspAi(
+                            AiAction.EFFICIENCY
+                        )
+
+                    3 ->
+                        runGaspAi(
+                            AiAction.FIND_PROBLEMS
+                        )
+
+                    4 ->
+                        runGaspAi(
+                            AiAction.SUGGEST_GPU_TUNING
+                        )
+
+                    5 ->
+                        showGaspAiQuestionDialog()
+                }
+            }
+            .setNegativeButton(
+                "Fechar",
+                null
+            )
+            .show()
+    }
+
+
+    private fun showGaspAiQuestionDialog() {
+
+        val input =
+            EditText(this).apply {
+
+                hint =
+                    "Ex.: o que limita o clock máximo?"
+
+                minLines =
+                    3
+
+                maxLines =
+                    6
+
+                setPadding(
+                    dpToPx(18),
+                    dpToPx(12),
+                    dpToPx(18),
+                    dpToPx(12)
+                )
+            }
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                "Perguntar à Gasp AI"
+            )
+            .setView(
+                input
+            )
+            .setNegativeButton(
+                "Cancelar",
+                null
+            )
+            .setPositiveButton(
+                "Analisar"
+            ) {
+                _,
+                _ ->
+
+                val question =
+                    input.text
+                        .toString()
+                        .trim()
+
+                if (question.isNotEmpty()) {
+
+                    runGaspAi(
+                        AiAction.CUSTOM,
+                        question
+                    )
+                }
+            }
+            .show()
+    }
+
+
+    private fun runGaspAi(
+        action: AiAction,
+        question: String? = null
+    ) {
+
+        val file =
+            gpuDtsFiles.getOrNull(
+                currentFileIndex
+            ) ?: return
+
+        val context =
+            GaspAiContextBuilder.build(
+                dtsFile =
+                    file,
+                nodeContent =
+                    editor.text.toString(),
+                userQuestion =
+                    question
+            )
+
+        val suggestion =
+            GaspAiLocalAnalyzer.analyze(
+                action,
+                context
+            )
+
+        showGaspAiSuggestion(
+            suggestion
+        )
+    }
+
+
+    private fun showGaspAiSuggestion(
+        suggestion: AiSuggestion
+    ) {
+
+        val risk =
+            when (
+                suggestion.risk
+            ) {
+
+                com.exynosbess.app.ai.AiRiskLevel.LOW ->
+                    "Baixo"
+
+                com.exynosbess.app.ai.AiRiskLevel.MEDIUM ->
+                    "Moderado"
+
+                com.exynosbess.app.ai.AiRiskLevel.HIGH ->
+                    "Alto"
+
+                com.exynosbess.app.ai.AiRiskLevel.CRITICAL ->
+                    "Crítico"
+            }
+
+        val message =
+            "Risco: $risk\n\n" +
+                suggestion.explanation
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                "✦ ${suggestion.title}"
+            )
+            .setMessage(
+                message
+            )
+            .setPositiveButton(
+                "OK",
+                null
+            )
+            .show()
     }
 
 
