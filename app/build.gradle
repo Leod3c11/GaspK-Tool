@@ -5,6 +5,7 @@ plugins {
 android {
     namespace 'com.exynosbess.app'
     compileSdk 36
+    ndkVersion "27.3.13750724"
 
     defaultConfig {
         applicationId "com.exynosbess.app"
@@ -14,6 +15,23 @@ android {
 
         versionCode 1
         versionName "0.1.0"
+
+        ndk {
+            abiFilters "arm64-v8a"
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file("src/main/cpp/CMakeLists.txt")
+            version "3.22.1"
+        }
     }
 
     buildTypes {
