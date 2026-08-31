@@ -376,8 +376,8 @@ class GpuEditorActivity : Activity() {
             .setMessage(
                 "A Gasp AI funciona localmente no aparelho.\n\n" +
                     "Modelo:\n" +
-                    "Qwen2.5-Coder-0.5B-Instruct Q4_K_M\n\n" +
-                    "Tamanho aproximado: 491 MB.\n\n" +
+                    "SmolLM2-360M-Instruct Q4_K_M\n\n" +
+                    "Tamanho aproximado: 271 MB.\n\n" +
                     "Após o download, a IA poderá funcionar offline."
             )
             .setNegativeButton(

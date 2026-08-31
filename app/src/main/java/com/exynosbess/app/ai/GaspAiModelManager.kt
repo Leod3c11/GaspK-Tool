@@ -6,13 +6,13 @@ import java.io.File
 object GaspAiModelManager {
 
     const val MODEL_NAME =
-        "Qwen2.5-Coder-0.5B-Instruct Q4_K_M"
+        "SmolLM2-360M-Instruct Q4_K_M"
 
     const val MODEL_SHA256 =
-        "1d9614638d18024d0fbb36575a15f1302a3adf044df10345688ec4f6e1c4ff32"
+        "2fa3f013dcdd7b99f9b237717fa0b12d75bbb89984cc1274be1471a465bac9c2"
 
     const val MODEL_URL =
-        "https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF/resolve/main/qwen2.5-coder-0.5b-instruct-q4_k_m.gguf?download=true"
+        "https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf?download=true"
 
     private const val MODEL_DIR =
         "models"
@@ -57,6 +57,6 @@ object GaspAiModelManager {
 
         return file.exists() &&
             file.isFile &&
-            file.length() > 400L * 1024L * 1024L
+            file.length() > 240L * 1024L * 1024L
     }
 }

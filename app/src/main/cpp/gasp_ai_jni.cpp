@@ -24,8 +24,8 @@ llama_model * g_model = nullptr;
 
 bool g_backend_initialized = false;
 
-constexpr uint32_t GASP_CONTEXT_SIZE = 2048;
-constexpr uint32_t GASP_BATCH_SIZE = 512;
+constexpr uint32_t GASP_CONTEXT_SIZE = 1024;
+constexpr uint32_t GASP_BATCH_SIZE = 128;
 
 void ensureBackend() {
 

@@ -32,7 +32,7 @@ object GaspAiPromptBuilder {
 
         val node =
             context.nodeContent.take(
-                7000
+                3000
             )
 
         val system =
