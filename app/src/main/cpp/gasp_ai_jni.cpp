@@ -517,7 +517,7 @@ Java_com_exynosbess_app_ai_GaspAiNative_nativeGenerate(
         generated++
     ) {
 
-        const llama_token token =
+        llama_token token =
             llama_sampler_sample(
                 sampler,
                 ctx,
