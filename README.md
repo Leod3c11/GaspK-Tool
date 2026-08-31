@@ -1,1 +1,1 @@
-# ExynosBess
+# GaspKernel-Editor
