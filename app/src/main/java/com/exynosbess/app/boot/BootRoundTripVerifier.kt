@@ -62,16 +62,17 @@ object BootRoundTripVerifier {
             }
 
             /*
-             * Ler o mapa criado durante a extração original.
+             * Ler somente DTBs pertencentes ao boot.
              *
-             * Aqui sabemos exatamente:
+             * Possíveis origens:
              *
-             * dtb_0 -> extra
-             * dtb_1 -> dtb
-             * dtb_2 -> kernel_dtb
-             * etc.
+             * kernel
+             * extra
+             * dtb
+             * kernel_dtb
              *
-             * dtb_partition NÃO pertence ao boot.
+             * dtb_partition é tratado separadamente
+             * e nunca entra nesta verificação.
              */
             val expectedEntries =
                 DtbSourceMap
@@ -132,7 +133,7 @@ object BootRoundTripVerifier {
             verifyWorkspace.mkdirs()
 
             /*
-             * Desempacotar o boot recém-gerado.
+             * Desempacotar boot reconstruído.
              */
             val unpack =
                 ShellExecutor.root(
@@ -149,14 +150,12 @@ object BootRoundTripVerifier {
             }
 
             /*
-             * NÃO exigimos extra.
+             * Importante:
              *
-             * O scanner encontrará qualquer combinação:
+             * NÃO exigimos "extra".
              *
-             * kernel
-             * extra
-             * dtb
-             * kernel_dtb
+             * O scanner procura qualquer componente
+             * suportado presente no boot.
              */
             val scan =
                 DtbScanner.scan(
@@ -180,6 +179,12 @@ object BootRoundTripVerifier {
                             supportedSources
                     }
 
+            if (actualEntries.isEmpty()) {
+                return fail(
+                    "Nenhum DTB de boot localizado após round-trip"
+                )
+            }
+
             val expectedBySource =
                 expectedEntries
                     .groupBy {
@@ -193,12 +198,19 @@ object BootRoundTripVerifier {
                     }
 
             /*
-             * As origens que possuíam DTB antes precisam
-             * continuar existindo depois do repack.
+             * Verificar se cada componente que originalmente
+             * possuía DTBs continua presente e com a mesma
+             * quantidade de DTBs após o repack.
+             *
+             * Usamos for tradicional para permitir return
+             * seguro da função verify().
              */
-            expectedBySource.forEach {
-                sourceName,
-                expectedSourceEntries ->
+            for (
+                (
+                    sourceName,
+                    expectedSourceEntries
+                ) in expectedBySource
+            ) {
 
                 val actualSourceEntries =
                     actualBySource[
@@ -237,217 +249,246 @@ object BootRoundTripVerifier {
                 mutableListOf<DtbCheck>()
 
             /*
-             * Verificar cada componente separadamente.
-             *
-             * O índice global original é preservado através
-             * do DtbSourceMap.
+             * Processar cada componente independentemente.
              */
-            expectedBySource
-                .toSortedMap()
-                .forEach {
+            for (
+                (
                     sourceName,
-                    expectedUnsorted ->
+                    expectedUnsorted
+                ) in expectedBySource.toSortedMap()
+            ) {
 
-                    val expected =
-                        expectedUnsorted
-                            .sortedBy {
-                                it.offset
-                            }
-
-                    val actual =
-                        actualBySource[
-                            sourceName
-                        ]
-                            ?.sortedBy {
-                                it.offset
-                            }
-                            ?: emptyList()
-
-                    val sourceFile =
-                        File(
-                            verifyWorkspace,
-                            sourceName
-                        )
-
-                    if (!sourceFile.exists()) {
-                        return fail(
-                            "Componente $sourceName desapareceu após repack"
-                        )
-                    }
-
-                    expected.forEachIndexed {
-                        localIndex,
-                        expectedEntry ->
-
-                        val actualEntry =
-                            actual[
-                                localIndex
-                            ]
-
-                        val globalIndex =
-                            expectedEntry.index
-
-                        val originalDts =
-                            File(
-                                workspace,
-                                "dtbs/dtb_${globalIndex}.dts"
-                            )
-
-                        if (!originalDts.exists()) {
-                            return fail(
-                                "DTS original dtb_${globalIndex}.dts não encontrado"
-                            )
+                val expected =
+                    expectedUnsorted
+                        .sortedBy {
+                            it.offset
                         }
 
-                        /*
-                         * Extrair o DTB realmente presente
-                         * no boot reconstruído.
-                         */
-                        val extractedDtb =
-                            File(
-                                extractedDir,
-                                "actual_${globalIndex}.dtb"
-                            )
-
-                        extractRegion(
-                            sourceFile,
-                            extractedDtb,
-                            actualEntry.offset,
-                            actualEntry.size
-                        )
-
-                        if (
-                            !hasValidMagic(
-                                extractedDtb
-                            )
-                        ) {
-                            return fail(
-                                "DTB $globalIndex de $sourceName " +
-                                    "possui magic inválido"
-                            )
+                val actual =
+                    actualBySource[
+                        sourceName
+                    ]
+                        ?.sortedBy {
+                            it.offset
                         }
+                        ?: emptyList()
 
-                        /*
-                         * Recompilar o DTS salvo pelo editor.
-                         *
-                         * Essa é a representação binária que
-                         * esperamos encontrar no boot.
-                         */
-                        val expectedDtb =
-                            File(
-                                extractedDir,
-                                "expected_${globalIndex}.dtb"
-                            )
+                val sourceFile =
+                    File(
+                        verifyWorkspace,
+                        sourceName
+                    )
 
-                        val compile =
-                            ShellExecutor.root(
-                                "'${dtc.path}' " +
-                                    "-I dts " +
-                                    "-O dtb " +
-                                    "-o '${expectedDtb.absolutePath}' " +
-                                    "'${originalDts.absolutePath}'"
-                            )
-
-                        if (
-                            !compile.success ||
-                            !expectedDtb.exists() ||
-                            expectedDtb.length() == 0L
-                        ) {
-                            return fail(
-                                "Falha recompilando dtb_${globalIndex}.dts:\n\n" +
-                                    compile.output
-                            )
-                        }
-
-                        /*
-                         * Gerar também DTS round-trip para
-                         * diagnóstico visual.
-                         */
-                        val roundTripDts =
-                            File(
-                                extractedDir,
-                                "roundtrip_${globalIndex}.dts"
-                            )
-
-                        val decompile =
-                            ShellExecutor.root(
-                                "'${dtc.path}' " +
-                                    "-I dtb " +
-                                    "-O dts " +
-                                    "-o '${roundTripDts.absolutePath}' " +
-                                    "'${extractedDtb.absolutePath}'"
-                            )
-
-                        if (
-                            !decompile.success ||
-                            !roundTripDts.exists()
-                        ) {
-                            return fail(
-                                "Falha decompilando DTB $globalIndex:\n\n" +
-                                    decompile.output
-                            )
-                        }
-
-                        /*
-                         * Comparação binária.
-                         *
-                         * É mais confiável que comparar
-                         * formatação textual do DTS.
-                         */
-                        val expectedHash =
-                            sha256(
-                                expectedDtb
-                            )
-
-                        val actualHash =
-                            sha256(
-                                extractedDtb
-                            )
-
-                        val equal =
-                            expectedHash ==
-                                actualHash
-
-                        checks.add(
-                            DtbCheck(
-                                index =
-                                    globalIndex,
-
-                                originalDts =
-                                    originalDts.absolutePath,
-
-                                roundTripDts =
-                                    roundTripDts.absolutePath,
-
-                                equal =
-                                    equal,
-
-                                message =
-                                    if (equal) {
-                                        "$sourceName: DTB preservado"
-                                    } else {
-                                        "$sourceName: DTB diferente após round-trip"
-                                    }
-                            )
-                        )
-
-                        if (!equal) {
-                            return VerifyResult(
-                                false,
-                                checks,
-                                "Round-trip falhou no DTB " +
-                                    "$globalIndex de $sourceName"
-                            )
-                        }
-                    }
+                if (
+                    !sourceFile.exists() ||
+                    sourceFile.length() == 0L
+                ) {
+                    return fail(
+                        "Componente $sourceName desapareceu após repack"
+                    )
                 }
 
+                if (
+                    actual.size !=
+                    expected.size
+                ) {
+                    return fail(
+                        "Quantidade inesperada de DTBs em $sourceName.\n\n" +
+                            "Esperado: ${expected.size}\n" +
+                            "Encontrado: ${actual.size}"
+                    )
+                }
+
+                for (
+                    localIndex in
+                    expected.indices
+                ) {
+
+                    val expectedEntry =
+                        expected[
+                            localIndex
+                        ]
+
+                    val actualEntry =
+                        actual[
+                            localIndex
+                        ]
+
+                    val globalIndex =
+                        expectedEntry.index
+
+                    val originalDts =
+                        File(
+                            workspace,
+                            "dtbs/dtb_${globalIndex}.dts"
+                        )
+
+                    if (!originalDts.exists()) {
+                        return fail(
+                            "DTS original dtb_${globalIndex}.dts não encontrado"
+                        )
+                    }
+
+                    /*
+                     * Extrair DTB realmente presente no
+                     * boot reconstruído.
+                     */
+                    val extractedDtb =
+                        File(
+                            extractedDir,
+                            "actual_${globalIndex}.dtb"
+                        )
+
+                    extractRegion(
+                        sourceFile,
+                        extractedDtb,
+                        actualEntry.offset,
+                        actualEntry.size
+                    )
+
+                    if (
+                        !hasValidMagic(
+                            extractedDtb
+                        )
+                    ) {
+                        return fail(
+                            "DTB $globalIndex de $sourceName " +
+                                "possui magic inválido"
+                        )
+                    }
+
+                    /*
+                     * Recompilar DTS atualmente salvo pelo
+                     * editor para obter o DTB esperado.
+                     */
+                    val expectedDtb =
+                        File(
+                            extractedDir,
+                            "expected_${globalIndex}.dtb"
+                        )
+
+                    val compile =
+                        ShellExecutor.root(
+                            "'${dtc.path}' " +
+                                "-I dts " +
+                                "-O dtb " +
+                                "-o '${expectedDtb.absolutePath}' " +
+                                "'${originalDts.absolutePath}'"
+                        )
+
+                    if (
+                        !compile.success ||
+                        !expectedDtb.exists() ||
+                        expectedDtb.length() == 0L
+                    ) {
+                        return fail(
+                            "Falha recompilando dtb_${globalIndex}.dts:\n\n" +
+                                compile.output
+                        )
+                    }
+
+                    if (
+                        !hasValidMagic(
+                            expectedDtb
+                        )
+                    ) {
+                        return fail(
+                            "DTB esperado $globalIndex possui magic inválido"
+                        )
+                    }
+
+                    /*
+                     * Decompilar DTB encontrado após repack
+                     * para diagnóstico.
+                     */
+                    val roundTripDts =
+                        File(
+                            extractedDir,
+                            "roundtrip_${globalIndex}.dts"
+                        )
+
+                    val decompile =
+                        ShellExecutor.root(
+                            "'${dtc.path}' " +
+                                "-I dtb " +
+                                "-O dts " +
+                                "-o '${roundTripDts.absolutePath}' " +
+                                "'${extractedDtb.absolutePath}'"
+                        )
+
+                    if (
+                        !decompile.success ||
+                        !roundTripDts.exists() ||
+                        roundTripDts.length() == 0L
+                    ) {
+                        return fail(
+                            "Falha decompilando DTB $globalIndex:\n\n" +
+                                decompile.output
+                        )
+                    }
+
+                    /*
+                     * Comparação binária SHA-256.
+                     *
+                     * Não dependemos da formatação textual
+                     * produzida pelo dtc.
+                     */
+                    val expectedHash =
+                        sha256(
+                            expectedDtb
+                        )
+
+                    val actualHash =
+                        sha256(
+                            extractedDtb
+                        )
+
+                    val equal =
+                        expectedHash ==
+                            actualHash
+
+                    checks.add(
+                        DtbCheck(
+                            index =
+                                globalIndex,
+
+                            originalDts =
+                                originalDts.absolutePath,
+
+                            roundTripDts =
+                                roundTripDts.absolutePath,
+
+                            equal =
+                                equal,
+
+                            message =
+                                if (equal) {
+                                    "$sourceName: DTB preservado"
+                                } else {
+                                    "$sourceName: DTB diferente após round-trip"
+                                }
+                        )
+                    )
+
+                    if (!equal) {
+                        return VerifyResult(
+                            success = false,
+                            checks = checks,
+                            message =
+                                "Round-trip falhou no DTB " +
+                                    "$globalIndex de $sourceName"
+                        )
+                    }
+                }
+            }
+
             return VerifyResult(
-                true,
-                checks,
-                "Round-trip concluído com sucesso.\n" +
-                    "${checks.size} DTB(s) verificado(s) em " +
-                    "${expectedBySource.size} componente(s)."
+                success = true,
+                checks = checks,
+                message =
+                    "Round-trip concluído com sucesso.\n" +
+                        "${checks.size} DTB(s) verificado(s) em " +
+                        "${expectedBySource.size} componente(s)."
             )
 
         } catch (
@@ -468,8 +509,8 @@ object BootRoundTripVerifier {
     ) {
 
         if (
-            offset < 0 ||
-            size <= 0 ||
+            offset < 0L ||
+            size <= 0L ||
             offset + size >
             source.length()
         ) {
@@ -501,7 +542,7 @@ object BootRoundTripVerifier {
                         )
 
                     while (
-                        remaining > 0
+                        remaining > 0L
                     ) {
 
                         val wanted =
@@ -519,7 +560,7 @@ object BootRoundTripVerifier {
 
                         if (read <= 0) {
                             throw IllegalStateException(
-                                "Fim inesperado durante extração"
+                                "Fim inesperado durante extração de ${source.name}"
                             )
                         }
 
@@ -542,7 +583,7 @@ object BootRoundTripVerifier {
 
         if (
             !file.exists() ||
-            file.length() < 4
+            file.length() < 4L
         ) {
             return false
         }
@@ -614,9 +655,9 @@ object BootRoundTripVerifier {
     ): VerifyResult {
 
         return VerifyResult(
-            false,
-            emptyList(),
-            message
+            success = false,
+            checks = emptyList(),
+            message = message
         )
     }
 }
