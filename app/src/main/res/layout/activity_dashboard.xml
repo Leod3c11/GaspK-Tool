@@ -31,19 +31,39 @@
             android:layout_marginBottom="22dp" />
 
         <LinearLayout
+            android:id="@+id/dashboardDeviceCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_dashboard_card"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="DEVICE TREE"
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="DEVICE TREE"
+                    android:textColor="@color/exynos_text_secondary"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="@color/exynos_accent"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/dashboardDtbModel"
@@ -145,62 +165,6 @@
                 android:textColor="@color/exynos_text_secondary"
                 android:textSize="11sp"
                 android:layout_marginTop="6dp" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/dashboardDtbSelector"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_dashboard_card"
-            android:orientation="vertical"
-            android:clickable="true"
-            android:focusable="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="DEVICE TREES"
-                    android:textColor="@color/exynos_text_secondary"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textColor="@color/exynos_accent"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/dashboardDtbSelectorCount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Detectando..."
-                android:textColor="@color/exynos_text"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginTop="7dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Toque para visualizar e editar"
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="11sp"
-                android:layout_marginTop="4dp" />
 
         </LinearLayout>
 

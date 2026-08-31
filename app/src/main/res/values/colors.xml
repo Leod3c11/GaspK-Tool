@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="exynos_bg">#0D1117</color>
-    <color name="exynos_surface">#161B22</color>
-    <color name="exynos_surface_2">#1C2128</color>
-    <color name="exynos_border">#30363D</color>
+    <color name="exynos_bg">#000000</color>
+    <color name="exynos_surface">#0A0A0A</color>
+    <color name="exynos_surface_2">#111111</color>
+    <color name="exynos_border">#202020</color>
 
     <color name="exynos_text">#F0F6FC</color>
     <color name="exynos_text_secondary">#8B949E</color>
@@ -16,6 +16,6 @@
     <color name="exynos_warning">#D29922</color>
     <color name="exynos_error">#F85149</color>
 
-    <color name="exynos_editor_bg">#090C10</color>
+    <color name="exynos_editor_bg">#000000</color>
 
 </resources>

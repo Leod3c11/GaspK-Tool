@@ -27,8 +27,7 @@ class DashboardActivity : Activity() {
     private lateinit var bootStatus: TextView
     private lateinit var dashboardStatus: TextView
 
-    private lateinit var dtbSelector: LinearLayout
-    private lateinit var dtbSelectorCount: TextView
+    private lateinit var deviceCard: LinearLayout
 
     private lateinit var advanced: Button
 
@@ -106,14 +105,9 @@ class DashboardActivity : Activity() {
                 R.id.dashboardStatus
             )
 
-        dtbSelector =
+        deviceCard =
             findViewById(
-                R.id.dashboardDtbSelector
-            )
-
-        dtbSelectorCount =
-            findViewById(
-                R.id.dashboardDtbSelectorCount
+                R.id.dashboardDeviceCard
             )
 
         advanced =
@@ -121,10 +115,10 @@ class DashboardActivity : Activity() {
                 R.id.dashboardAdvanced
             )
 
-        dtbSelector.isEnabled =
+        deviceCard.isEnabled =
             false
 
-        dtbSelector.setOnClickListener {
+        deviceCard.setOnClickListener {
 
             if (availableDtbs.isNotEmpty()) {
                 showDtbSelector()
@@ -207,10 +201,7 @@ class DashboardActivity : Activity() {
                     dtbCount.text =
                         "Device Trees: 0"
 
-                    dtbSelectorCount.text =
-                        "Nenhum disponível"
-
-                    dtbSelector.isEnabled =
+                    deviceCard.isEnabled =
                         false
 
                     dashboardStatus.text =
@@ -251,20 +242,7 @@ class DashboardActivity : Activity() {
                 dtbCount.text =
                     "Device Trees: $count"
 
-                dtbSelectorCount.text =
-                    when (count) {
-
-                        0 ->
-                            "Nenhum disponível"
-
-                        1 ->
-                            "1 Device Tree disponível"
-
-                        else ->
-                            "$count Device Trees disponíveis"
-                    }
-
-                dtbSelector.isEnabled =
+                deviceCard.isEnabled =
                     count > 0
 
                 dashboardStatus.text =
