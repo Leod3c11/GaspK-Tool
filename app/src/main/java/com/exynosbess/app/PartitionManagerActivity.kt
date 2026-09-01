@@ -1,13 +1,13 @@
 package com.exynosbess.app
 
 import android.app.Activity
-import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.exynosbess.app.partition.PartitionImportManager
+import com.exynosbess.app.partition.PartitionSelection
 import com.exynosbess.app.partition.PartitionInfo
 import com.exynosbess.app.partition.PartitionScanner
 import com.exynosbess.app.partition.PartitionType
@@ -298,16 +298,14 @@ class PartitionManagerActivity : Activity() {
             ).apply {
 
                 text =
-                    "Importar localmente"
+                    "Abrir"
 
                 isAllCaps =
                     false
 
                 setOnClickListener {
-                    importPartition(
-                        partition,
-                        this,
-                        details
+                    openPartition(
+                        partition
                     )
                 }
             }
@@ -319,93 +317,20 @@ class PartitionManagerActivity : Activity() {
         return root
     }
 
-    private fun importPartition(
-        partition: PartitionInfo,
-        button: Button,
-        details: TextView
+    private fun openPartition(
+        partition: PartitionInfo
     ) {
 
-        AlertDialog.Builder(
-            this
+        PartitionSelection.set(
+            partition
         )
-            .setTitle(
-                "Importar ${partition.name}"
+
+        startActivity(
+            Intent(
+                this,
+                PartitionSessionActivity::class.java
             )
-            .setMessage(
-                "Será criada uma cópia local somente para trabalho.\n\n" +
-                    "Nenhuma gravação será feita na partição."
-            )
-            .setNegativeButton(
-                "Cancelar",
-                null
-            )
-            .setPositiveButton(
-                "Importar"
-            ) {
-                _,
-                _ ->
-
-                button.isEnabled =
-                    false
-
-                button.text =
-                    "Importando..."
-
-                Thread {
-
-                    val result =
-                        PartitionImportManager
-                            .import(
-                                this,
-                                partition
-                            )
-
-                    runOnUiThread {
-
-                        button.isEnabled =
-                            true
-
-                        if (result.success) {
-
-                            button.text =
-                                "Importado ✓"
-
-                            details.text =
-                                details.text.toString() +
-                                    "\n\n✓ Cópia local pronta" +
-                                    (
-                                        result.sha256
-                                            ?.let {
-                                                "\nSHA-256: $it"
-                                            }
-                                            ?: ""
-                                    )
-
-                        } else {
-
-                            button.text =
-                                "Tentar novamente"
-
-                            AlertDialog.Builder(
-                                this
-                            )
-                                .setTitle(
-                                    "Falha na importação"
-                                )
-                                .setMessage(
-                                    result.message
-                                )
-                                .setPositiveButton(
-                                    "OK",
-                                    null
-                                )
-                                .show()
-                        }
-                    }
-
-                }.start()
-            }
-            .show()
+        )
     }
 
     private fun clearContainers() {
