@@ -58,6 +58,12 @@ class GpuEditorActivity : Activity() {
 
     private var decimalMode = false
 
+    private var workspacePath:
+        String? = null
+
+    private var sessionMode =
+        false
+
 
     override fun onCreate(
         savedInstanceState: Bundle?
@@ -68,9 +74,29 @@ class GpuEditorActivity : Activity() {
             R.layout.activity_gpu_editor
         )
 
+        workspacePath =
+            intent.getStringExtra(
+                "workspace_path"
+            )
+
+        sessionMode =
+            !workspacePath.isNullOrBlank()
+
         bindViews()
         setupListeners()
         discoverGpuDtbs()
+
+        if (sessionMode) {
+
+            rebuildButton.isEnabled =
+                false
+
+            verifyButton.isEnabled =
+                false
+
+            flashButton.isEnabled =
+                false
+        }
     }
 
 
@@ -224,10 +250,23 @@ class GpuEditorActivity : Activity() {
 
     private fun discoverGpuDtbs() {
 
+        val workspace =
+            workspacePath
+                ?.takeIf {
+                    it.isNotBlank()
+                }
+                ?.let {
+                    File(it)
+                }
+                ?: File(
+                    filesDir,
+                    "workspace"
+                )
+
         val dtbDir =
             File(
-                filesDir,
-                "workspace/dtbs"
+                workspace,
+                "dtbs"
             )
 
         gpuDtsFiles =
@@ -604,10 +643,20 @@ class GpuEditorActivity : Activity() {
                     validated = true
 
                     rebuildButton.isEnabled =
-                        true
+                        !sessionMode
+
+                    verifyButton.isEnabled =
+                        false
+
+                    flashButton.isEnabled =
+                        false
 
                     status.text =
-                        "✓ DTS válido"
+                        if (sessionMode) {
+                            "✓ DTS válido • salvo na sessão da partição"
+                        } else {
+                            "✓ DTS válido"
+                        }
 
                 } else {
 
@@ -637,6 +686,12 @@ class GpuEditorActivity : Activity() {
 
 
     private fun rebuildBoot() {
+
+        if (sessionMode) {
+            status.text =
+                "Reconstrução controlada pela sessão da partição."
+            return
+        }
 
         if (!validated) {
 
@@ -692,6 +747,12 @@ class GpuEditorActivity : Activity() {
 
     private fun verifyBoot() {
 
+        if (sessionMode) {
+            status.text =
+                "Verificação controlada pela sessão da partição."
+            return
+        }
+
         if (!bootGenerated) {
 
             status.text =
@@ -745,6 +806,12 @@ class GpuEditorActivity : Activity() {
 
 
     private fun confirmFlash() {
+
+        if (sessionMode) {
+            status.text =
+                "Flash bloqueado no editor. Use a sessão da partição."
+            return
+        }
 
         if (!bootVerified)
             return

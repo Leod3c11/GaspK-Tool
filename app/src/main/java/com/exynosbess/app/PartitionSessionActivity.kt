@@ -2,10 +2,13 @@ package com.exynosbess.app
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import com.exynosbess.app.partition.PartitionImportManager
+import com.exynosbess.app.partition.PartitionDtbCatalog
+import com.exynosbess.app.partition.PartitionDtbEntry
 import com.exynosbess.app.partition.PartitionPipeline
 import com.exynosbess.app.partition.PartitionInfo
 import com.exynosbess.app.partition.PartitionSelection
@@ -159,9 +162,7 @@ class PartitionSessionActivity : Activity() {
         }
 
         editButton.setOnClickListener {
-            showPending(
-                "Editor"
-            )
+            showDtbSelector()
         }
 
         validateButton.setOnClickListener {
@@ -493,6 +494,200 @@ class PartitionSessionActivity : Activity() {
 
         }.start()
     }
+
+    private fun showDtbSelector() {
+
+        val workspace =
+            PartitionWorkspace.get(
+                this,
+                partition
+            )
+
+        val workspacePath =
+            workspace.extracted.absolutePath
+
+        val entries =
+            PartitionDtbCatalog.load(
+                workspacePath
+            )
+
+        if (entries.isEmpty()) {
+
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Device Trees"
+                )
+                .setMessage(
+                    "Nenhum Device Tree editável foi encontrado nesta sessão.\\n\\n" +
+                        "Execute a extração primeiro."
+                )
+                .setPositiveButton(
+                    "OK",
+                    null
+                )
+                .show()
+
+            return
+        }
+
+        val labels =
+            entries.map { entry ->
+
+                buildString {
+
+                    append(
+                        "DTB ${entry.index}"
+                    )
+
+                    append(
+                        "  •  ${entry.sourceFile}"
+                    )
+
+                    append(
+                        "\\nOffset: 0x${entry.offset.toString(16).uppercase()}"
+                    )
+
+                    append(
+                        "  •  ${formatBytes(entry.size)}"
+                    )
+                }
+            }
+                .toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                "Device Trees • ${partition.name}"
+            )
+            .setItems(
+                labels
+            ) { _, position ->
+
+                val entry =
+                    entries[position]
+
+                showEditorChoice(
+                    workspacePath,
+                    entry
+                )
+            }
+            .setNegativeButton(
+                "Cancelar",
+                null
+            )
+            .show()
+    }
+
+
+    private fun showEditorChoice(
+        workspacePath: String,
+        entry: PartitionDtbEntry
+    ) {
+
+        val options =
+            arrayOf(
+                "Editor DTS completo",
+                "Editor GPU Mali"
+            )
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                "DTB ${entry.index} • ${entry.sourceFile}"
+            )
+            .setMessage(
+                "Offset: 0x${entry.offset.toString(16).uppercase()}\\n" +
+                    "Tamanho: ${formatBytes(entry.size)}"
+            )
+            .setItems(
+                options
+            ) { _, which ->
+
+                when (which) {
+
+                    0 ->
+                        openDtsEditor(
+                            workspacePath,
+                            entry.index
+                        )
+
+                    1 ->
+                        openGpuEditor(
+                            workspacePath
+                        )
+                }
+            }
+            .setNegativeButton(
+                "Cancelar",
+                null
+            )
+            .show()
+    }
+
+
+    private fun openDtsEditor(
+        workspacePath: String,
+        dtbIndex: Int
+    ) {
+
+        startActivity(
+            Intent(
+                this,
+                DtsEditorActivity::class.java
+            )
+                .putExtra(
+                    "workspace_path",
+                    workspacePath
+                )
+                .putExtra(
+                    "dtb_index",
+                    dtbIndex
+                )
+        )
+    }
+
+
+    private fun openGpuEditor(
+        workspacePath: String
+    ) {
+
+        startActivity(
+            Intent(
+                this,
+                GpuEditorActivity::class.java
+            )
+                .putExtra(
+                    "workspace_path",
+                    workspacePath
+                )
+        )
+    }
+
+
+    private fun formatBytes(
+        bytes: Long
+    ): String {
+
+        return when {
+
+            bytes >=
+                1024L * 1024L ->
+
+                "%.2f MB".format(
+                    bytes.toDouble() /
+                        (1024.0 * 1024.0)
+                )
+
+            bytes >= 1024L ->
+
+                "%.2f KB".format(
+                    bytes.toDouble() /
+                        1024.0
+                )
+
+            else ->
+                "$bytes B"
+        }
+    }
+
 
     private fun showPending(
         operation: String

@@ -52,6 +52,9 @@ class DtsEditorActivity : Activity() {
     private var dtbIndex: Int = 0
     private lateinit var dtsFile: File
 
+    private var sessionMode =
+        false
+
     private var searchResults =
         emptyList<Int>()
 
@@ -135,10 +138,32 @@ class DtsEditorActivity : Activity() {
                 0
             )
 
+        val workspacePath =
+            intent.getStringExtra(
+                "workspace_path"
+            )
+
+        sessionMode =
+            !workspacePath.isNullOrBlank()
+
+        val workspace =
+            if (
+                workspacePath.isNullOrBlank()
+            ) {
+                File(
+                    filesDir,
+                    "workspace"
+                )
+            } else {
+                File(
+                    workspacePath
+                )
+            }
+
         dtsFile =
             File(
-                filesDir,
-                "workspace/dtbs/dtb_${dtbIndex}.dts"
+                workspace,
+                "dtbs/dtb_${dtbIndex}.dts"
             )
 
         editorTitle.text =
@@ -146,6 +171,12 @@ class DtsEditorActivity : Activity() {
 
         editorPath.text =
             dtsFile.absolutePath
+
+        if (sessionMode) {
+
+            bootActionsPanel.visibility =
+                View.GONE
+        }
 
         loadDts()
 
@@ -561,21 +592,29 @@ class DtsEditorActivity : Activity() {
                     bootVerified =
                         false
 
-                    bootActionsPanel.visibility =
-                        View.VISIBLE
+                    if (sessionMode) {
 
-                    rebuildFromEditorButton.isEnabled =
-                        true
+                        bootActionsPanel.visibility =
+                            View.GONE
 
-                    verifyFromEditorButton.isEnabled =
-                        false
+                    } else {
 
-                    flashFromEditorButton.isEnabled =
-                        false
+                        bootActionsPanel.visibility =
+                            View.VISIBLE
 
-                    bootActionStatus.text =
-                        "✓ DTS $dtbIndex validado\n" +
-                        "○ Novo boot ainda não gerado"
+                        rebuildFromEditorButton.isEnabled =
+                            true
+
+                        verifyFromEditorButton.isEnabled =
+                            false
+
+                        flashFromEditorButton.isEnabled =
+                            false
+
+                        bootActionStatus.text =
+                            "✓ DTS $dtbIndex validado\n" +
+                            "○ Novo boot ainda não gerado"
+                    }
 
                 } else {
 
@@ -642,6 +681,12 @@ class DtsEditorActivity : Activity() {
     }
 
     private fun rebuildBoot() {
+
+        if (sessionMode) {
+            editorStatus.text =
+                "Reconstrução controlada pela sessão da partição."
+            return
+        }
 
         if (
             validatedContent == null ||
@@ -727,6 +772,12 @@ class DtsEditorActivity : Activity() {
 
     private fun verifyBoot() {
 
+        if (sessionMode) {
+            editorStatus.text =
+                "Verificação controlada pela sessão da partição."
+            return
+        }
+
         if (!bootGenerated) {
 
             bootActionStatus.text =
@@ -809,6 +860,12 @@ class DtsEditorActivity : Activity() {
     }
 
     private fun confirmFlash() {
+
+        if (sessionMode) {
+            editorStatus.text =
+                "Flash bloqueado no editor. Use a sessão da partição."
+            return
+        }
 
         if (!bootVerified) {
 

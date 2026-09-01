@@ -3,6 +3,9 @@ package com.exynosbess.app.partition
 import android.content.Context
 import android.os.Process
 import com.exynosbess.app.boot.ShellExecutor
+import com.exynosbess.app.boot.DtbScanner
+import com.exynosbess.app.boot.DtbExtractor
+import com.exynosbess.app.boot.DtbDecompiler
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
 
@@ -147,6 +150,82 @@ object PartitionPipeline {
             )
         }
 
+        /*
+         * Procura Device Trees em todos os componentes
+         * conhecidos do boot.
+         *
+         * DtbScanner já verifica:
+         * kernel
+         * extra
+         * dtb
+         * kernel_dtb
+         * dtb_partition
+         */
+        val scan =
+            DtbScanner.scan(
+                extracted.absolutePath
+            )
+
+        var dtbCount =
+            0
+
+        var dtsCount =
+            0
+
+        var dtbMessage =
+            scan.message
+
+        if (
+            scan.success &&
+            scan.entries.isNotEmpty()
+        ) {
+
+            val extraction =
+                DtbExtractor.extract(
+                    extracted.absolutePath,
+                    scan.entries
+                )
+
+            if (!extraction.success) {
+
+                return Result(
+                    success = false,
+                    message =
+                        "Boot foi extraído, mas houve falha " +
+                        "extraindo os Device Trees:\n\n" +
+                        extraction.message
+                )
+            }
+
+            dtbCount =
+                extraction.files.size
+
+            val decompile =
+                DtbDecompiler.decompileAll(
+                    context,
+                    extracted.absolutePath
+                )
+
+            if (!decompile.success) {
+
+                return Result(
+                    success = false,
+                    message =
+                        "Os DTBs foram encontrados e extraídos, " +
+                        "mas houve falha ao gerar os DTS:\n\n" +
+                        decompile.message
+                )
+            }
+
+            dtsCount =
+                decompile.files.size
+
+            dtbMessage =
+                "${scan.entries.size} DTB(s) encontrado(s), " +
+                    "$dtbCount extraído(s), " +
+                    "$dtsCount convertido(s) para DTS."
+        }
+
         val files =
             extracted
                 .listFiles()
@@ -248,6 +327,44 @@ object PartitionPipeline {
                                 "• $it"
                             )
                         }
+                    }
+
+                    appendLine()
+                    appendLine(
+                        "Device Trees:"
+                    )
+
+                    appendLine(
+                        dtbMessage
+                    )
+
+                    if (dtsCount > 0) {
+
+                        appendLine()
+                        appendLine(
+                            "DTS editáveis:"
+                        )
+
+                        val dtbDir =
+                            File(
+                                extracted,
+                                "dtbs"
+                            )
+
+                        dtbDir
+                            .listFiles()
+                            ?.filter {
+                                it.isFile &&
+                                    it.name.endsWith(".dts")
+                            }
+                            ?.sortedBy {
+                                it.name
+                            }
+                            ?.forEach {
+                                appendLine(
+                                    "• ${it.name}"
+                                )
+                            }
                     }
 
                     if (unpack.output.isNotBlank()) {
