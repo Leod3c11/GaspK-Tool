@@ -10,6 +10,10 @@
         android:theme="@style/Theme.ExynosBess">
 
         <activity
+            android:name=".PartitionManagerActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".DtsEditorActivity"
             android:exported="false" />
 
