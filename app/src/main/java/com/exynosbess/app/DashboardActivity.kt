@@ -29,6 +29,7 @@ class DashboardActivity : Activity() {
 
     private lateinit var deviceCard: LinearLayout
 
+    private lateinit var partitions: Button
     private lateinit var advanced: Button
 
     private var availableDtbs =
@@ -110,6 +111,11 @@ class DashboardActivity : Activity() {
                 R.id.dashboardDeviceCard
             )
 
+        partitions =
+            findViewById(
+                R.id.dashboardPartitions
+            )
+
         advanced =
             findViewById(
                 R.id.dashboardAdvanced
@@ -123,6 +129,16 @@ class DashboardActivity : Activity() {
             if (availableDtbs.isNotEmpty()) {
                 showDtbSelector()
             }
+        }
+
+        partitions.setOnClickListener {
+
+            startActivity(
+                Intent(
+                    this,
+                    PartitionManagerActivity::class.java
+                )
+            )
         }
 
         advanced.setOnClickListener {
