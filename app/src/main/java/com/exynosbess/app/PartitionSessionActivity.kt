@@ -15,8 +15,16 @@ import com.exynosbess.app.partition.PartitionSelection
 import com.exynosbess.app.partition.PartitionSessionState
 import com.exynosbess.app.partition.PartitionStateStore
 import com.exynosbess.app.partition.PartitionWorkspace
+import com.exynosbess.app.partition.BootSessionRebuildManager
+import com.exynosbess.app.partition.BootSessionVerifier
+import com.exynosbess.app.partition.PartitionType
 
 class PartitionSessionActivity : Activity() {
+
+    companion object {
+        private const val REQUEST_EXPORT_REBUILT =
+            7001
+    }
 
     private lateinit var partition:
         PartitionInfo
@@ -87,6 +95,16 @@ class PartitionSessionActivity : Activity() {
         restoreState()
         render()
     }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (::partition.isInitialized) {
+            restoreState()
+            render()
+        }
+    }
+
 
     private fun bindViews() {
 
@@ -172,21 +190,15 @@ class PartitionSessionActivity : Activity() {
         }
 
         rebuildButton.setOnClickListener {
-            showPending(
-                "Reconstrução"
-            )
+            executeRebuild()
         }
 
         verifyButton.setOnClickListener {
-            showPending(
-                "Verificação"
-            )
+            executeVerification()
         }
 
         exportButton.setOnClickListener {
-            showPending(
-                "Exportação"
-            )
+            requestExport()
         }
 
         flashButton.setOnClickListener {
@@ -685,6 +697,258 @@ class PartitionSessionActivity : Activity() {
 
             else ->
                 "$bytes B"
+        }
+    }
+
+
+    private fun executeRebuild() {
+
+        if (partition.type != PartitionType.BOOT) {
+            showPending("Reconstrução")
+            return
+        }
+
+        rebuildButton.isEnabled =
+            false
+
+        rebuildButton.text =
+            "Reconstruindo..."
+
+        Thread {
+
+            val result =
+                BootSessionRebuildManager.rebuild(
+                    this,
+                    partition
+                )
+
+            runOnUiThread {
+
+                rebuildButton.text =
+                    "Reconstruir"
+
+                if (result.success) {
+
+                    state =
+                        PartitionSessionState.BUILT
+
+                    PartitionStateStore.save(
+                        this,
+                        partition,
+                        state
+                    )
+                }
+
+                render()
+
+                AlertDialog.Builder(this)
+                    .setTitle(
+                        if (result.success) {
+                            "Reconstrução concluída"
+                        } else {
+                            "Falha na reconstrução"
+                        }
+                    )
+                    .setMessage(result.message)
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+
+        }.start()
+    }
+
+
+    private fun executeVerification() {
+
+        if (partition.type != PartitionType.BOOT) {
+            showPending("Verificação")
+            return
+        }
+
+        verifyButton.isEnabled =
+            false
+
+        verifyButton.text =
+            "Verificando..."
+
+        Thread {
+
+            val result =
+                BootSessionVerifier.verify(
+                    this,
+                    partition
+                )
+
+            runOnUiThread {
+
+                verifyButton.text =
+                    "Verificar reconstrução"
+
+                if (result.success) {
+
+                    state =
+                        PartitionSessionState.VERIFIED
+
+                    PartitionStateStore.save(
+                        this,
+                        partition,
+                        state
+                    )
+                }
+
+                render()
+
+                AlertDialog.Builder(this)
+                    .setTitle(
+                        if (result.success) {
+                            "Verificação concluída"
+                        } else {
+                            "Verificação falhou"
+                        }
+                    )
+                    .setMessage(result.message)
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
+
+        }.start()
+    }
+
+
+    private fun requestExport() {
+
+        val workspace =
+            PartitionWorkspace.get(
+                this,
+                partition
+            )
+
+        if (
+            !workspace.rebuilt.exists() ||
+            workspace.rebuilt.length() <= 0L
+        ) {
+
+            AlertDialog.Builder(this)
+                .setTitle("Exportação")
+                .setMessage(
+                    "Nenhum arquivo reconstruído disponível."
+                )
+                .setPositiveButton("OK", null)
+                .show()
+
+            return
+        }
+
+        val fileName =
+            when (partition.type) {
+
+                PartitionType.BOOT ->
+                    "${partition.name}_modified.img"
+
+                PartitionType.DTB ->
+                    "${partition.name}_modified.img"
+
+                PartitionType.DTBO ->
+                    "${partition.name}_modified.img"
+            }
+
+        val intent =
+            Intent(
+                Intent.ACTION_CREATE_DOCUMENT
+            )
+                .addCategory(
+                    Intent.CATEGORY_OPENABLE
+                )
+                .setType(
+                    "application/octet-stream"
+                )
+                .putExtra(
+                    Intent.EXTRA_TITLE,
+                    fileName
+                )
+
+        startActivityForResult(
+            intent,
+            REQUEST_EXPORT_REBUILT
+        )
+    }
+
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+
+        super.onActivityResult(
+            requestCode,
+            resultCode,
+            data
+        )
+
+        if (
+            requestCode != REQUEST_EXPORT_REBUILT ||
+            resultCode != RESULT_OK
+        ) {
+            return
+        }
+
+        val uri =
+            data?.data
+                ?: return
+
+        val source =
+            PartitionWorkspace.get(
+                this,
+                partition
+            ).rebuilt
+
+        try {
+
+            contentResolver
+                .openOutputStream(uri)
+                ?.use { output ->
+
+                    source
+                        .inputStream()
+                        .use { input ->
+
+                            input.copyTo(
+                                output
+                            )
+                        }
+                }
+                ?: throw IllegalStateException(
+                    "Não foi possível abrir o destino."
+                )
+
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Exportação concluída"
+                )
+                .setMessage(
+                    "${source.name} exportado com sucesso."
+                )
+                .setPositiveButton(
+                    "OK",
+                    null
+                )
+                .show()
+
+        } catch (e: Exception) {
+
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Falha na exportação"
+                )
+                .setMessage(
+                    e.message ?: "Erro desconhecido"
+                )
+                .setPositiveButton(
+                    "OK",
+                    null
+                )
+                .show()
         }
     }
 

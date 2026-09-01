@@ -1,5 +1,9 @@
 package com.exynosbess.app
 
+import com.exynosbess.app.partition.PartitionSelection
+import com.exynosbess.app.partition.PartitionStateStore
+import com.exynosbess.app.partition.PartitionSessionState
+
 import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
@@ -546,6 +550,19 @@ class GpuEditorActivity : Activity() {
             status.text =
                 "✓ GPU salva em ${file.name}"
 
+            if (sessionMode) {
+
+                PartitionSelection.get()
+                    ?.let { selected ->
+
+                        PartitionStateStore.save(
+                            this,
+                            selected,
+                            PartitionSessionState.SAVED
+                        )
+                    }
+            }
+
             invalidateBootState()
 
         } catch (
@@ -641,6 +658,19 @@ class GpuEditorActivity : Activity() {
                 ) {
 
                     validated = true
+
+                    if (sessionMode) {
+
+                        PartitionSelection.get()
+                            ?.let { selected ->
+
+                                PartitionStateStore.save(
+                                    this,
+                                    selected,
+                                    PartitionSessionState.VALIDATED
+                                )
+                            }
+                    }
 
                     rebuildButton.isEnabled =
                         !sessionMode

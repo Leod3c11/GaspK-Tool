@@ -1,5 +1,9 @@
 package com.exynosbess.app
 
+import com.exynosbess.app.partition.PartitionSelection
+import com.exynosbess.app.partition.PartitionStateStore
+import com.exynosbess.app.partition.PartitionSessionState
+
 import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
@@ -462,6 +466,19 @@ class DtsEditorActivity : Activity() {
             editorStatus.text =
                 "✓ DTS salvo"
 
+            if (sessionMode) {
+
+                PartitionSelection.get()
+                    ?.let { selected ->
+
+                        PartitionStateStore.save(
+                            this,
+                            selected,
+                            PartitionSessionState.SAVED
+                        )
+                    }
+            }
+
             invalidateBootFlow()
 
         } catch (e: Exception) {
@@ -585,6 +602,19 @@ class DtsEditorActivity : Activity() {
 
                     validatedContent =
                         dtsEditor.text.toString()
+
+                    if (sessionMode) {
+
+                        PartitionSelection.get()
+                            ?.let { selected ->
+
+                                PartitionStateStore.save(
+                                    this,
+                                    selected,
+                                    PartitionSessionState.VALIDATED
+                                )
+                            }
+                    }
 
                     bootGenerated =
                         false
