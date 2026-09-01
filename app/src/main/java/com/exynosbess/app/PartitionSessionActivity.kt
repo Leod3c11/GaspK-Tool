@@ -15,6 +15,7 @@ import com.exynosbess.app.partition.PartitionSelection
 import com.exynosbess.app.partition.PartitionSessionState
 import com.exynosbess.app.partition.PartitionStateStore
 import com.exynosbess.app.partition.PartitionWorkspace
+import com.exynosbess.app.partition.PartitionDtsValidator
 import com.exynosbess.app.partition.BootSessionRebuildManager
 import com.exynosbess.app.partition.BootSessionVerifier
 import com.exynosbess.app.partition.PartitionType
@@ -180,13 +181,11 @@ class PartitionSessionActivity : Activity() {
         }
 
         editButton.setOnClickListener {
-            showDtbSelector()
+            openDtbEditor()
         }
 
         validateButton.setOnClickListener {
-            showPending(
-                "Validação"
-            )
+            executeValidation()
         }
 
         rebuildButton.setOnClickListener {
@@ -215,6 +214,32 @@ class PartitionSessionActivity : Activity() {
                 this,
                 partition
             )
+
+        val editableDtbs =
+            PartitionDtbCatalog.load(
+                PartitionWorkspace.get(
+                    this,
+                    partition
+                ).extracted.absolutePath
+            )
+
+        if (
+            editableDtbs.isNotEmpty() &&
+            state in setOf(
+                PartitionSessionState.DETECTED,
+                PartitionSessionState.IMPORTED
+            )
+        ) {
+
+            state =
+                PartitionSessionState.EXTRACTED
+
+            PartitionStateStore.save(
+                this,
+                partition,
+                state
+            )
+        }
     }
 
     private fun render() {
@@ -268,13 +293,23 @@ class PartitionSessionActivity : Activity() {
                 PartitionSessionState.EXTRACTED
             )
 
-        editButton.isEnabled =
-            state in setOf(
-                PartitionSessionState.EXTRACTED,
-                PartitionSessionState.DIRTY,
-                PartitionSessionState.SAVED,
-                PartitionSessionState.VALIDATED
+        val editableDtbs =
+            PartitionDtbCatalog.load(
+                PartitionWorkspace.get(
+                    this,
+                    partition
+                ).extracted.absolutePath
             )
+
+        editButton.isEnabled =
+            editableDtbs.isNotEmpty()
+
+        editButton.text =
+            if (editableDtbs.isNotEmpty()) {
+                "Editar Device Trees (${editableDtbs.size})"
+            } else {
+                "Editar Device Trees"
+            }
 
         validateButton.isEnabled =
             state ==
@@ -950,6 +985,104 @@ class PartitionSessionActivity : Activity() {
                 )
                 .show()
         }
+    }
+
+
+    private fun openDtbEditor() {
+
+        val workspace =
+            PartitionWorkspace.get(
+                this,
+                partition
+            )
+
+        val entries =
+            PartitionDtbCatalog.load(
+                workspace.extracted.absolutePath
+            )
+
+        if (entries.isEmpty()) {
+
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Editor"
+                )
+                .setMessage(
+                    "Nenhum Device Tree editável foi encontrado.\n\n" +
+                        "Use Extrair / descompactar primeiro."
+                )
+                .setPositiveButton(
+                    "OK",
+                    null
+                )
+                .show()
+
+            return
+        }
+
+        startActivity(
+            Intent(
+                this,
+                PartitionDtbEditorActivity::class.java
+            )
+        )
+    }
+
+
+    private fun executeValidation() {
+
+        validateButton.isEnabled =
+            false
+
+        validateButton.text =
+            "Validando..."
+
+        Thread {
+
+            val result =
+                PartitionDtsValidator.validate(
+                    this,
+                    partition
+                )
+
+            runOnUiThread {
+
+                validateButton.text =
+                    "Validar alterações"
+
+                if (result.success) {
+
+                    state =
+                        PartitionSessionState.VALIDATED
+
+                    PartitionStateStore.save(
+                        this,
+                        partition,
+                        state
+                    )
+                }
+
+                render()
+
+                AlertDialog.Builder(this)
+                    .setTitle(
+                        if (result.success) {
+                            "Validação concluída"
+                        } else {
+                            "Falha na validação"
+                        }
+                    )
+                    .setMessage(
+                        result.message
+                    )
+                    .setPositiveButton(
+                        "OK",
+                        null
+                    )
+                    .show()
+            }
+
+        }.start()
     }
 
 
