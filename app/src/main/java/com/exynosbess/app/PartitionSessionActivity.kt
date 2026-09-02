@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import com.exynosbess.app.partition.PartitionImportManager
+import com.exynosbess.app.partition.PartitionFlashManager
 import com.exynosbess.app.partition.PartitionDtbCatalog
 import com.exynosbess.app.partition.PartitionDtbEntry
 import com.exynosbess.app.partition.PartitionPipeline
@@ -203,9 +204,7 @@ class PartitionSessionActivity : Activity() {
         }
 
         flashButton.setOnClickListener {
-            showPending(
-                "Flash"
-            )
+            confirmFlash()
         }
     }
 
@@ -1088,6 +1087,146 @@ class PartitionSessionActivity : Activity() {
                             "Validação concluída"
                         } else {
                             "Falha na validação"
+                        }
+                    )
+                    .setMessage(
+                        result.message
+                    )
+                    .setPositiveButton(
+                        "OK",
+                        null
+                    )
+                    .show()
+            }
+
+        }.start()
+    }
+
+
+    private fun confirmFlash() {
+
+        if (
+            state !=
+            PartitionSessionState.VERIFIED
+        ) {
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Flash bloqueado"
+                )
+                .setMessage(
+                    "A imagem precisa estar reconstruída e verificada antes do flash."
+                )
+                .setPositiveButton(
+                    "OK",
+                    null
+                )
+                .show()
+
+            return
+        }
+
+        val workspace =
+            PartitionWorkspace.get(
+                this,
+                partition
+            )
+
+        if (
+            !workspace.rebuilt.exists() ||
+            workspace.rebuilt.length() <= 0L
+        ) {
+            AlertDialog.Builder(this)
+                .setTitle(
+                    "Flash bloqueado"
+                )
+                .setMessage(
+                    "A imagem reconstruída não foi encontrada."
+                )
+                .setPositiveButton(
+                    "OK",
+                    null
+                )
+                .show()
+
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                "Gravar ${partition.name}?"
+            )
+            .setMessage(
+                "Você está prestes a gravar diretamente uma partição do dispositivo.\n\n" +
+                    "Tipo: ${partition.type.name}\n" +
+                    "Partição: ${partition.name}\n" +
+                    "Destino: ${partition.resolvedPath}\n" +
+                    "Imagem: ${workspace.rebuilt.length()} bytes\n\n" +
+                    "Antes da gravação, o GaspKernel criará um novo backup " +
+                    "da partição atual.\n\n" +
+                    "Após o flash, a partição será lida novamente e comparada " +
+                    "por SHA-256 com a imagem reconstruída.\n\n" +
+                    "O aparelho NÃO será reiniciado automaticamente."
+            )
+            .setNegativeButton(
+                "Cancelar",
+                null
+            )
+            .setPositiveButton(
+                "GRAVAR"
+            ) { _, _ ->
+
+                executeFlash()
+            }
+            .show()
+    }
+
+
+    private fun executeFlash() {
+
+        /*
+         * Revalidar estado inclusive depois do diálogo.
+         */
+        if (
+            state !=
+            PartitionSessionState.VERIFIED
+        ) {
+            render()
+            return
+        }
+
+        flashButton.isEnabled =
+            false
+
+        flashButton.text =
+            "Gravando..."
+
+        Thread {
+
+            val result =
+                PartitionFlashManager.flash(
+                    this,
+                    partition
+                )
+
+            runOnUiThread {
+
+                flashButton.text =
+                    "Flash"
+
+                /*
+                 * Após sucesso, mantemos VERIFIED.
+                 * A imagem continua sendo exatamente a imagem validada.
+                 *
+                 * Em qualquer falha, também não avançamos estado.
+                 */
+                render()
+
+                AlertDialog.Builder(this)
+                    .setTitle(
+                        if (result.success) {
+                            "Flash concluído"
+                        } else {
+                            "Falha no flash"
                         }
                     )
                     .setMessage(
