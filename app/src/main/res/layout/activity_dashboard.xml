@@ -11,193 +11,345 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:paddingStart="18dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="30dp">
+
+        <!-- ============================================================= -->
+        <!-- HEADER -->
+        <!-- ============================================================= -->
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="GaspKernel"
             android:textColor="@color/exynos_text"
-            android:textSize="27sp"
-            android:textStyle="bold" />
+            android:textSize="30sp"
+            android:textStyle="bold"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Device Tree &amp; Kernel Editor"
-            android:textColor="@color/exynos_accent"
-            android:textSize="13sp"
             android:layout_marginTop="2dp"
-            android:layout_marginBottom="22dp" />
+            android:text="Kernel &amp; Device Tree Editor"
+            android:textColor="@color/exynos_accent"
+            android:textSize="13sp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:text="Controle, edição e reconstrução das partições do dispositivo"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="11sp"/>
+
+
+        <!-- ============================================================= -->
+        <!-- GERENCIAMENTO -->
+        <!-- ============================================================= -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="9dp"
+            android:text="GERENCIAMENTO"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.10"/>
+
+
+        <!-- PARTITION MANAGER -->
 
         <LinearLayout
-            android:id="@+id/dashboardDeviceCard"
+            android:id="@+id/dashboardPartitionCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_dashboard_card"
-            android:orientation="vertical"
             android:clickable="true"
-            android:focusable="true">
+            android:focusable="true"
+            android:orientation="vertical"
+            android:padding="18dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="DEVICE TREE"
-                    android:textColor="@color/exynos_text_secondary"
+                    android:text="PARTIÇÕES"
+                    android:textColor="@color/exynos_accent"
                     android:textSize="10sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.08" />
+                    android:letterSpacing="0.10"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="@color/exynos_accent"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
+                    android:textSize="28sp"
+                    android:textStyle="bold"/>
 
             </LinearLayout>
 
             <TextView
-                android:id="@+id/dashboardDtbModel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Detectando..."
-                android:textColor="@color/exynos_text"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginTop="9dp" />
-
-            <TextView
-                android:id="@+id/dashboardCompatible"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="12sp"
-                android:layout_marginTop="5dp" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_dashboard_card"
-            android:orientation="vertical"
-            android:layout_marginTop="12dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="GPU"
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08" />
-
-            <TextView
-                android:id="@+id/dashboardGpu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Detectando..."
+                android:layout_marginTop="8dp"
+                android:text="Gerenciar Partições"
                 android:textColor="@color/exynos_text"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginTop="9dp" />
+                android:textStyle="bold"/>
 
             <TextView
-                android:id="@+id/dashboardGpuCompatible"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text=""
+                android:layout_marginTop="6dp"
+                android:text="Detecte, extraia, edite e reconstrua boot, DTB e DTBO."
                 android:textColor="@color/exynos_text_secondary"
-                android:textSize="12sp"
-                android:layout_marginTop="5dp" />
+                android:textSize="12sp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_button_secondary"
+                    android:paddingStart="11dp"
+                    android:paddingTop="7dp"
+                    android:paddingEnd="11dp"
+                    android:paddingBottom="7dp"
+                    android:text="BOOT"
+                    android:textColor="@color/exynos_text"
+                    android:textSize="10sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="7dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:paddingStart="11dp"
+                    android:paddingTop="7dp"
+                    android:paddingEnd="11dp"
+                    android:paddingBottom="7dp"
+                    android:text="DTB"
+                    android:textColor="@color/exynos_text"
+                    android:textSize="10sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="7dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:paddingStart="11dp"
+                    android:paddingTop="7dp"
+                    android:paddingEnd="11dp"
+                    android:paddingBottom="7dp"
+                    android:text="DTBO"
+                    android:textColor="@color/exynos_text"
+                    android:textSize="10sp"
+                    android:textStyle="bold"/>
+
+            </LinearLayout>
 
         </LinearLayout>
+
+
+        <!-- ============================================================= -->
+        <!-- DEVICE TREE INFO -->
+        <!-- ============================================================= -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_dashboard_card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DEVICE TREE"
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.10"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="Edição centralizada"
+                android:textColor="@color/exynos_text"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="A edição de Device Trees agora é feita exclusivamente através do Gerenciador de Partições."
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="11sp"/>
+
+        </LinearLayout>
+
+
+        <!-- ============================================================= -->
+        <!-- FLUXO -->
+        <!-- ============================================================= -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="9dp"
+            android:text="FLUXO"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.10"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_dashboard_card"
             android:orientation="vertical"
-            android:layout_marginTop="12dp">
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="01  Detectar partição"
+                android:textColor="@color/exynos_text"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="02  Importar imagem local"
+                android:textColor="@color/exynos_text"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="03  Extrair e editar"
+                android:textColor="@color/exynos_text"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="04  Validar alterações"
+                android:textColor="@color/exynos_text"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="05  Reconstruir e verificar"
+                android:textColor="@color/exynos_text"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:text="06  Exportar ou instalar"
+                android:textColor="@color/exynos_accent"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+
+        <!-- ============================================================= -->
+        <!-- AVANÇADO -->
+        <!-- ============================================================= -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="9dp"
+            android:text="SISTEMA"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.10"/>
+
+        <LinearLayout
+            android:id="@+id/dashboardAdvancedCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_dashboard_card"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="18dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ferramentas avançadas"
+                    android:textColor="@color/exynos_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Acesso às funções técnicas e diagnóstico."
+                    android:textColor="@color/exynos_text_secondary"
+                    android:textSize="11sp"/>
+
+            </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="AMBIENTE"
+                android:layout_marginStart="12dp"
+                android:text="›"
                 android:textColor="@color/exynos_text_secondary"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08" />
-
-            <TextView
-                android:id="@+id/dashboardRoot"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Root: —"
-                android:textColor="@color/exynos_text"
-                android:textSize="14sp"
-                android:layout_marginTop="9dp" />
-
-            <TextView
-                android:id="@+id/dashboardDtbCount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="DTBs: —"
-                android:textColor="@color/exynos_text"
-                android:textSize="14sp"
-                android:layout_marginTop="6dp" />
-
-            <TextView
-                android:id="@+id/dashboardBoot"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Boot: —"
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="11sp"
-                android:layout_marginTop="6dp" />
+                android:textSize="27sp"
+                android:textStyle="bold"/>
 
         </LinearLayout>
-
-        <Button
-            android:id="@+id/dashboardPartitions"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_button_primary"
-            android:text="Gerenciar partições"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/dashboardAdvanced"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_button_secondary"
-            android:text="Ferramentas avançadas"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text" />
-
-        <TextView
-            android:id="@+id/dashboardStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="@color/exynos_text_secondary"
-            android:textSize="11sp"
-            android:gravity="center"
-            android:layout_marginTop="14dp" />
 
     </LinearLayout>
 
