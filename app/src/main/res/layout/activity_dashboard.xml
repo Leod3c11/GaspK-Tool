@@ -170,47 +170,6 @@
 
 
         <!-- ============================================================= -->
-        <!-- DEVICE TREE INFO -->
-        <!-- ============================================================= -->
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_dashboard_card"
-            android:orientation="vertical"
-            android:padding="18dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="DEVICE TREE"
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.10"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="9dp"
-                android:text="Edição centralizada"
-                android:textColor="@color/exynos_text"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:text="A edição de Device Trees agora é feita exclusivamente através do Gerenciador de Partições."
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="11sp"/>
-
-        </LinearLayout>
-
-
-        <!-- ============================================================= -->
         <!-- FLUXO -->
         <!-- ============================================================= -->
 
