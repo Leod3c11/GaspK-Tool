@@ -15,6 +15,8 @@ import com.exynosbess.app.partition.PartitionSelection
 import com.exynosbess.app.partition.PartitionSessionState
 import com.exynosbess.app.partition.PartitionStateStore
 import com.exynosbess.app.partition.PartitionWorkspace
+import com.exynosbess.app.partition.DtboSessionExtractor
+import com.exynosbess.app.partition.DtbSessionExtractor
 import com.exynosbess.app.partition.PartitionDtsValidator
 import com.exynosbess.app.partition.BootSessionRebuildManager
 import com.exynosbess.app.partition.BootSessionVerifier
@@ -488,10 +490,26 @@ class PartitionSessionActivity : Activity() {
         Thread {
 
             val result =
-                PartitionPipeline.extract(
-                    this,
-                    partition
-                )
+                when (partition.type) {
+
+                    PartitionType.BOOT ->
+                        PartitionPipeline.extract(
+                            this,
+                            partition
+                        )
+
+                    PartitionType.DTB ->
+                        DtbSessionExtractor.extract(
+                            this,
+                            partition
+                        )
+
+                    PartitionType.DTBO ->
+                        DtboSessionExtractor.extract(
+                            this,
+                            partition
+                        )
+                }
 
             runOnUiThread {
 

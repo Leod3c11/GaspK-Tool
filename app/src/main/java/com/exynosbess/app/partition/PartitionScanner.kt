@@ -20,30 +20,37 @@ object PartitionScanner {
     fun scan(): ScanResult {
 
         val activeSlot =
-            detectActiveSlotSuffix()
+            detectActiveSlot()
 
         val command =
             """
-            for d in \
-                /dev/block/by-name \
-                /dev/block/bootdevice/by-name \
-                /dev/block/platform/*/by-name
-            do
-                [ -d "${'$'}d" ] || continue
+            set +e
 
-                for p in "${'$'}d"/*
-                do
-                    [ -e "${'$'}p" ] || continue
+            scan_dir() {
+                d="${'$'}1"
+
+                [ -d "${'$'}d" ] || return 0
+
+                for p in "${'$'}d"/*; do
+
+                    [ -e "${'$'}p" ] || [ -L "${'$'}p" ] || continue
 
                     n="${'$'}{p##*/}"
 
-                    case "${'$'}n" in
-                        boot|boot_*|dtb|dtb_*|dtbo|dtbo_*)
-                            r="${'$'}(readlink -f "${'$'}p" 2>/dev/null)"
+                    lower="${'$'}(
+                        printf '%s' "${'$'}n" |
+                        tr '[:upper:]' '[:lower:]'
+                    )"
 
-                            if [ -z "${'$'}r" ]; then
-                                r="${'$'}p"
-                            fi
+                    case "${'$'}lower" in
+
+                        boot|boot_a|boot_b|dtb|dtb_a|dtb_b|dtbo|dtbo_a|dtbo_b)
+
+                            r="${'$'}(
+                                readlink -f "${'$'}p" 2>/dev/null
+                            )"
+
+                            [ -n "${'$'}r" ] || r="${'$'}p"
 
                             printf '%s|%s|%s\n' \
                                 "${'$'}n" \
@@ -52,19 +59,67 @@ object PartitionScanner {
                             ;;
                     esac
                 done
+            }
+
+            scan_dir /dev/block/by-name
+            scan_dir /dev/block/bootdevice/by-name
+
+            for d in /dev/block/platform/*/by-name; do
+                scan_dir "${'$'}d"
+            done
+
+            for d in ${'$'}(
+                find /dev/block \
+                    -type d \
+                    -name by-name \
+                    2>/dev/null
+            ); do
+                scan_dir "${'$'}d"
+            done
+
+            for p in /dev/block/*; do
+
+                [ -e "${'$'}p" ] || continue
+
+                n="${'$'}{p##*/}"
+
+                lower="${'$'}(
+                    printf '%s' "${'$'}n" |
+                    tr '[:upper:]' '[:lower:]'
+                )"
+
+                case "${'$'}lower" in
+
+                    boot|boot_a|boot_b|dtb|dtb_a|dtb_b|dtbo|dtbo_a|dtbo_b)
+
+                        r="${'$'}(
+                            readlink -f "${'$'}p" 2>/dev/null
+                        )"
+
+                        [ -n "${'$'}r" ] || r="${'$'}p"
+
+                        printf '%s|%s|%s\n' \
+                            "${'$'}n" \
+                            "${'$'}p" \
+                            "${'$'}r"
+                        ;;
+                esac
             done
             """.trimIndent()
 
         val result =
-            ShellExecutor.root(command)
+            ShellExecutor.root(
+                command
+            )
 
         if (!result.success) {
+
             return ScanResult(
                 success = false,
                 partitions = emptyList(),
                 activeSlotSuffix = activeSlot,
                 message =
-                    "Falha ao enumerar partições: " +
+                    "Falha ao consultar partições.\n\n" +
                         result.output
             )
         }
@@ -78,6 +133,7 @@ object PartitionScanner {
                 .toList()
 
         if (candidates.isEmpty()) {
+
             return ScanResult(
                 success = true,
                 partitions = emptyList(),
@@ -87,40 +143,117 @@ object PartitionScanner {
             )
         }
 
-        /*
-         * O mesmo dispositivo pode aparecer em:
-         *
-         * /dev/block/by-name
-         * /dev/block/bootdevice/by-name
-         * /dev/block/platform/.../by-name
-         *
-         * Portanto agrupamos pelo caminho real.
-         */
         val groups =
             candidates.groupBy {
                 it.resolvedPath
             }
 
         val partitions =
-            groups.values
-                .mapNotNull {
-                    buildPartitionInfo(it)
-                }
-                .sortedWith(
-                    compareBy<PartitionInfo>(
-                        { typeOrder(it.type) },
-                        { it.name }
+            groups.mapNotNull {
+                (_, aliases) ->
+
+                val preferred =
+                    aliases.minByOrNull {
+                        aliasPriority(
+                            it.aliasPath
+                        )
+                    }
+                        ?: return@mapNotNull null
+
+                val type =
+                    typeOf(
+                        preferred.name
                     )
+                        ?: return@mapNotNull null
+
+                val slot =
+                    slotOf(
+                        preferred.name
+                    )
+
+                PartitionInfo(
+                    name =
+                        preferred.name,
+
+                    type =
+                        type,
+
+                    aliasPath =
+                        preferred.aliasPath,
+
+                    resolvedPath =
+                        preferred.resolvedPath,
+
+                    sizeBytes =
+                        readSize(
+                            preferred.resolvedPath
+                        ),
+
+                    slotSuffix =
+                        slot,
+
+                    aliases =
+                        aliases
+                            .map {
+                                it.aliasPath
+                            }
+                            .distinct()
+                            .sorted()
                 )
+            }
+                .sortedWith(
+                    compareBy<PartitionInfo> {
+                        when (it.type) {
+                            PartitionType.BOOT -> 0
+                            PartitionType.DTB -> 1
+                            PartitionType.DTBO -> 2
+                        }
+                    }
+                        .thenBy {
+                            it.name.lowercase()
+                        }
+                )
+
+        val counts =
+            partitions
+                .groupingBy {
+                    it.type
+                }
+                .eachCount()
 
         return ScanResult(
             success = true,
             partitions = partitions,
             activeSlotSuffix = activeSlot,
             message =
-                "${partitions.size} partição(ões) encontrada(s)."
+                buildString {
+
+                    append(
+                        "${partitions.size} partição(ões) encontrada(s)"
+                    )
+
+                    append(
+                        "\nBOOT: ${counts[PartitionType.BOOT] ?: 0}"
+                    )
+
+                    append(
+                        "\nDTB: ${counts[PartitionType.DTB] ?: 0}"
+                    )
+
+                    append(
+                        "\nDTBO: ${counts[PartitionType.DTBO] ?: 0}"
+                    )
+
+                    if (activeSlot != null) {
+
+                        append(
+                            "\nSlot ativo: $activeSlot"
+                        )
+                    }
+                }
         )
     }
+
 
     private fun parseCandidate(
         line: String
@@ -153,7 +286,9 @@ object PartitionScanner {
             return null
         }
 
-        if (partitionType(name) == null) {
+        if (
+            typeOf(name) == null
+        ) {
             return null
         }
 
@@ -164,86 +299,44 @@ object PartitionScanner {
         )
     }
 
-    private fun buildPartitionInfo(
-        candidates: List<Candidate>
-    ): PartitionInfo? {
 
-        if (candidates.isEmpty()) {
-            return null
-        }
-
-        val primary =
-            candidates.minWithOrNull(
-                compareBy<Candidate>(
-                    { aliasPriority(it.aliasPath) },
-                    { it.aliasPath.length }
-                )
-            ) ?: return null
-
-        val type =
-            partitionType(
-                primary.name
-            ) ?: return null
-
-        return PartitionInfo(
-            name = primary.name,
-            type = type,
-            aliasPath = primary.aliasPath,
-            resolvedPath = primary.resolvedPath,
-            sizeBytes =
-                detectPartitionSize(
-                    primary.resolvedPath
-                ),
-            slotSuffix =
-                slotSuffix(
-                    primary.name
-                ),
-            aliases =
-                candidates
-                    .map {
-                        it.aliasPath
-                    }
-                    .distinct()
-                    .sorted()
-        )
-    }
-
-    private fun partitionType(
+    private fun typeOf(
         name: String
     ): PartitionType? {
 
-        return when (
-            name.lowercase()
-        ) {
+        return when {
 
-            "boot" ->
+            name.matches(
+                Regex(
+                    """^boot(?:_[ab])?$""",
+                    RegexOption.IGNORE_CASE
+                )
+            ) ->
                 PartitionType.BOOT
 
-            "dtb" ->
+            name.matches(
+                Regex(
+                    """^dtb(?:_[ab])?$""",
+                    RegexOption.IGNORE_CASE
+                )
+            ) ->
                 PartitionType.DTB
 
-            "dtbo" ->
+            name.matches(
+                Regex(
+                    """^dtbo(?:_[ab])?$""",
+                    RegexOption.IGNORE_CASE
+                )
+            ) ->
                 PartitionType.DTBO
 
-            else -> {
-                when {
-                    name.lowercase().startsWith("boot_") ->
-                        PartitionType.BOOT
-
-                    name.lowercase().startsWith("dtbo_") ->
-                        PartitionType.DTBO
-
-                    name.lowercase().startsWith("dtb_") ->
-                        PartitionType.DTB
-
-                    else ->
-                        null
-                }
-            }
+            else ->
+                null
         }
     }
 
-    private fun slotSuffix(
+
+    private fun slotOf(
         name: String
     ): String? {
 
@@ -251,6 +344,7 @@ object PartitionScanner {
             name.lowercase()
 
         return when {
+
             lower.endsWith("_a") ->
                 "_a"
 
@@ -262,12 +356,13 @@ object PartitionScanner {
         }
     }
 
-    private fun detectActiveSlotSuffix():
+
+    private fun detectActiveSlot():
         String? {
 
         val result =
             ShellExecutor.root(
-                "getprop ro.boot.slot_suffix"
+                "getprop ro.boot.slot_suffix 2>/dev/null"
             )
 
         if (!result.success) {
@@ -278,6 +373,7 @@ object PartitionScanner {
             result.output.trim()
 
         return when (value) {
+
             "_a",
             "_b" ->
                 value
@@ -287,100 +383,67 @@ object PartitionScanner {
         }
     }
 
-    private fun detectPartitionSize(
-        resolvedPath: String
+
+    private fun readSize(
+        path: String
     ): Long? {
 
-        val path =
-            shellQuote(
-                resolvedPath
-            )
+        val quoted =
+            quote(path)
 
-        /*
-         * Primeiro tenta blockdev.
-         */
-        val blockdev =
+        val command =
+            """
+            size="${'$'}(
+                blockdev --getsize64 $quoted 2>/dev/null
+            )"
+
+            if [ -n "${'$'}size" ]; then
+                echo "${'$'}size"
+                exit 0
+            fi
+
+            b="${'$'}(
+                basename $quoted
+            )"
+
+            sectors="${'$'}(
+                cat "/sys/class/block/${'$'}b/size" 2>/dev/null
+            )"
+
+            if [ -n "${'$'}sectors" ]; then
+                echo ${'$'}((sectors * 512))
+            fi
+            """.trimIndent()
+
+        val result =
             ShellExecutor.root(
-                "blockdev --getsize64 $path 2>/dev/null"
+                command
             )
 
-        if (blockdev.success) {
-
-            blockdev.output
-                .trim()
-                .toLongOrNull()
-                ?.let {
-                    if (it > 0L) {
-                        return it
-                    }
-                }
-        }
-
-        /*
-         * Fallback via sysfs.
-         *
-         * /sys/class/block/<device>/size
-         * informa número de setores de 512 bytes.
-         */
-        val baseName =
-            resolvedPath
-                .substringAfterLast('/')
-
-        if (
-            baseName.isEmpty() ||
-            !baseName.matches(
-                Regex("[A-Za-z0-9._-]+")
-            )
-        ) {
+        if (!result.success) {
             return null
         }
 
-        val sysfs =
-            ShellExecutor.root(
-                "cat /sys/class/block/$baseName/size 2>/dev/null"
-            )
-
-        if (!sysfs.success) {
-            return null
-        }
-
-        val sectors =
-            sysfs.output
-                .trim()
-                .toLongOrNull()
-                ?: return null
-
-        if (sectors <= 0L) {
-            return null
-        }
-
-        return try {
-            Math.multiplyExact(
-                sectors,
-                512L
-            )
-        } catch (_: ArithmeticException) {
-            null
-        }
+        return result.output
+            .lineSequence()
+            .map {
+                it.trim()
+            }
+            .firstOrNull {
+                it.matches(
+                    Regex("""\d+""")
+                )
+            }
+            ?.toLongOrNull()
     }
 
-    private fun shellQuote(
-        value: String
-    ): String {
-
-        return "'" +
-            value.replace(
-                "'",
-                "'\"'\"'"
-            ) +
-            "'"
-    }
 
     private fun aliasPriority(
         path: String
     ): Int {
 
         return when {
+
             path.startsWith(
                 "/dev/block/by-name/"
             ) ->
@@ -391,19 +454,24 @@ object PartitionScanner {
             ) ->
                 1
 
-            else ->
+            "/by-name/" in path ->
                 2
+
+            else ->
+                3
         }
     }
 
-    private fun typeOrder(
-        type: PartitionType
-    ): Int {
 
-        return when (type) {
-            PartitionType.BOOT -> 0
-            PartitionType.DTB -> 1
-            PartitionType.DTBO -> 2
-        }
+    private fun quote(
+        value: String
+    ): String {
+
+        return "'" +
+            value.replace(
+                "'",
+                "'\\''"
+            ) +
+            "'"
     }
 }
