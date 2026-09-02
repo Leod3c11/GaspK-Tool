@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import com.exynosbess.app.partition.PartitionImportManager
+import com.exynosbess.app.partition.PartitionBuildManager
 import com.exynosbess.app.partition.PartitionFlashManager
 import com.exynosbess.app.partition.PartitionDtbCatalog
 import com.exynosbess.app.partition.PartitionDtbEntry
@@ -15,6 +16,7 @@ import com.exynosbess.app.partition.PartitionInfo
 import com.exynosbess.app.partition.PartitionSelection
 import com.exynosbess.app.partition.PartitionSessionState
 import com.exynosbess.app.partition.PartitionStateStore
+import com.exynosbess.app.partition.PartitionVerificationStore
 import com.exynosbess.app.partition.PartitionWorkspace
 import com.exynosbess.app.partition.DtboSessionExtractor
 import com.exynosbess.app.partition.DtbSessionExtractor
@@ -760,6 +762,11 @@ class PartitionSessionActivity : Activity() {
             return
         }
 
+        PartitionVerificationStore.invalidate(
+            this,
+            partition
+        )
+
         rebuildButton.isEnabled =
             false
 
@@ -838,14 +845,51 @@ class PartitionSessionActivity : Activity() {
 
                 if (result.success) {
 
-                    state =
-                        PartitionSessionState.VERIFIED
+                    val verification =
+                        PartitionVerificationStore.markVerified(
+                            this,
+                            partition
+                        )
 
-                    PartitionStateStore.save(
-                        this,
-                        partition,
-                        state
-                    )
+                    if (verification.valid) {
+
+                        state =
+                            PartitionSessionState.VERIFIED
+
+                        PartitionStateStore.save(
+                            this,
+                            partition,
+                            state
+                        )
+
+                    } else {
+
+                        state =
+                            PartitionSessionState.BUILT
+
+                        PartitionStateStore.save(
+                            this,
+                            partition,
+                            state
+                        )
+
+                        render()
+
+                        AlertDialog.Builder(this)
+                            .setTitle(
+                                "Falha registrando verificação"
+                            )
+                            .setMessage(
+                                verification.message
+                            )
+                            .setPositiveButton(
+                                "OK",
+                                null
+                            )
+                            .show()
+
+                        return@runOnUiThread
+                    }
                 }
 
                 render()

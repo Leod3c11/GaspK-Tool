@@ -66,6 +66,27 @@ object PartitionFlashManager {
             }
 
             /*
+             * O estado VERIFIED não é suficiente.
+             *
+             * rebuilt.img precisa ser byte-a-byte o mesmo
+             * arquivo que passou pelo verificador.
+             */
+            val verification =
+                PartitionVerificationStore.check(
+                    context,
+                    partition
+                )
+
+            if (!verification.valid) {
+
+                return fail(
+                    "FLASH BLOQUEADO.\n\n" +
+                        verification.message +
+                        "\n\nExecute Verificar reconstrução novamente."
+                )
+            }
+
+            /*
              * Resolver novamente a partição.
              *
              * Não confiamos cegamente no resolvedPath salvo quando
