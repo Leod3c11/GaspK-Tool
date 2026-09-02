@@ -8,6 +8,15 @@
         android:label="GaspKernel Editor"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExynosBess">
+        <activity
+            android:name=".DeviceInfoActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".GaspLogsActivity"
+            android:exported="false" />
+
+
 
         <activity
             android:name=".PartitionManagerActivity"

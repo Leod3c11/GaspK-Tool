@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/exynos_bg"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Logs do GaspKernel"
+        android:textColor="@color/exynos_text"
+        android:textSize="25sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="Histórico técnico das operações realizadas pelo app"
+        android:textColor="@color/exynos_text_secondary"
+        android:textSize="11sp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/gaspLogsRefresh"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Atualizar"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"/>
+
+        <Button
+            android:id="@+id/gaspLogsCopy"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Copiar"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"/>
+
+        <Button
+            android:id="@+id/gaspLogsClear"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="Limpar"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"/>
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_dashboard_card"
+        android:fillViewport="true">
+
+        <TextView
+            android:id="@+id/gaspLogsContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="17dp"
+            android:text="Nenhum registro disponível."
+            android:textColor="@color/exynos_text"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:textIsSelectable="true"/>
+
+    </ScrollView>
+
+</LinearLayout>
