@@ -34,9 +34,6 @@ class GpuEditorActivity : LocalizedActivity() {
 
     private lateinit var saveButton: Button
     private lateinit var validateButton: Button
-    private lateinit var rebuildButton: Button
-    private lateinit var verifyButton: Button
-    private lateinit var flashButton: Button
 
     private var gpuDtsFiles =
         emptyList<File>()
@@ -49,8 +46,6 @@ class GpuEditorActivity : LocalizedActivity() {
     private var loadingEditor = false
 
     private var validated = false
-    private var bootGenerated = false
-    private var bootVerified = false
 
     private var searchMatches =
         emptyList<Int>()
@@ -66,10 +61,15 @@ class GpuEditorActivity : LocalizedActivity() {
         false
 
 
+
+
     override fun onCreate(
         savedInstanceState: Bundle?
     ) {
-        super.onCreate(savedInstanceState)
+
+        super.onCreate(
+            savedInstanceState
+        )
 
         setContentView(
             R.layout.activity_gpu_editor
@@ -83,21 +83,12 @@ class GpuEditorActivity : LocalizedActivity() {
         sessionMode =
             !workspacePath.isNullOrBlank()
 
+
         bindViews()
+
         setupListeners()
+
         discoverGpuDtbs()
-
-        if (sessionMode) {
-
-            rebuildButton.isEnabled =
-                false
-
-            verifyButton.isEnabled =
-                false
-
-            flashButton.isEnabled =
-                false
-        }
     }
 
 
@@ -128,7 +119,6 @@ class GpuEditorActivity : LocalizedActivity() {
                 R.id.gpuSearchStatus
             )
 
-
         numericBaseButton =
             findViewById(
                 R.id.gpuNumericBaseButton
@@ -153,58 +143,35 @@ class GpuEditorActivity : LocalizedActivity() {
             findViewById(
                 R.id.gpuValidateButton
             )
-
-        rebuildButton =
-            findViewById(
-                R.id.gpuRebuildButton
-            )
-
-        verifyButton =
-            findViewById(
-                R.id.gpuVerifyButton
-            )
-
-        flashButton =
-            findViewById(
-                R.id.gpuFlashButton
-            )
     }
 
 
     private fun setupListeners() {
 
-
         numericBaseButton.setOnClickListener {
             toggleNumericBase()
         }
+
 
         previousButton.setOnClickListener {
             switchDtb(-1)
         }
 
+
         nextButton.setOnClickListener {
             switchDtb(1)
         }
+
 
         saveButton.setOnClickListener {
             saveGpuNode()
         }
 
+
         validateButton.setOnClickListener {
             validateCurrentDts()
         }
 
-        rebuildButton.setOnClickListener {
-            rebuildBoot()
-        }
-
-        verifyButton.setOnClickListener {
-            verifyBoot()
-        }
-
-        flashButton.setOnClickListener {
-            confirmFlash()
-        }
 
         findViewById<Button>(
             R.id.gpuSearchButton
@@ -212,11 +179,13 @@ class GpuEditorActivity : LocalizedActivity() {
             startSearch()
         }
 
+
         findViewById<Button>(
             R.id.gpuSearchNextButton
         ).setOnClickListener {
             nextSearchResult()
         }
+
 
         editor.addTextChangedListener(
             object : TextWatcher {
@@ -226,8 +195,8 @@ class GpuEditorActivity : LocalizedActivity() {
                     start: Int,
                     count: Int,
                     after: Int
-                ) {
-                }
+                ) = Unit
+
 
                 override fun onTextChanged(
                     s: CharSequence?,
@@ -235,19 +204,19 @@ class GpuEditorActivity : LocalizedActivity() {
                     before: Int,
                     count: Int
                 ) {
+
                     if (!loadingEditor) {
                         invalidateBootState()
                     }
                 }
 
+
                 override fun afterTextChanged(
                     s: Editable?
-                ) {
-                }
+                ) = Unit
             }
         )
     }
-
 
     private fun discoverGpuDtbs() {
 
@@ -572,9 +541,12 @@ class GpuEditorActivity : LocalizedActivity() {
     }
 
 
+
+
     private fun validateCurrentDts() {
 
         ensureHexModeBeforePersistence()
+
 
         if (hasUnsavedChanges()) {
 
@@ -583,19 +555,26 @@ class GpuEditorActivity : LocalizedActivity() {
 
             saveGpuNode()
 
-            if (hasUnsavedChanges())
+            if (hasUnsavedChanges()) {
                 return
+            }
         }
+
 
         val file =
             gpuDtsFiles.getOrNull(
                 currentFileIndex
-            ) ?: return
+            )
+                ?: return
 
-        setBusy(true)
+
+        setBusy(
+            true
+        )
 
         status.text =
             "Validando ${file.name}..."
+
 
         Thread {
 
@@ -614,11 +593,14 @@ class GpuEditorActivity : LocalizedActivity() {
                     status.text =
                         "✗ dtc indisponível: ${tool.message}"
 
-                    setBusy(false)
+                    setBusy(
+                        false
+                    )
                 }
 
                 return@Thread
             }
+
 
             val validationDir =
                 File(
@@ -628,23 +610,28 @@ class GpuEditorActivity : LocalizedActivity() {
 
             validationDir.mkdirs()
 
+
             val output =
                 File(
                     validationDir,
                     "${file.nameWithoutExtension}.dtb"
                 )
 
+
             if (output.exists()) {
                 output.delete()
             }
 
+
             val result =
                 ShellExecutor.root(
                     "'${tool.path}' " +
-                        "-I dts -O dtb " +
+                        "-I dts " +
+                        "-O dtb " +
                         "-o '${output.absolutePath}' " +
                         "'${file.absolutePath}'"
                 )
+
 
             runOnUiThread {
 
@@ -654,7 +641,16 @@ class GpuEditorActivity : LocalizedActivity() {
                     output.length() > 0L
                 ) {
 
-                    validated = true
+                    validated =
+                        true
+
+                    status.text =
+                        if (sessionMode) {
+                            "✓ GPU salva e DTS válido • sessão atualizada"
+                        } else {
+                            "✓ GPU salva e DTS válido"
+                        }
+
 
                     if (sessionMode) {
 
@@ -669,27 +665,9 @@ class GpuEditorActivity : LocalizedActivity() {
                             }
                     }
 
-                    rebuildButton.isEnabled =
-                        !sessionMode
-
-                    verifyButton.isEnabled =
-                        false
-
-                    flashButton.isEnabled =
-                        false
-
-                    status.text =
-                        if (sessionMode) {
-                            "✓ DTS válido • salvo na sessão da partição"
-                        } else {
-                            "✓ DTS válido"
-                        }
-
                 } else {
 
-                    validated = false
-
-                    rebuildButton.isEnabled =
+                    validated =
                         false
 
                     val error =
@@ -698,19 +676,23 @@ class GpuEditorActivity : LocalizedActivity() {
                             .firstOrNull {
                                 it.isNotBlank()
                             }
-                            ?.take(180)
+                            ?.take(
+                                220
+                            )
                             ?: "Erro de compilação"
 
                     status.text =
                         "✗ DTS inválido: $error"
                 }
 
-                setBusy(false)
+
+                setBusy(
+                    false
+                )
             }
 
         }.start()
     }
-
 
     private fun startSearch() {
 
@@ -986,10 +968,13 @@ class GpuEditorActivity : LocalizedActivity() {
     }
 
 
+
+
     private fun invalidateBootState() {
 
         validated =
             false
+
 
         if (sessionMode) {
 
@@ -1004,7 +989,6 @@ class GpuEditorActivity : LocalizedActivity() {
                 }
         }
     }
-
 
     private fun updateNavigationButtons() {
 

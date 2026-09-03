@@ -36,16 +36,8 @@ class DtsEditorActivity : LocalizedActivity() {
 
     private var decimalMode = false
 
-    private lateinit var bootActionsPanel: LinearLayout
-    private lateinit var bootActionStatus: TextView
-    private lateinit var rebuildFromEditorButton: Button
-    private lateinit var verifyFromEditorButton: Button
-    private lateinit var flashFromEditorButton: Button
-
     private var loadingDts = false
     private var validatedContent: String? = null
-    private var bootGenerated = false
-    private var bootVerified = false
 
     private var dtbIndex: Int = 0
     private lateinit var dtsFile: File
@@ -62,79 +54,82 @@ class DtsEditorActivity : LocalizedActivity() {
     private var lastSearchQuery =
         ""
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_dts_editor)
+
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
+
+        super.onCreate(
+            savedInstanceState
+        )
+
+        setContentView(
+            R.layout.activity_dts_editor
+        )
 
         editorTitle =
-            findViewById(R.id.editorTitle)
+            findViewById(
+                R.id.editorTitle
+            )
 
         editorPath =
-            findViewById(R.id.editorPath)
+            findViewById(
+                R.id.editorPath
+            )
 
         dtsEditor =
-            findViewById(R.id.dtsEditor)
+            findViewById(
+                R.id.dtsEditor
+            )
 
         searchInput =
-            findViewById(R.id.searchInput)
+            findViewById(
+                R.id.searchInput
+            )
 
         searchButton =
-            findViewById(R.id.searchButton)
+            findViewById(
+                R.id.searchButton
+            )
 
         searchNextButton =
-            findViewById(R.id.searchNextButton)
+            findViewById(
+                R.id.searchNextButton
+            )
 
         searchStatus =
-            findViewById(R.id.searchStatus)
+            findViewById(
+                R.id.searchStatus
+            )
 
         saveDtsButton =
-            findViewById(R.id.saveDtsButton)
+            findViewById(
+                R.id.saveDtsButton
+            )
 
         validateDtsButton =
-            findViewById(R.id.validateDtsButton)
+            findViewById(
+                R.id.validateDtsButton
+            )
 
         editorStatus =
-            findViewById(R.id.editorStatus)
+            findViewById(
+                R.id.editorStatus
+            )
 
         numericBaseButton =
-            findViewById(R.id.numericBaseButton)
+            findViewById(
+                R.id.numericBaseButton
+            )
 
-        bootActionsPanel =
-            findViewById(R.id.bootActionsPanel)
-
-        bootActionStatus =
-            findViewById(R.id.bootActionStatus)
-
-        rebuildFromEditorButton =
-            findViewById(R.id.rebuildFromEditorButton)
-
-        verifyFromEditorButton =
-            findViewById(R.id.verifyFromEditorButton)
-
-        flashFromEditorButton =
-            findViewById(R.id.flashFromEditorButton)
-
-        bootActionsPanel.visibility =
-            View.VISIBLE
-
-        bootActionStatus.text =
-            "○ Valide o DTS para continuar"
-
-        rebuildFromEditorButton.isEnabled =
-            false
-
-        verifyFromEditorButton.isEnabled =
-            false
-
-        flashFromEditorButton.isEnabled =
-            false
 
         dtbIndex =
             intent.getIntExtra(
                 "dtb_index",
                 0
             )
+
 
         val workspacePath =
             intent.getStringExtra(
@@ -144,19 +139,24 @@ class DtsEditorActivity : LocalizedActivity() {
         sessionMode =
             !workspacePath.isNullOrBlank()
 
+
         val workspace =
             if (
                 workspacePath.isNullOrBlank()
             ) {
+
                 File(
                     filesDir,
                     "workspace"
                 )
+
             } else {
+
                 File(
                     workspacePath
                 )
             }
+
 
         dtsFile =
             File(
@@ -164,19 +164,16 @@ class DtsEditorActivity : LocalizedActivity() {
                 "dtbs/dtb_${dtbIndex}.dts"
             )
 
+
         editorTitle.text =
             "Editor DTS $dtbIndex"
 
         editorPath.text =
             dtsFile.absolutePath
 
-        if (sessionMode) {
-
-            bootActionsPanel.visibility =
-                View.GONE
-        }
 
         loadDts()
+
 
         searchButton.setOnClickListener {
             startSearch()
@@ -186,29 +183,21 @@ class DtsEditorActivity : LocalizedActivity() {
             showNextResult()
         }
 
+
         saveDtsButton.setOnClickListener {
             saveDts()
         }
+
 
         validateDtsButton.setOnClickListener {
             validateDts()
         }
 
+
         numericBaseButton.setOnClickListener {
             toggleNumericBase()
         }
 
-        rebuildFromEditorButton.setOnClickListener {
-            rebuildBoot()
-        }
-
-        verifyFromEditorButton.setOnClickListener {
-            verifyBoot()
-        }
-
-        flashFromEditorButton.setOnClickListener {
-            confirmFlash()
-        }
 
         dtsEditor.addTextChangedListener(
             object : TextWatcher {
@@ -220,16 +209,19 @@ class DtsEditorActivity : LocalizedActivity() {
                     after: Int
                 ) = Unit
 
+
                 override fun onTextChanged(
                     s: CharSequence?,
                     start: Int,
                     before: Int,
                     count: Int
                 ) {
+
                     if (!loadingDts) {
                         invalidateBootFlowIfNeeded()
                     }
                 }
+
 
                 override fun afterTextChanged(
                     s: Editable?
@@ -447,6 +439,8 @@ class DtsEditorActivity : LocalizedActivity() {
         }
     }
 
+
+
     private fun saveDts() {
 
         ensureHexModeBeforePersistence()
@@ -457,8 +451,12 @@ class DtsEditorActivity : LocalizedActivity() {
                 dtsEditor.text.toString()
             )
 
+            validatedContent =
+                null
+
             editorStatus.text =
-                "✓ DTS salvo"
+                "✓ DTS salvo • validação necessária"
+
 
             if (sessionMode) {
 
@@ -473,21 +471,22 @@ class DtsEditorActivity : LocalizedActivity() {
                     }
             }
 
-            invalidateBootFlow()
-
-        } catch (e: Exception) {
+        } catch (
+            e: Exception
+        ) {
 
             editorStatus.text =
                 "✗ Falha ao salvar DTS\n${e.message}"
         }
     }
 
+
     private fun validateDts() {
 
         ensureHexModeBeforePersistence()
 
         editorStatus.text =
-            "Validando DTS..."
+            "Salvando e validando DTS..."
 
         saveDtsButton.isEnabled =
             false
@@ -495,13 +494,16 @@ class DtsEditorActivity : LocalizedActivity() {
         validateDtsButton.isEnabled =
             false
 
+
         try {
 
             dtsFile.writeText(
                 dtsEditor.text.toString()
             )
 
-        } catch (e: Exception) {
+        } catch (
+            e: Exception
+        ) {
 
             editorStatus.text =
                 "✗ Falha ao salvar antes da validação\n${e.message}"
@@ -515,10 +517,13 @@ class DtsEditorActivity : LocalizedActivity() {
             return
         }
 
+
         Thread {
 
             val tool =
-                ToolManager.installDtc(this)
+                ToolManager.installDtc(
+                    this
+                )
 
             if (
                 !tool.success ||
@@ -540,32 +545,37 @@ class DtsEditorActivity : LocalizedActivity() {
                 return@Thread
             }
 
+
             val validatedDtb =
                 File(
                     dtsFile.parentFile,
                     "validated_dtb_${dtbIndex}.dtb"
                 )
 
+
             if (validatedDtb.exists()) {
                 validatedDtb.delete()
             }
 
+
             val command =
                 "'${tool.path}' " +
-                "-I dts " +
-                "-O dtb " +
-                "-o '${validatedDtb.absolutePath}' " +
-                "'${dtsFile.absolutePath}'"
+                    "-I dts " +
+                    "-O dtb " +
+                    "-o '${validatedDtb.absolutePath}' " +
+                    "'${dtsFile.absolutePath}'"
+
 
             val result =
                 ShellExecutor.root(
                     command
                 )
 
+
             if (
                 result.success &&
                 validatedDtb.exists() &&
-                validatedDtb.length() > 0
+                validatedDtb.length() > 0L
             ) {
 
                 val appUid =
@@ -573,9 +583,10 @@ class DtsEditorActivity : LocalizedActivity() {
 
                 ShellExecutor.root(
                     "chown $appUid:$appUid '${validatedDtb.absolutePath}' && " +
-                    "chmod 600 '${validatedDtb.absolutePath}'"
+                        "chmod 600 '${validatedDtb.absolutePath}'"
                 )
             }
+
 
             runOnUiThread {
 
@@ -585,17 +596,20 @@ class DtsEditorActivity : LocalizedActivity() {
                 validateDtsButton.isEnabled =
                     true
 
+
                 if (
                     result.success &&
                     validatedDtb.exists() &&
-                    validatedDtb.length() > 0
+                    validatedDtb.length() > 0L
                 ) {
 
-                    editorStatus.text =
-                        "✓ DTS válido"
-
                     validatedContent =
-                        dtsEditor.text.toString()
+                        dtsEditor.text
+                            .toString()
+
+                    editorStatus.text =
+                        "✓ DTS salvo e válido"
+
 
                     if (sessionMode) {
 
@@ -610,89 +624,73 @@ class DtsEditorActivity : LocalizedActivity() {
                             }
                     }
 
-                    bootGenerated =
-                        false
-
-                    bootVerified =
-                        false
-
-                    if (sessionMode) {
-
-                        bootActionsPanel.visibility =
-                            View.GONE
-
-                    } else {
-
-                        bootActionsPanel.visibility =
-                            View.VISIBLE
-
-                        rebuildFromEditorButton.isEnabled =
-                            true
-
-                        verifyFromEditorButton.isEnabled =
-                            false
-
-                        flashFromEditorButton.isEnabled =
-                            false
-
-                        bootActionStatus.text =
-                            "✓ DTS $dtbIndex validado\n" +
-                            "○ Novo boot ainda não gerado"
-                    }
-
                 } else {
+
+                    validatedContent =
+                        null
+
 
                     if (validatedDtb.exists()) {
                         validatedDtb.delete()
                     }
 
-                    val errorLine =
+
+                    val error =
                         result.output
                             .lineSequence()
                             .firstOrNull {
                                 it.isNotBlank()
                             }
-                            ?.take(180)
+                            ?.take(
+                                220
+                            )
                             ?: "Erro de compilação"
 
+
                     editorStatus.text =
-                        "✗ DTS inválido: $errorLine"
+                        "✗ DTS inválido: $error"
                 }
             }
+
         }.start()
     }
 
+
     private fun invalidateBootFlowIfNeeded() {
 
-        val validated =
+        val previous =
             validatedContent
+                ?: return
+
 
         if (
-            validated != null &&
-            dtsEditor.text.toString() != validated
+            dtsEditor.text.toString() ==
+            previous
         ) {
+            return
+        }
 
-            validatedContent =
-                null
 
-            editorStatus.text =
-                "Alterações não validadas"
+        validatedContent =
+            null
 
-            if (sessionMode) {
+        editorStatus.text =
+            "Alterações não validadas"
 
-                PartitionSelection.get()
-                    ?.let { selected ->
 
-                        PartitionStateStore.save(
-                            this,
-                            selected,
-                            PartitionSessionState.DIRTY
-                        )
-                    }
-            }
+        if (sessionMode) {
+
+            PartitionSelection.get()
+                ?.let { selected ->
+
+                    PartitionStateStore.save(
+                        this,
+                        selected,
+                        PartitionSessionState.DIRTY
+                    )
+                }
         }
     }
-
 
     private fun toggleNumericBase() {
 
