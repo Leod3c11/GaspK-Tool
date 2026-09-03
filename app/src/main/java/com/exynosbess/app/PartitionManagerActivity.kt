@@ -18,7 +18,7 @@ import com.exynosbess.app.partition.PartitionStateStore
 import com.exynosbess.app.partition.PartitionType
 import com.exynosbess.app.partition.PartitionWorkspace
 
-class PartitionManagerActivity : Activity() {
+class PartitionManagerActivity : LocalizedActivity() {
 
     private lateinit var status:
         TextView

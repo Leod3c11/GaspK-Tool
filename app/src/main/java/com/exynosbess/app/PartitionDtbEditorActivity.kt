@@ -12,7 +12,7 @@ import com.exynosbess.app.partition.PartitionInfo
 import com.exynosbess.app.partition.PartitionSelection
 import com.exynosbess.app.partition.PartitionWorkspace
 
-class PartitionDtbEditorActivity : Activity() {
+class PartitionDtbEditorActivity : LocalizedActivity() {
 
     private lateinit var partition:
         PartitionInfo

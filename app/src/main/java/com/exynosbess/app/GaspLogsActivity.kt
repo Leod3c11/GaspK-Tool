@@ -11,7 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.exynosbess.app.logging.GaspLog
 
-class GaspLogsActivity : Activity() {
+class GaspLogsActivity : LocalizedActivity() {
 
     private lateinit var logView:
         TextView

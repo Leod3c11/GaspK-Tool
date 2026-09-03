@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/exynos_bg"
+    android:padding="20dp">
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Arquivo DTB"
+        android:textColor="@color/exynos_text"
+        android:textSize="30sp"
+        android:textStyle="bold"/>
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="Importe, leia e exporte Device Trees"
+        android:textColor="@color/exynos_text_secondary"
+        android:textSize="13sp"/>
+
+
+    <TextView
+        android:id="@+id/dtbFileStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:textColor="@color/exynos_accent"
+        android:textSize="13sp"/>
+
+
+    <TextView
+        android:id="@+id/dtbFileDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textColor="@color/exynos_text_secondary"
+        android:textSize="12sp"/>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/dtbFileImportButton"
+            style="@style/Widget.GaspKernel.Button.Primary"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:text="Importar DTB"/>
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/dtbFileExportButton"
+            style="@style/Widget.GaspKernel.Button.Secondary"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:text="Exportar DTB"/>
+
+    </LinearLayout>
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="DTS"
+        android:textColor="@color/exynos_text_secondary"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.10"/>
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_editor_panel"
+        android:fillViewport="true">
+
+
+        <HorizontalScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/dtbFilePreview"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:minWidth="320dp"
+                android:padding="12dp"
+                android:fontFamily="monospace"
+                android:textColor="@color/exynos_text"
+                android:textSize="10sp"
+                android:textIsSelectable="true"/>
+
+        </HorizontalScrollView>
+
+    </ScrollView>
+
+</LinearLayout>

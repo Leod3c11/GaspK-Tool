@@ -6,7 +6,7 @@ import android.widget.TextView
 import com.exynosbess.app.device.DeviceInfoProvider
 import com.exynosbess.app.logging.GaspLog
 
-class DeviceInfoActivity : Activity() {
+class DeviceInfoActivity : LocalizedActivity() {
 
     private lateinit var status:
         TextView

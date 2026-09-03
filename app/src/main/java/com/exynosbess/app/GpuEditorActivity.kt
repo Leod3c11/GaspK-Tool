@@ -12,16 +12,13 @@ import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import com.exynosbess.app.boot.BootFlashManager
-import com.exynosbess.app.boot.BootRebuildManager
-import com.exynosbess.app.boot.BootRoundTripVerifier
 import com.exynosbess.app.boot.ShellExecutor
 import com.exynosbess.app.gpu.MaliGpuParser
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
 import java.math.BigInteger
 
-class GpuEditorActivity : Activity() {
+class GpuEditorActivity : LocalizedActivity() {
 
     private lateinit var subtitle: TextView
     private lateinit var status: TextView
@@ -715,202 +712,6 @@ class GpuEditorActivity : Activity() {
     }
 
 
-    private fun rebuildBoot() {
-
-        if (sessionMode) {
-            status.text =
-                "Reconstrução controlada pela sessão da partição."
-            return
-        }
-
-        if (!validated) {
-
-            status.text =
-                "Valide o DTS primeiro"
-
-            return
-        }
-
-        setBusy(true)
-
-        status.text =
-            "Reconstruindo boot..."
-
-        Thread {
-
-            val result =
-                BootRebuildManager.rebuild(
-                    this
-                )
-
-            runOnUiThread {
-
-                if (result.success) {
-
-                    bootGenerated =
-                        true
-
-                    verifyButton.isEnabled =
-                        true
-
-                    status.text =
-                        "✓ Boot reconstruído"
-
-                } else {
-
-                    bootGenerated =
-                        false
-
-                    verifyButton.isEnabled =
-                        false
-
-                    status.text =
-                        "✗ ${result.message}"
-                }
-
-                setBusy(false)
-            }
-
-        }.start()
-    }
-
-
-    private fun verifyBoot() {
-
-        if (sessionMode) {
-            status.text =
-                "Verificação controlada pela sessão da partição."
-            return
-        }
-
-        if (!bootGenerated) {
-
-            status.text =
-                "Gere o boot primeiro"
-
-            return
-        }
-
-        setBusy(true)
-
-        status.text =
-            "Verificando boot..."
-
-        Thread {
-
-            val result =
-                BootRoundTripVerifier.verify(
-                    this
-                )
-
-            runOnUiThread {
-
-                if (result.success) {
-
-                    bootVerified =
-                        true
-
-                    flashButton.isEnabled =
-                        true
-
-                    status.text =
-                        "✓ Boot verificado"
-
-                } else {
-
-                    bootVerified =
-                        false
-
-                    flashButton.isEnabled =
-                        false
-
-                    status.text =
-                        "✗ ${result.message}"
-                }
-
-                setBusy(false)
-            }
-
-        }.start()
-    }
-
-
-    private fun confirmFlash() {
-
-        if (sessionMode) {
-            status.text =
-                "Flash bloqueado no editor. Use a sessão da partição."
-            return
-        }
-
-        if (!bootVerified)
-            return
-
-        AlertDialog.Builder(this)
-            .setTitle(
-                "Gravar boot"
-            )
-            .setMessage(
-                "O boot foi reconstruído e verificado.\n\n" +
-                    "Deseja gravá-lo na partição de boot?\n\n" +
-                    "O aparelho não será reiniciado automaticamente."
-            )
-            .setNegativeButton(
-                "Cancelar",
-                null
-            )
-            .setPositiveButton(
-                "Flash"
-            ) {
-                _,
-                _ ->
-
-                executeFlash()
-            }
-            .show()
-    }
-
-
-    private fun executeFlash() {
-
-        setBusy(true)
-
-        flashButton.isEnabled =
-            false
-
-        status.text =
-            "Gravando boot..."
-
-        Thread {
-
-            val result =
-                BootFlashManager.flash(
-                    this
-                )
-
-            runOnUiThread {
-
-                if (result.success) {
-
-                    status.text =
-                        "✓ Boot gravado e verificado"
-
-                } else {
-
-                    status.text =
-                        "✗ ${result.message}"
-
-                    flashButton.isEnabled =
-                        true
-                }
-
-                setBusy(false)
-            }
-
-        }.start()
-    }
-
-
     private fun startSearch() {
 
         val query =
@@ -1187,18 +988,21 @@ class GpuEditorActivity : Activity() {
 
     private fun invalidateBootState() {
 
-        validated = false
-        bootGenerated = false
-        bootVerified = false
-
-        rebuildButton.isEnabled =
+        validated =
             false
 
-        verifyButton.isEnabled =
-            false
+        if (sessionMode) {
 
-        flashButton.isEnabled =
-            false
+            PartitionSelection.get()
+                ?.let { selected ->
+
+                    PartitionStateStore.save(
+                        this,
+                        selected,
+                        PartitionSessionState.DIRTY
+                    )
+                }
+        }
     }
 
 

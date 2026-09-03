@@ -8,6 +8,15 @@
         android:label="GaspKernel Editor"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExynosBess">
+
+        <activity
+            android:name=".DtbFileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LanguageActivity"
+            android:exported="false" />
+
         <activity
             android:name=".DeviceInfoActivity"
             android:exported="false" />

@@ -25,7 +25,7 @@ import com.exynosbess.app.partition.PartitionType
 import com.exynosbess.app.partition.PartitionVerificationStore
 import com.exynosbess.app.partition.PartitionWorkspace
 
-class PartitionSessionActivity : Activity() {
+class PartitionSessionActivity : LocalizedActivity() {
 
     companion object {
         private const val REQUEST_EXPORT_REBUILT =

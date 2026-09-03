@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 
-class DashboardActivity : Activity() {
+class DashboardActivity : LocalizedActivity() {
 
     private lateinit var partitionCard:
         View

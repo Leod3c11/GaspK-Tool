@@ -162,73 +162,28 @@
         android:textSize="10sp" />
 
 
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="38dp"
+        android:layout_height="52dp"
         android:orientation="horizontal">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/gpuSaveButton"
+            style="@style/Widget.GaspKernel.Button.Secondary"
             android:layout_width="0dp"
-            android:layout_height="34dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_button_secondary"
-            android:text="Salvar"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text"
-            android:textSize="10sp" />
+            android:text="Salvar"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/gpuValidateButton"
+            style="@style/Widget.GaspKernel.Button.Primary"
             android:layout_width="0dp"
-            android:layout_height="34dp"
-            android:layout_marginStart="4dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_button_secondary"
-            android:text="Validar"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text"
-            android:textSize="10sp" />
-
-        <Button
-            android:id="@+id/gpuRebuildButton"
-            android:layout_width="0dp"
-            android:layout_height="34dp"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_button_secondary"
-            android:enabled="false"
-            android:text="Gerar"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text"
-            android:textSize="10sp" />
-
-        <Button
-            android:id="@+id/gpuVerifyButton"
-            android:layout_width="0dp"
-            android:layout_height="34dp"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_button_secondary"
-            android:enabled="false"
-            android:text="Verificar"
-            android:textAllCaps="false"
-            android:textColor="@color/exynos_text"
-            android:textSize="10sp" />
-
-        <Button
-            android:id="@+id/gpuFlashButton"
-            android:layout_width="0dp"
-            android:layout_height="34dp"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_button_primary"
-            android:enabled="false"
-            android:text="Flash"
-            android:textAllCaps="false"
-            android:textColor="#081018"
-            android:textSize="10sp"
-            android:textStyle="bold" />
+            android:layout_marginStart="8dp"
+            android:text="Validar"/>
 
     </LinearLayout>
 

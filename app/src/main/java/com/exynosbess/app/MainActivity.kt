@@ -1,23 +1,29 @@
 package com.exynosbess.app
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.widget.LinearLayout
+import android.widget.TextView
 import com.exynosbess.app.logging.GaspLog
+import com.exynosbess.app.settings.LanguageManager
+import com.google.android.material.card.MaterialCardView
 
-class MainActivity : Activity() {
+class MainActivity :
+    LocalizedActivity() {
 
     override fun onCreate(
         savedInstanceState: Bundle?
     ) {
-        super.onCreate(savedInstanceState)
+
+        super.onCreate(
+            savedInstanceState
+        )
 
         setContentView(
             R.layout.activity_main
         )
 
-        findViewById<LinearLayout>(
+
+        findViewById<MaterialCardView>(
             R.id.toolsDeviceInfoCard
         ).setOnClickListener {
 
@@ -29,7 +35,21 @@ class MainActivity : Activity() {
             )
         }
 
-        findViewById<LinearLayout>(
+
+        findViewById<MaterialCardView>(
+            R.id.toolsDtbFileCard
+        ).setOnClickListener {
+
+            startActivity(
+                Intent(
+                    this,
+                    DtbFileActivity::class.java
+                )
+            )
+        }
+
+
+        findViewById<MaterialCardView>(
             R.id.toolsLogsCard
         ).setOnClickListener {
 
@@ -40,6 +60,37 @@ class MainActivity : Activity() {
                 )
             )
         }
+
+
+        findViewById<MaterialCardView>(
+            R.id.toolsLanguageCard
+        ).setOnClickListener {
+
+            startActivity(
+                Intent(
+                    this,
+                    LanguageActivity::class.java
+                )
+            )
+        }
+
+
+        findViewById<TextView>(
+            R.id.toolsLanguageValue
+        ).text =
+            when (
+                LanguageManager.current(
+                    this
+                )
+            ) {
+
+                LanguageManager.ENGLISH ->
+                    "English"
+
+                else ->
+                    "Português (Brasil)"
+            }
+
 
         GaspLog.info(
             this,
