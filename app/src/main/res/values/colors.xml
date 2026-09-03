@@ -1,21 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="exynos_bg">#000000</color>
-    <color name="exynos_surface">#0A0A0A</color>
-    <color name="exynos_surface_2">#111111</color>
-    <color name="exynos_border">#202020</color>
+    <!-- Material 3 dark base -->
+    <color name="exynos_bg">#0B0F14</color>
 
-    <color name="exynos_text">#F0F6FC</color>
-    <color name="exynos_text_secondary">#8B949E</color>
+    <color name="exynos_surface">#11161D</color>
+    <color name="exynos_surface_2">#171C24</color>
+    <color name="exynos_surface_3">#1D232C</color>
 
-    <color name="exynos_accent">#58A6FF</color>
-    <color name="exynos_accent_pressed">#388BFD</color>
+    <color name="exynos_border">#2B313B</color>
 
-    <color name="exynos_success">#3FB950</color>
-    <color name="exynos_warning">#D29922</color>
-    <color name="exynos_error">#F85149</color>
+    <!-- Typography -->
+    <color name="exynos_text">#E6EAF0</color>
+    <color name="exynos_text_secondary">#AAB2BF</color>
+    <color name="exynos_text_tertiary">#7E8795</color>
 
-    <color name="exynos_editor_bg">#000000</color>
+    <!-- Primary -->
+    <color name="exynos_accent">#A8C7FA</color>
+    <color name="exynos_accent_pressed">#8AB4F8</color>
+
+    <color name="exynos_on_accent">#062E6F</color>
+
+    <color name="exynos_primary_container">#163E72</color>
+    <color name="exynos_on_primary_container">#D5E3FF</color>
+
+    <!-- Semantic -->
+    <color name="exynos_success">#81C995</color>
+    <color name="exynos_success_container">#123822</color>
+
+    <color name="exynos_warning">#FDD663</color>
+    <color name="exynos_warning_container">#443700</color>
+
+    <color name="exynos_error">#F2B8B5</color>
+    <color name="exynos_error_container">#8C1D18</color>
+
+    <!-- Editor -->
+    <color name="exynos_editor_bg">#090D12</color>
 
 </resources>

@@ -2,6 +2,7 @@
 
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/exynos_bg"
@@ -84,8 +85,9 @@
             android:letterSpacing="0.10"/>
 
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/partitionPrepareButton"
+            style="@style/Widget.GaspKernel.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="54dp"
             android:text="Preparar partição"
@@ -93,8 +95,9 @@
             android:textSize="15sp"/>
 
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/partitionEditButton"
+            style="@style/Widget.GaspKernel.Button.Secondary"
             android:layout_width="match_parent"
             android:layout_height="54dp"
             android:layout_marginTop="10dp"
@@ -104,8 +107,9 @@
             android:visibility="gone"/>
 
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/partitionApplyButton"
+            style="@style/Widget.GaspKernel.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="54dp"
             android:layout_marginTop="10dp"
@@ -136,8 +140,9 @@
                 android:letterSpacing="0.10"/>
 
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/partitionExportButton"
+                style="@style/Widget.GaspKernel.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:text="Exportar imagem"
@@ -146,12 +151,12 @@
                 android:visibility="gone"/>
 
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/partitionFlashButton"
+                style="@style/Widget.GaspKernel.Button.Danger"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/bg_advanced_card_danger"
                 android:text="Instalar modificação"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"

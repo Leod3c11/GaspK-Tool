@@ -2,6 +2,7 @@
 
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/exynos_bg"
@@ -41,8 +42,9 @@
             android:textColor="@color/exynos_accent"
             android:textSize="12sp"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/scanPartitionsButton"
+            style="@style/Widget.GaspKernel.Button.Secondary"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="12dp"

@@ -1,46 +1,64 @@
 package com.exynosbess.app
 
+import com.exynosbess.app.root.RootEnvironment
+
 object RootManager {
 
     data class RootResult(
+
         val granted: Boolean,
-        val output: String
+
+        val output: String,
+
+        val provider: String =
+            "Desconhecido",
+
+        val version: String? =
+            null,
+
+        val suPath: String? =
+            null,
+
+        val selinux: String? =
+            null
     )
 
-    fun checkRoot(): RootResult {
-        return try {
 
-            val process = ProcessBuilder(
-                "su",
-                "-c",
-                "id"
-            )
-                .redirectErrorStream(true)
-                .start()
+    fun checkRoot():
+        RootResult {
 
-            val output = process
-                .inputStream
-                .bufferedReader()
-                .readText()
-                .trim()
+        val environment =
+            RootEnvironment.detect()
 
-            val exitCode = process.waitFor()
 
-            val rootGranted =
-                exitCode == 0 &&
-                output.contains("uid=0")
+        return RootResult(
 
-            RootResult(
-                granted = rootGranted,
-                output = output
-            )
+            granted =
+                environment.available,
 
-        } catch (e: Exception) {
+            output =
+                environment.uidOutput,
 
-            RootResult(
-                granted = false,
-                output = e.message ?: "Erro desconhecido"
-            )
-        }
+            provider =
+                environment
+                    .provider
+                    .displayName,
+
+            version =
+                environment.version,
+
+            suPath =
+                environment.suPath,
+
+            selinux =
+                environment.selinux
+        )
+    }
+
+
+    fun getEnvironment():
+        RootEnvironment.Info {
+
+        return RootEnvironment.detect()
     }
 }

@@ -3,21 +3,24 @@ package com.exynosbess.app
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.widget.LinearLayout
+import android.view.View
 
 class DashboardActivity : Activity() {
 
     private lateinit var partitionCard:
-        LinearLayout
+        View
 
     private lateinit var advancedCard:
-        LinearLayout
+        View
 
 
     override fun onCreate(
         savedInstanceState: Bundle?
     ) {
-        super.onCreate(savedInstanceState)
+
+        super.onCreate(
+            savedInstanceState
+        )
 
         setContentView(
             R.layout.activity_dashboard
