@@ -26,8 +26,8 @@ object DtboSessionExtractor {
 
     private data class Entry(
         val index: Int,
-        val size: Int,
-        val offset: Int
+        val size: Long,
+        val offset: Long
     )
 
 
@@ -128,13 +128,20 @@ object DtboSessionExtractor {
         for (entry in entries) {
 
             val end =
-                entry.offset.toLong() +
-                    entry.size.toLong()
+                entry.offset +
+                    entry.size
 
             if (
-                entry.offset < 0 ||
-                entry.size <= 0 ||
-                end > bytes.size.toLong()
+                entry.offset < 0L ||
+                entry.size <= 0L ||
+                entry.offset >
+                    Int.MAX_VALUE.toLong() ||
+                entry.size >
+                    Int.MAX_VALUE.toLong() ||
+                end >
+                    bytes.size.toLong() ||
+                end >
+                    Int.MAX_VALUE.toLong()
             ) {
 
                 unsupportedCount++
@@ -143,9 +150,11 @@ object DtboSessionExtractor {
 
             val blob =
                 bytes.copyOfRange(
-                    entry.offset,
-                    entry.offset +
-                        entry.size
+                    entry.offset.toInt(),
+                    (
+                        entry.offset +
+                            entry.size
+                    ).toInt()
                 )
 
             if (
@@ -388,20 +397,25 @@ object DtboSessionExtractor {
             }
 
             val size =
-                readIntBe(
+                readUInt32Be(
                     data,
                     position
                 )
 
             val offset =
-                readIntBe(
+                readUInt32Be(
                     data,
                     position + 4
                 )
 
             if (
-                size <= 0 ||
-                offset < 0
+                size <= 0L ||
+                offset >
+                    Int.MAX_VALUE.toLong() ||
+                size >
+                    Int.MAX_VALUE.toLong() ||
+                offset + size >
+                    data.size.toLong()
             ) {
                 continue
             }
@@ -416,6 +430,19 @@ object DtboSessionExtractor {
         }
 
         return result
+    }
+
+
+    private fun readUInt32Be(
+        data: ByteArray,
+        offset: Int
+    ): Long {
+
+        return readIntBe(
+            data,
+            offset
+        ).toLong() and
+            0xFFFFFFFFL
     }
 
 

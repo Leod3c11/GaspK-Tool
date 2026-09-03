@@ -11,150 +11,196 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:paddingStart="20dp"
+        android:paddingTop="26dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="32dp">
+
 
         <TextView
             android:id="@+id/partitionSessionTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="Device Tree"
             android:textColor="@color/exynos_text"
-            android:textSize="28sp"
+            android:textSize="30sp"
             android:textStyle="bold"/>
+
 
         <TextView
             android:id="@+id/partitionSessionType"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="3dp"
             android:textColor="@color/exynos_accent"
             android:textSize="13sp"
             android:textStyle="bold"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_dashboard_card"
-            android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ORIGEM"
-                android:textColor="@color/exynos_text_secondary"
-                android:textSize="10sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:id="@+id/partitionSessionSource"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textColor="@color/exynos_text"
-                android:textSize="12sp"/>
-
-        </LinearLayout>
+        <!-- STATUS PRINCIPAL -->
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/bg_dashboard_card"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="20dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ESTADO"
+                android:text="STATUS"
                 android:textColor="@color/exynos_text_secondary"
                 android:textSize="10sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:letterSpacing="0.10"/>
 
             <TextView
                 android:id="@+id/partitionSessionState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
+                android:text="Partição encontrada"
                 android:textColor="@color/exynos_text"
-                android:textSize="13sp"/>
+                android:textSize="15sp"
+                android:lineSpacingExtra="3dp"/>
 
         </LinearLayout>
 
-        <Button
-            android:id="@+id/partitionImportButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="18dp"
-            android:text="Importar partição"
-            android:textAllCaps="false"/>
 
-        <Button
-            android:id="@+id/partitionExtractButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
-            android:text="Extrair / descompactar"
-            android:textAllCaps="false"/>
-
-        <Button
-            android:id="@+id/partitionEditButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
-            android:text="Editar Device Trees"
-            android:textAllCaps="false"/>
-
-        <Button
-            android:id="@+id/partitionValidateButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
-            android:text="Validar alterações"
-            android:textAllCaps="false"/>
-
-        <Button
-            android:id="@+id/partitionRebuildButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
-            android:text="Reconstruir"
-            android:textAllCaps="false"/>
-
-        <Button
-            android:id="@+id/partitionVerifyButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
-            android:text="Verificar reconstrução"
-            android:textAllCaps="false"/>
-
-        <Button
-            android:id="@+id/partitionExportButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="18dp"
-            android:text="Exportar arquivo modificado"
-            android:textAllCaps="false"/>
+        <!-- FLUXO -->
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_marginTop="28dp"
-            android:text="ZONA DE RISCO"
-            android:textColor="#B36B75"
+            android:layout_marginBottom="10dp"
+            android:text="EDIÇÃO"
+            android:textColor="@color/exynos_text_secondary"
             android:textSize="10sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:letterSpacing="0.10"/>
+
 
         <Button
-            android:id="@+id/partitionFlashButton"
+            android:id="@+id/partitionPrepareButton"
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:layout_marginTop="9dp"
-            android:background="@drawable/bg_advanced_card_danger"
-            android:text="Flash"
+            android:text="Preparar partição"
             android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"/>
+            android:textSize="15sp"/>
+
+
+        <Button
+            android:id="@+id/partitionEditButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="10dp"
+            android:text="Editar Device Trees"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            android:visibility="gone"/>
+
+
+        <Button
+            android:id="@+id/partitionApplyButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="10dp"
+            android:text="Aplicar alterações"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            android:visibility="gone"/>
+
+
+        <!-- RESULTADO -->
+
+        <LinearLayout
+            android:id="@+id/partitionReadyActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="10dp"
+                android:text="IMAGEM MODIFICADA"
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.10"/>
+
+
+            <Button
+                android:id="@+id/partitionExportButton"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:text="Exportar imagem"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                android:visibility="gone"/>
+
+
+            <Button
+                android:id="@+id/partitionFlashButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_advanced_card_danger"
+                android:text="Instalar modificação"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+
+
+        <!-- DETALHES TÉCNICOS -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="10dp"
+            android:text="DETALHES"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.10"/>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_dashboard_card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Partição"
+                android:textColor="@color/exynos_text_secondary"
+                android:textSize="11sp"/>
+
+            <TextView
+                android:id="@+id/partitionSessionSource"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/exynos_text"
+                android:textSize="11sp"/>
+
+        </LinearLayout>
+
 
     </LinearLayout>
 

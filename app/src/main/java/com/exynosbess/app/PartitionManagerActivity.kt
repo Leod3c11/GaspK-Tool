@@ -2,19 +2,26 @@ package com.exynosbess.app
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.exynosbess.app.partition.PartitionSelection
+import com.exynosbess.app.partition.PartitionDtbCatalog
 import com.exynosbess.app.partition.PartitionInfo
 import com.exynosbess.app.partition.PartitionScanner
+import com.exynosbess.app.partition.PartitionSelection
+import com.exynosbess.app.partition.PartitionSessionState
+import com.exynosbess.app.partition.PartitionStateStore
 import com.exynosbess.app.partition.PartitionType
+import com.exynosbess.app.partition.PartitionWorkspace
 
 class PartitionManagerActivity : Activity() {
 
-    private lateinit var status: TextView
+    private lateinit var status:
+        TextView
 
     private lateinit var bootContainer:
         LinearLayout
@@ -30,6 +37,7 @@ class PartitionManagerActivity : Activity() {
 
     private var activeSlot:
         String? = null
+
 
     override fun onCreate(
         savedInstanceState: Bundle?
@@ -74,6 +82,7 @@ class PartitionManagerActivity : Activity() {
         scanPartitions()
     }
 
+
     private fun scanPartitions() {
 
         scanButton.isEnabled =
@@ -100,7 +109,7 @@ class PartitionManagerActivity : Activity() {
                 if (!result.success) {
 
                     status.text =
-                        "✗ ${result.message}"
+                        result.message
 
                     return@runOnUiThread
                 }
@@ -109,14 +118,14 @@ class PartitionManagerActivity : Activity() {
                     buildString {
 
                         append(
-                            "✓ ${result.message}"
+                            "${result.partitions.size} partição(ões) disponível(is)"
                         )
 
                         result.activeSlotSuffix
                             ?.let {
 
                                 append(
-                                    "\nSlot ativo: $it"
+                                    "  •  slot $it"
                                 )
                             }
                     }
@@ -129,6 +138,7 @@ class PartitionManagerActivity : Activity() {
         }.start()
     }
 
+
     private fun renderPartitions(
         partitions: List<PartitionInfo>
     ) {
@@ -140,6 +150,7 @@ class PartitionManagerActivity : Activity() {
                 when (
                     partition.type
                 ) {
+
                     PartitionType.BOOT ->
                         bootContainer
 
@@ -151,29 +162,30 @@ class PartitionManagerActivity : Activity() {
                 }
 
             target.addView(
-                createPartitionView(
+                createPartitionCard(
                     partition
                 )
             )
         }
 
-        showEmptyMessageIfNeeded(
+        showEmpty(
             bootContainer,
             "Nenhuma partição boot encontrada."
         )
 
-        showEmptyMessageIfNeeded(
+        showEmpty(
             dtbContainer,
-            "Nenhuma partição dtb encontrada."
+            "Nenhuma partição DTB encontrada."
         )
 
-        showEmptyMessageIfNeeded(
+        showEmpty(
             dtboContainer,
-            "Nenhuma partição dtbo encontrada."
+            "Nenhuma partição DTBO encontrada."
         )
     }
 
-    private fun createPartitionView(
+
+    private fun createPartitionCard(
         partition: PartitionInfo
     ): View {
 
@@ -186,34 +198,53 @@ class PartitionManagerActivity : Activity() {
                     LinearLayout.VERTICAL
 
                 setPadding(
-                    dp(14),
-                    dp(14),
-                    dp(14),
-                    dp(14)
+                    dp(18),
+                    dp(17),
+                    dp(18),
+                    dp(17)
                 )
 
                 background =
                     getDrawable(
-                        R.drawable.bg_advanced_card
+                        R.drawable.bg_dashboard_card
                     )
 
-                val params =
+                isClickable =
+                    true
+
+                isFocusable =
+                    true
+
+                setOnClickListener {
+                    openPartition(
+                        partition
+                    )
+                }
+
+                layoutParams =
                     LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
-                    )
+                    ).apply {
 
-                params.bottomMargin =
-                    dp(10)
-
-                layoutParams =
-                    params
+                        bottomMargin =
+                            dp(10)
+                    }
             }
 
-        val active =
-            partition.slotSuffix != null &&
-                partition.slotSuffix ==
-                    activeSlot
+
+        val header =
+            LinearLayout(
+                this
+            ).apply {
+
+                orientation =
+                    LinearLayout.HORIZONTAL
+
+                gravity =
+                    Gravity.CENTER_VERTICAL
+            }
+
 
         val title =
             TextView(
@@ -221,25 +252,68 @@ class PartitionManagerActivity : Activity() {
             ).apply {
 
                 text =
-                    if (active) {
-                        "${partition.name}  •  ATIVA"
-                    } else {
-                        partition.name
-                    }
+                    friendlyName(
+                        partition
+                    )
 
                 setTextColor(
                     0xFFF2F4F7.toInt()
                 )
 
                 textSize =
-                    16f
+                    18f
+
+                setTypeface(
+                    typeface,
+                    Typeface.BOLD
+                )
+
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    )
             }
 
-        root.addView(
+
+        val arrow =
+            TextView(
+                this
+            ).apply {
+
+                text =
+                    "›"
+
+                textSize =
+                    28f
+
+                setTextColor(
+                    0xFF6E9EFF.toInt()
+                )
+            }
+
+
+        header.addView(
             title
         )
 
-        val details =
+        header.addView(
+            arrow
+        )
+
+        root.addView(
+            header
+        )
+
+
+        val active =
+            partition.slotSuffix != null &&
+                partition.slotSuffix ==
+                activeSlot
+
+
+        val identifier =
             TextView(
                 this
             ).apply {
@@ -248,30 +322,69 @@ class PartitionManagerActivity : Activity() {
                     buildString {
 
                         append(
-                            partition.sizeDisplay
+                            partition.name
                         )
 
                         append(
-                            "\n${partition.aliasPath}"
+                            "  •  "
                         )
 
-                        if (
-                            partition.resolvedPath !=
-                            partition.aliasPath
-                        ) {
-                            append(
-                                "\n→ ${partition.resolvedPath}"
-                            )
-                        }
+                        append(
+                            partition.sizeDisplay
+                        )
 
-                        if (
-                            partition.aliases.size > 1
-                        ) {
+                        if (active) {
                             append(
-                                "\n${partition.aliases.size} aliases"
+                                "  •  ATIVA"
                             )
                         }
                     }
+
+                setTextColor(
+                    0xFF6E9EFF.toInt()
+                )
+
+                textSize =
+                    11f
+
+                setPadding(
+                    0,
+                    dp(5),
+                    0,
+                    0
+                )
+            }
+
+        root.addView(
+            identifier
+        )
+
+
+        val state =
+            PartitionStateStore.load(
+                this,
+                partition
+            )
+
+        val dtbCount =
+            PartitionDtbCatalog.load(
+                PartitionWorkspace.get(
+                    this,
+                    partition
+                ).extracted.absolutePath
+            ).size
+
+
+        val summary =
+            TextView(
+                this
+            ).apply {
+
+                text =
+                    sessionSummary(
+                        state,
+                        dtbCount
+                    )
 
                 setTextColor(
                     0xFF919BA7.toInt()
@@ -282,40 +395,76 @@ class PartitionManagerActivity : Activity() {
 
                 setPadding(
                     0,
-                    dp(5),
+                    dp(9),
                     0,
-                    dp(10)
+                    0
                 )
             }
 
         root.addView(
-            details
-        )
-
-        val button =
-            Button(
-                this
-            ).apply {
-
-                text =
-                    "Abrir"
-
-                isAllCaps =
-                    false
-
-                setOnClickListener {
-                    openPartition(
-                        partition
-                    )
-                }
-            }
-
-        root.addView(
-            button
+            summary
         )
 
         return root
     }
+
+
+    private fun friendlyName(
+        partition: PartitionInfo
+    ): String {
+
+        return when (
+            partition.type
+        ) {
+
+            PartitionType.BOOT ->
+                "Boot"
+
+            PartitionType.DTB ->
+                "Device Tree"
+
+            PartitionType.DTBO ->
+                "Device Tree Overlays"
+        }
+    }
+
+
+    private fun sessionSummary(
+        state: PartitionSessionState,
+        count: Int
+    ): String {
+
+        return when (state) {
+
+            PartitionSessionState.DETECTED ->
+                "Toque para preparar"
+
+            PartitionSessionState.IMPORTED ->
+                "Preparação pendente"
+
+            PartitionSessionState.EXTRACTED ->
+
+                if (count > 0) {
+                    "Pronta para editar  •  $count item(ns)"
+                } else {
+                    "Pronta para editar"
+                }
+
+            PartitionSessionState.DIRTY,
+            PartitionSessionState.SAVED ->
+                "Alterações pendentes"
+
+            PartitionSessionState.VALIDATED ->
+                "Alterações validadas"
+
+            PartitionSessionState.BUILT ->
+                "Imagem reconstruída"
+
+            PartitionSessionState.VERIFIED ->
+                "✓ Pronta para exportar ou instalar"
+        }
+    }
+
 
     private fun openPartition(
         partition: PartitionInfo
@@ -333,6 +482,7 @@ class PartitionManagerActivity : Activity() {
         )
     }
 
+
     private fun clearContainers() {
 
         bootContainer.removeAllViews()
@@ -340,7 +490,8 @@ class PartitionManagerActivity : Activity() {
         dtboContainer.removeAllViews()
     }
 
-    private fun showEmptyMessageIfNeeded(
+
+    private fun showEmpty(
         container: LinearLayout,
         message: String
     ) {
@@ -375,6 +526,7 @@ class PartitionManagerActivity : Activity() {
             }
         )
     }
+
 
     private fun dp(
         value: Int

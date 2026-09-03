@@ -633,12 +633,16 @@ object PartitionBuildManager {
                     replacement.length() >
                     entry.size
                 ) {
+
+                    val replacementSize =
+                        replacement.length()
+
                     replacement.delete()
 
                     throw IllegalStateException(
                         "DTB ${entry.index} ficou maior " +
                             "que o espaço original.\n\n" +
-                            "Novo: ${replacement.length()} bytes\n" +
+                            "Novo: $replacementSize bytes\n" +
                             "Slot: ${entry.size} bytes"
                     )
                 }
@@ -1255,6 +1259,35 @@ object PartitionBuildManager {
                     Int.MAX_VALUE.toLong() ||
                 entriesOffset <
                     headerSize
+            ) {
+                return null
+            }
+
+            val tableSize =
+                try {
+                    Math.multiplyExact(
+                        entrySize,
+                        entryCountLong
+                    )
+                } catch (_: ArithmeticException) {
+                    return null
+                }
+
+            val tableEnd =
+                try {
+                    Math.addExact(
+                        entriesOffset,
+                        tableSize
+                    )
+                } catch (_: ArithmeticException) {
+                    return null
+                }
+
+            if (
+                tableEnd >
+                    totalSize ||
+                tableEnd >
+                    file.length()
             ) {
                 return null
             }

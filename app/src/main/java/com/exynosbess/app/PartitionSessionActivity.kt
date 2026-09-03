@@ -4,26 +4,26 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import com.exynosbess.app.partition.PartitionImportManager
+import com.exynosbess.app.partition.BootSessionRebuildManager
+import com.exynosbess.app.partition.BootSessionVerifier
+import com.exynosbess.app.partition.DtbSessionExtractor
+import com.exynosbess.app.partition.DtboSessionExtractor
 import com.exynosbess.app.partition.PartitionBuildManager
-import com.exynosbess.app.partition.PartitionFlashManager
 import com.exynosbess.app.partition.PartitionDtbCatalog
-import com.exynosbess.app.partition.PartitionDtbEntry
-import com.exynosbess.app.partition.PartitionPipeline
+import com.exynosbess.app.partition.PartitionDtsValidator
+import com.exynosbess.app.partition.PartitionFlashManager
+import com.exynosbess.app.partition.PartitionImportManager
 import com.exynosbess.app.partition.PartitionInfo
+import com.exynosbess.app.partition.PartitionPipeline
 import com.exynosbess.app.partition.PartitionSelection
 import com.exynosbess.app.partition.PartitionSessionState
 import com.exynosbess.app.partition.PartitionStateStore
+import com.exynosbess.app.partition.PartitionType
 import com.exynosbess.app.partition.PartitionVerificationStore
 import com.exynosbess.app.partition.PartitionWorkspace
-import com.exynosbess.app.partition.DtboSessionExtractor
-import com.exynosbess.app.partition.DtbSessionExtractor
-import com.exynosbess.app.partition.PartitionDtsValidator
-import com.exynosbess.app.partition.BootSessionRebuildManager
-import com.exynosbess.app.partition.BootSessionVerifier
-import com.exynosbess.app.partition.PartitionType
 
 class PartitionSessionActivity : Activity() {
 
@@ -50,22 +50,13 @@ class PartitionSessionActivity : Activity() {
     private lateinit var stateView:
         TextView
 
-    private lateinit var importButton:
-        Button
-
-    private lateinit var extractButton:
+    private lateinit var prepareButton:
         Button
 
     private lateinit var editButton:
         Button
 
-    private lateinit var validateButton:
-        Button
-
-    private lateinit var rebuildButton:
-        Button
-
-    private lateinit var verifyButton:
+    private lateinit var applyButton:
         Button
 
     private lateinit var exportButton:
@@ -73,6 +64,7 @@ class PartitionSessionActivity : Activity() {
 
     private lateinit var flashButton:
         Button
+
 
     override fun onCreate(
         savedInstanceState: Bundle?
@@ -101,6 +93,7 @@ class PartitionSessionActivity : Activity() {
         restoreState()
         render()
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -134,14 +127,9 @@ class PartitionSessionActivity : Activity() {
                 R.id.partitionSessionState
             )
 
-        importButton =
+        prepareButton =
             findViewById(
-                R.id.partitionImportButton
-            )
-
-        extractButton =
-            findViewById(
-                R.id.partitionExtractButton
+                R.id.partitionPrepareButton
             )
 
         editButton =
@@ -149,19 +137,9 @@ class PartitionSessionActivity : Activity() {
                 R.id.partitionEditButton
             )
 
-        validateButton =
+        applyButton =
             findViewById(
-                R.id.partitionValidateButton
-            )
-
-        rebuildButton =
-            findViewById(
-                R.id.partitionRebuildButton
-            )
-
-        verifyButton =
-            findViewById(
-                R.id.partitionVerifyButton
+                R.id.partitionApplyButton
             )
 
         exportButton =
@@ -175,30 +153,19 @@ class PartitionSessionActivity : Activity() {
             )
     }
 
+
     private fun setupListeners() {
 
-        importButton.setOnClickListener {
-            confirmImport()
-        }
-
-        extractButton.setOnClickListener {
-            executeExtraction()
+        prepareButton.setOnClickListener {
+            confirmPrepare()
         }
 
         editButton.setOnClickListener {
             openDtbEditor()
         }
 
-        validateButton.setOnClickListener {
-            executeValidation()
-        }
-
-        rebuildButton.setOnClickListener {
-            executeRebuild()
-        }
-
-        verifyButton.setOnClickListener {
-            executeVerification()
+        applyButton.setOnClickListener {
+            executeApply()
         }
 
         exportButton.setOnClickListener {
@@ -210,6 +177,7 @@ class PartitionSessionActivity : Activity() {
         }
     }
 
+
     private fun restoreState() {
 
         state =
@@ -218,16 +186,43 @@ class PartitionSessionActivity : Activity() {
                 partition
             )
 
-        val editableDtbs =
-            PartitionDtbCatalog.load(
-                PartitionWorkspace.get(
+        /*
+         * Um estado VERIFIED persistido só continua válido
+         * se rebuilt.img ainda for exatamente a imagem selada.
+         */
+        if (
+            state ==
+            PartitionSessionState.VERIFIED
+        ) {
+
+            val verification =
+                PartitionVerificationStore.check(
                     this,
                     partition
-                ).extracted.absolutePath
-            )
+                )
+
+            if (!verification.valid) {
+
+                state =
+                    PartitionSessionState.BUILT
+
+                PartitionStateStore.save(
+                    this,
+                    partition,
+                    state
+                )
+            }
+        }
+
+        /*
+         * Se já existem DTBs extraídos, a sessão está
+         * no mínimo preparada.
+         */
+        val editable =
+            editableDtbs()
 
         if (
-            editableDtbs.isNotEmpty() &&
+            editable.isNotEmpty() &&
             state in setOf(
                 PartitionSessionState.DETECTED,
                 PartitionSessionState.IMPORTED
@@ -245,16 +240,20 @@ class PartitionSessionActivity : Activity() {
         }
     }
 
+
     private fun render() {
 
+        val dtbs =
+            editableDtbs()
+
         title.text =
-            partition.name
+            friendlyPartitionName()
 
         type.text =
             buildString {
 
                 append(
-                    partition.type.name
+                    partition.name
                 )
 
                 append(
@@ -277,146 +276,309 @@ class PartitionSessionActivity : Activity() {
                     partition.resolvedPath !=
                     partition.aliasPath
                 ) {
+
                     append(
-                        "\n→ ${partition.resolvedPath}"
+                        "\n${partition.resolvedPath}"
                     )
                 }
             }
 
         stateView.text =
-            stateText()
-
-        importButton.isEnabled =
-            state ==
-                PartitionSessionState.DETECTED
-
-        extractButton.isEnabled =
-            state in setOf(
-                PartitionSessionState.IMPORTED,
-                PartitionSessionState.EXTRACTED
+            stateText(
+                dtbs.size
             )
 
-        val editableDtbs =
-            PartitionDtbCatalog.load(
-                PartitionWorkspace.get(
-                    this,
-                    partition
-                ).extracted.absolutePath
-            )
-
-        editButton.isEnabled =
-            editableDtbs.isNotEmpty()
-
-        editButton.text =
-            if (editableDtbs.isNotEmpty()) {
-                "Editar Device Trees (${editableDtbs.size})"
+        /*
+         * PREPARAR aparece somente enquanto a partição
+         * ainda não foi completamente extraída.
+         */
+        prepareButton.visibility =
+            if (
+                state in setOf(
+                    PartitionSessionState.DETECTED,
+                    PartitionSessionState.IMPORTED
+                )
+            ) {
+                View.VISIBLE
             } else {
-                "Editar Device Trees"
+                View.GONE
             }
 
-        validateButton.isEnabled =
-            state ==
-                PartitionSessionState.SAVED ||
+        prepareButton.isEnabled =
+            state in setOf(
+                PartitionSessionState.DETECTED,
+                PartitionSessionState.IMPORTED
+            )
+
+        prepareButton.text =
+            if (
                 state ==
-                PartitionSessionState.DIRTY
+                PartitionSessionState.IMPORTED
+            ) {
+                "Concluir preparação"
+            } else {
+                "Preparar partição"
+            }
 
-        rebuildButton.isEnabled =
-            state ==
-                PartitionSessionState.VALIDATED
 
-        verifyButton.isEnabled =
+        /*
+         * EDITAR aparece depois da extração.
+         */
+        editButton.visibility =
+            if (dtbs.isNotEmpty()) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+
+        editButton.isEnabled =
+            dtbs.isNotEmpty()
+
+        editButton.text =
+            when {
+
+                partition.type ==
+                    PartitionType.DTBO &&
+                    dtbs.size == 1 ->
+
+                    "Editar overlay"
+
+                partition.type ==
+                    PartitionType.DTBO ->
+
+                    "Editar overlays (${dtbs.size})"
+
+                dtbs.size == 1 ->
+
+                    "Editar Device Tree"
+
+                else ->
+
+                    "Editar Device Trees (${dtbs.size})"
+            }
+
+
+        /*
+         * APLICAR substitui os três botões técnicos:
+         *
+         * Validar
+         * Reconstruir
+         * Verificar
+         *
+         * Internamente TODOS continuam sendo executados.
+         */
+        val canApply =
+            dtbs.isNotEmpty() &&
+                state in setOf(
+                    PartitionSessionState.EXTRACTED,
+                    PartitionSessionState.DIRTY,
+                    PartitionSessionState.SAVED,
+                    PartitionSessionState.VALIDATED,
+                    PartitionSessionState.BUILT
+                )
+
+        applyButton.visibility =
+            if (canApply) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+
+        applyButton.isEnabled =
+            canApply
+
+        applyButton.text =
+            "Aplicar alterações"
+
+
+        /*
+         * Exportar e instalar só aparecem quando a imagem
+         * passou por todo o pipeline.
+         */
+        val ready =
             state ==
-                PartitionSessionState.BUILT
+                PartitionSessionState.VERIFIED
+
+        exportButton.visibility =
+            if (ready) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+
+        flashButton.visibility =
+            if (ready) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
 
         exportButton.isEnabled =
-            state ==
-                PartitionSessionState.VERIFIED
+            ready
 
         flashButton.isEnabled =
-            state ==
-                PartitionSessionState.VERIFIED
+            ready
     }
 
-    private fun stateText():
-        String {
+
+    private fun stateText(
+        dtbCount: Int
+    ): String {
 
         return when (state) {
 
             PartitionSessionState.DETECTED ->
-                "● Detectada"
+                "Partição encontrada\n" +
+                    "Prepare-a para começar."
 
             PartitionSessionState.IMPORTED ->
-                "● Importada\n○ Extraída\n○ Validada\n○ Reconstruída\n○ Verificada"
+                "Cópia local criada\n" +
+                    "Conclua a preparação."
 
             PartitionSessionState.EXTRACTED ->
-                "● Importada\n● Extraída\n○ Validada\n○ Reconstruída\n○ Verificada"
+                buildString {
+
+                    append(
+                        "Pronta para editar"
+                    )
+
+                    if (dtbCount > 0) {
+                        append(
+                            "\n$dtbCount Device Tree(s) disponível(is)"
+                        )
+                    }
+                }
 
             PartitionSessionState.DIRTY ->
-                "● Alterações não salvas"
+                "Alterações detectadas\n" +
+                    "Aplique quando terminar."
 
             PartitionSessionState.SAVED ->
-                "● Alterações salvas\n○ Validada\n○ Reconstruída\n○ Verificada"
+                "Alterações salvas\n" +
+                    "Prontas para aplicar."
 
             PartitionSessionState.VALIDATED ->
-                "● Validada\n○ Reconstruída\n○ Verificada"
+                "Alterações validadas\n" +
+                    "Reconstrução pendente."
 
             PartitionSessionState.BUILT ->
-                "● Reconstruída\n○ Verificada"
+                "Imagem reconstruída\n" +
+                    "Verificação pendente."
 
             PartitionSessionState.VERIFIED ->
-                "● Verificada\n✓ Pronta para exportação ou flash"
+                "✓ Alterações prontas\n" +
+                    "✓ Estrutura validada\n" +
+                    "✓ Imagem reconstruída\n" +
+                    "✓ Verificação concluída\n" +
+                    "✓ SHA-256 confirmado"
         }
     }
 
-    private fun confirmImport() {
+
+    private fun friendlyPartitionName():
+        String {
+
+        return when (
+            partition.type
+        ) {
+
+            PartitionType.BOOT ->
+                "Boot"
+
+            PartitionType.DTB ->
+                "Device Tree"
+
+            PartitionType.DTBO ->
+                "Device Tree Overlays"
+        }
+    }
+
+
+    private fun editableDtbs() =
+        PartitionDtbCatalog.load(
+            PartitionWorkspace.get(
+                this,
+                partition
+            ).extracted.absolutePath
+        )
+
+
+    // ============================================================
+    // PREPARAÇÃO
+    // ============================================================
+
+    private fun confirmPrepare() {
+
+        val message =
+            if (
+                state ==
+                PartitionSessionState.IMPORTED
+            ) {
+                "A cópia local já existe.\n\n" +
+                    "O GaspKernel vai extrair e preparar " +
+                    "o conteúdo para edição."
+            } else {
+                "O GaspKernel criará uma cópia local da " +
+                    "partição e preparará seu conteúdo para edição.\n\n" +
+                    "Nenhuma gravação será feita na partição."
+            }
 
         AlertDialog.Builder(
             this
         )
             .setTitle(
-                "Importar ${partition.name}"
+                "Preparar ${friendlyPartitionName()}"
             )
             .setMessage(
-                "Será criada uma cópia local da partição.\n\n" +
-                    "Nenhuma gravação será feita no dispositivo."
+                message
             )
             .setNegativeButton(
                 "Cancelar",
                 null
             )
             .setPositiveButton(
-                "Importar"
-            ) {
-                _,
-                _ ->
+                "Preparar"
+            ) { _, _ ->
 
-                executeImport()
+                executePrepare()
             }
             .show()
     }
 
-    private fun executeImport() {
 
-        importButton.isEnabled =
+    private fun executePrepare() {
+
+        prepareButton.isEnabled =
             false
 
-        importButton.text =
-            "Importando..."
+        prepareButton.text =
+            "Preparando..."
 
         Thread {
 
-            val result =
-                PartitionImportManager.import(
-                    this,
-                    partition
-                )
+            var failure:
+                String? = null
 
-            runOnUiThread {
+            /*
+             * Etapa 1: importar.
+             */
+            if (
+                state ==
+                PartitionSessionState.DETECTED
+            ) {
 
-                importButton.text =
-                    "Importar"
+                val importResult =
+                    PartitionImportManager.import(
+                        this,
+                        partition
+                    )
 
-                if (result.success) {
+                if (!importResult.success) {
+
+                    failure =
+                        importResult.message
+
+                } else {
 
                     state =
                         PartitionSessionState.IMPORTED
@@ -426,29 +588,80 @@ class PartitionSessionActivity : Activity() {
                         partition,
                         state
                     )
+                }
+            }
 
-                    render()
+            /*
+             * Etapa 2: extrair.
+             */
+            if (
+                failure == null &&
+                state ==
+                PartitionSessionState.IMPORTED
+            ) {
+
+                val extraction =
+                    when (
+                        partition.type
+                    ) {
+
+                        PartitionType.BOOT ->
+                            PartitionPipeline.extract(
+                                this,
+                                partition
+                            )
+
+                        PartitionType.DTB ->
+                            DtbSessionExtractor.extract(
+                                this,
+                                partition
+                            )
+
+                        PartitionType.DTBO ->
+                            DtboSessionExtractor.extract(
+                                this,
+                                partition
+                            )
+                    }
+
+                if (
+                    !extraction.success ||
+                    extraction.newState == null
+                ) {
+
+                    failure =
+                        extraction.message
+
+                } else {
+
+                    state =
+                        extraction.newState
+
+                    PartitionStateStore.save(
+                        this,
+                        partition,
+                        state
+                    )
+                }
+            }
+
+            runOnUiThread {
+
+                prepareButton.text =
+                    "Preparar partição"
+
+                render()
+
+                if (failure != null) {
 
                     AlertDialog.Builder(
                         this
                     )
                         .setTitle(
-                            "Importação concluída"
+                            "Não foi possível preparar"
                         )
                         .setMessage(
-                            buildString {
-
-                                append(
-                                    result.message
-                                )
-
-                                result.sha256
-                                    ?.let {
-                                        append(
-                                            "\n\nSHA-256:\n$it"
-                                        )
-                                    }
-                            }
+                            failure
                         )
                         .setPositiveButton(
                             "OK",
@@ -458,19 +671,23 @@ class PartitionSessionActivity : Activity() {
 
                 } else {
 
-                    render()
-
                     AlertDialog.Builder(
                         this
                     )
                         .setTitle(
-                            "Falha"
+                            "Partição preparada"
                         )
                         .setMessage(
-                            result.message
+                            "${friendlyPartitionName()} está pronta para edição."
                         )
                         .setPositiveButton(
-                            "OK",
+                            "Editar"
+                        ) { _, _ ->
+
+                            openDtbEditor()
+                        }
+                        .setNegativeButton(
+                            "Depois",
                             null
                         )
                         .show()
@@ -480,76 +697,306 @@ class PartitionSessionActivity : Activity() {
         }.start()
     }
 
-    private fun executeExtraction() {
 
-        extractButton.isEnabled =
+    // ============================================================
+    // EDITOR
+    // ============================================================
+
+    private fun openDtbEditor() {
+
+        val entries =
+            editableDtbs()
+
+        if (entries.isEmpty()) {
+
+            AlertDialog.Builder(
+                this
+            )
+                .setTitle(
+                    "Editor"
+                )
+                .setMessage(
+                    "Nenhum Device Tree editável foi encontrado."
+                )
+                .setPositiveButton(
+                    "OK",
+                    null
+                )
+                .show()
+
+            return
+        }
+
+        /*
+         * Abrir o editor invalida qualquer imagem verificada
+         * anteriormente.
+         *
+         * Mesmo que o usuário apenas abra e feche sem editar,
+         * ele terá que aplicar/verificar novamente.
+         *
+         * É conservador, mas seguro.
+         */
+        PartitionVerificationStore.invalidate(
+            this,
+            partition
+        )
+
+        state =
+            PartitionSessionState.EXTRACTED
+
+        PartitionStateStore.save(
+            this,
+            partition,
+            state
+        )
+
+        render()
+
+        startActivity(
+            Intent(
+                this,
+                PartitionDtbEditorActivity::class.java
+            )
+        )
+    }
+
+
+    // ============================================================
+    // APLICAR
+    //
+    // validar -> rebuild -> verify -> SHA seal
+    // ============================================================
+
+    private fun executeApply() {
+
+        if (
+            editableDtbs().isEmpty()
+        ) {
+            return
+        }
+
+        PartitionVerificationStore.invalidate(
+            this,
+            partition
+        )
+
+        applyButton.isEnabled =
             false
 
-        extractButton.text =
-            "Extraindo..."
+        applyButton.text =
+            "Validando..."
 
         Thread {
 
-            val result =
-                when (partition.type) {
+            /*
+             * 1. VALIDAR DTS
+             */
+            val validation =
+                PartitionDtsValidator.validate(
+                    this,
+                    partition
+                )
 
-                    PartitionType.BOOT ->
-                        PartitionPipeline.extract(
-                            this,
-                            partition
-                        )
+            if (!validation.success) {
 
-                    PartitionType.DTB ->
-                        DtbSessionExtractor.extract(
-                            this,
-                            partition
-                        )
+                showApplyFailure(
+                    "Validação falhou",
+                    validation.message
+                )
 
-                    PartitionType.DTBO ->
-                        DtboSessionExtractor.extract(
-                            this,
-                            partition
-                        )
+                return@Thread
+            }
+
+            state =
+                PartitionSessionState.VALIDATED
+
+            PartitionStateStore.save(
+                this,
+                partition,
+                state
+            )
+
+            runOnUiThread {
+                applyButton.text =
+                    "Reconstruindo..."
+            }
+
+
+            /*
+             * 2. REBUILD
+             *
+             * BOOT:
+             * preservamos o backend que você já testou
+             * fisicamente com sucesso.
+             *
+             * DTB/DTBO:
+             * usam PartitionBuildManager.
+             */
+            val rebuildResult:
+                Pair<Boolean, String> =
+
+                when (
+                    partition.type
+                ) {
+
+                    PartitionType.BOOT -> {
+
+                        val result =
+                            BootSessionRebuildManager.rebuild(
+                                this,
+                                partition
+                            )
+
+                        result.success to
+                            result.message
+                    }
+
+                    PartitionType.DTB,
+                    PartitionType.DTBO -> {
+
+                        val result =
+                            PartitionBuildManager.rebuild(
+                                this,
+                                partition
+                            )
+
+                        result.success to
+                            result.message
+                    }
                 }
+
+            if (!rebuildResult.first) {
+
+                showApplyFailure(
+                    "Reconstrução falhou",
+                    rebuildResult.second
+                )
+
+                return@Thread
+            }
+
+            state =
+                PartitionSessionState.BUILT
+
+            PartitionStateStore.save(
+                this,
+                partition,
+                state
+            )
+
+            runOnUiThread {
+                applyButton.text =
+                    "Verificando..."
+            }
+
+
+            /*
+             * 3. ROUND-TRIP VERIFY
+             */
+            val verifyResult:
+                Pair<Boolean, String> =
+
+                when (
+                    partition.type
+                ) {
+
+                    PartitionType.BOOT -> {
+
+                        val result =
+                            BootSessionVerifier.verify(
+                                this,
+                                partition
+                            )
+
+                        result.success to
+                            result.message
+                    }
+
+                    PartitionType.DTB,
+                    PartitionType.DTBO -> {
+
+                        val result =
+                            PartitionBuildManager.verify(
+                                this,
+                                partition
+                            )
+
+                        result.success to
+                            result.message
+                    }
+                }
+
+            if (!verifyResult.first) {
+
+                showApplyFailure(
+                    "Verificação falhou",
+                    verifyResult.second
+                )
+
+                return@Thread
+            }
+
+
+            /*
+             * 4. SELAR rebuilt.img COM SHA-256
+             */
+            val seal =
+                PartitionVerificationStore.markVerified(
+                    this,
+                    partition
+                )
+
+            if (!seal.valid) {
+
+                showApplyFailure(
+                    "Verificação incompleta",
+                    seal.message
+                )
+
+                return@Thread
+            }
+
+            state =
+                PartitionSessionState.VERIFIED
+
+            PartitionStateStore.save(
+                this,
+                partition,
+                state
+            )
 
             runOnUiThread {
 
-                extractButton.text =
-                    "Extrair / descompactar"
+                applyButton.text =
+                    "Aplicar alterações"
 
-                if (
-                    result.success &&
-                    result.newState != null
-                ) {
-
-                    state =
-                        result.newState
-
-                    PartitionStateStore.save(
-                        this,
-                        partition,
-                        state
-                    )
-
-                    render()
-
-                } else {
-
-                    render()
-                }
+                render()
 
                 AlertDialog.Builder(
                     this
                 )
                     .setTitle(
-                        if (result.success) {
-                            "Extração concluída"
-                        } else {
-                            "Extração"
-                        }
+                        "Alterações prontas"
                     )
                     .setMessage(
-                        result.message
+                        buildString {
+
+                            append(
+                                "${friendlyPartitionName()} foi reconstruída e verificada com sucesso."
+                            )
+
+                            seal.expectedHash
+                                ?.let {
+
+                                    append(
+                                        "\n\nSHA-256:\n$it"
+                                    )
+                                }
+
+                            append(
+                                "\n\nAgora você pode exportar ou instalar a imagem."
+                            )
+                        }
                     )
                     .setPositiveButton(
                         "OK",
@@ -561,31 +1008,59 @@ class PartitionSessionActivity : Activity() {
         }.start()
     }
 
-    private fun showDtbSelector() {
 
-        val workspace =
-            PartitionWorkspace.get(
+    private fun showApplyFailure(
+        title: String,
+        message: String
+    ) {
+
+        runOnUiThread {
+
+            applyButton.text =
+                "Aplicar alterações"
+
+            render()
+
+            AlertDialog.Builder(
+                this
+            )
+                .setTitle(
+                    title
+                )
+                .setMessage(
+                    message
+                )
+                .setPositiveButton(
+                    "OK",
+                    null
+                )
+                .show()
+        }
+    }
+
+
+    // ============================================================
+    // EXPORTAR
+    // ============================================================
+
+    private fun requestExport() {
+
+        val verification =
+            PartitionVerificationStore.check(
                 this,
                 partition
             )
 
-        val workspacePath =
-            workspace.extracted.absolutePath
+        if (!verification.valid) {
 
-        val entries =
-            PartitionDtbCatalog.load(
-                workspacePath
+            AlertDialog.Builder(
+                this
             )
-
-        if (entries.isEmpty()) {
-
-            AlertDialog.Builder(this)
                 .setTitle(
-                    "Device Trees"
+                    "Exportação bloqueada"
                 )
                 .setMessage(
-                    "Nenhum Device Tree editável foi encontrado nesta sessão.\\n\\n" +
-                        "Execute a extração primeiro."
+                    verification.message
                 )
                 .setPositiveButton(
                     "OK",
@@ -595,323 +1070,6 @@ class PartitionSessionActivity : Activity() {
 
             return
         }
-
-        val labels =
-            entries.map { entry ->
-
-                buildString {
-
-                    append(
-                        "DTB ${entry.index}"
-                    )
-
-                    append(
-                        "  •  ${entry.sourceFile}"
-                    )
-
-                    append(
-                        "\\nOffset: 0x${entry.offset.toString(16).uppercase()}"
-                    )
-
-                    append(
-                        "  •  ${formatBytes(entry.size)}"
-                    )
-                }
-            }
-                .toTypedArray()
-
-        AlertDialog.Builder(this)
-            .setTitle(
-                "Device Trees • ${partition.name}"
-            )
-            .setItems(
-                labels
-            ) { _, position ->
-
-                val entry =
-                    entries[position]
-
-                showEditorChoice(
-                    workspacePath,
-                    entry
-                )
-            }
-            .setNegativeButton(
-                "Cancelar",
-                null
-            )
-            .show()
-    }
-
-
-    private fun showEditorChoice(
-        workspacePath: String,
-        entry: PartitionDtbEntry
-    ) {
-
-        val options =
-            arrayOf(
-                "Editor DTS completo",
-                "Editor GPU Mali"
-            )
-
-        AlertDialog.Builder(this)
-            .setTitle(
-                "DTB ${entry.index} • ${entry.sourceFile}"
-            )
-            .setMessage(
-                "Offset: 0x${entry.offset.toString(16).uppercase()}\\n" +
-                    "Tamanho: ${formatBytes(entry.size)}"
-            )
-            .setItems(
-                options
-            ) { _, which ->
-
-                when (which) {
-
-                    0 ->
-                        openDtsEditor(
-                            workspacePath,
-                            entry.index
-                        )
-
-                    1 ->
-                        openGpuEditor(
-                            workspacePath
-                        )
-                }
-            }
-            .setNegativeButton(
-                "Cancelar",
-                null
-            )
-            .show()
-    }
-
-
-    private fun openDtsEditor(
-        workspacePath: String,
-        dtbIndex: Int
-    ) {
-
-        startActivity(
-            Intent(
-                this,
-                DtsEditorActivity::class.java
-            )
-                .putExtra(
-                    "workspace_path",
-                    workspacePath
-                )
-                .putExtra(
-                    "dtb_index",
-                    dtbIndex
-                )
-        )
-    }
-
-
-    private fun openGpuEditor(
-        workspacePath: String
-    ) {
-
-        startActivity(
-            Intent(
-                this,
-                GpuEditorActivity::class.java
-            )
-                .putExtra(
-                    "workspace_path",
-                    workspacePath
-                )
-        )
-    }
-
-
-    private fun formatBytes(
-        bytes: Long
-    ): String {
-
-        return when {
-
-            bytes >=
-                1024L * 1024L ->
-
-                "%.2f MB".format(
-                    bytes.toDouble() /
-                        (1024.0 * 1024.0)
-                )
-
-            bytes >= 1024L ->
-
-                "%.2f KB".format(
-                    bytes.toDouble() /
-                        1024.0
-                )
-
-            else ->
-                "$bytes B"
-        }
-    }
-
-
-    private fun executeRebuild() {
-
-        if (partition.type != PartitionType.BOOT) {
-            showPending("Reconstrução")
-            return
-        }
-
-        PartitionVerificationStore.invalidate(
-            this,
-            partition
-        )
-
-        rebuildButton.isEnabled =
-            false
-
-        rebuildButton.text =
-            "Reconstruindo..."
-
-        Thread {
-
-            val result =
-                BootSessionRebuildManager.rebuild(
-                    this,
-                    partition
-                )
-
-            runOnUiThread {
-
-                rebuildButton.text =
-                    "Reconstruir"
-
-                if (result.success) {
-
-                    state =
-                        PartitionSessionState.BUILT
-
-                    PartitionStateStore.save(
-                        this,
-                        partition,
-                        state
-                    )
-                }
-
-                render()
-
-                AlertDialog.Builder(this)
-                    .setTitle(
-                        if (result.success) {
-                            "Reconstrução concluída"
-                        } else {
-                            "Falha na reconstrução"
-                        }
-                    )
-                    .setMessage(result.message)
-                    .setPositiveButton("OK", null)
-                    .show()
-            }
-
-        }.start()
-    }
-
-
-    private fun executeVerification() {
-
-        if (partition.type != PartitionType.BOOT) {
-            showPending("Verificação")
-            return
-        }
-
-        verifyButton.isEnabled =
-            false
-
-        verifyButton.text =
-            "Verificando..."
-
-        Thread {
-
-            val result =
-                BootSessionVerifier.verify(
-                    this,
-                    partition
-                )
-
-            runOnUiThread {
-
-                verifyButton.text =
-                    "Verificar reconstrução"
-
-                if (result.success) {
-
-                    val verification =
-                        PartitionVerificationStore.markVerified(
-                            this,
-                            partition
-                        )
-
-                    if (verification.valid) {
-
-                        state =
-                            PartitionSessionState.VERIFIED
-
-                        PartitionStateStore.save(
-                            this,
-                            partition,
-                            state
-                        )
-
-                    } else {
-
-                        state =
-                            PartitionSessionState.BUILT
-
-                        PartitionStateStore.save(
-                            this,
-                            partition,
-                            state
-                        )
-
-                        render()
-
-                        AlertDialog.Builder(this)
-                            .setTitle(
-                                "Falha registrando verificação"
-                            )
-                            .setMessage(
-                                verification.message
-                            )
-                            .setPositiveButton(
-                                "OK",
-                                null
-                            )
-                            .show()
-
-                        return@runOnUiThread
-                    }
-                }
-
-                render()
-
-                AlertDialog.Builder(this)
-                    .setTitle(
-                        if (result.success) {
-                            "Verificação concluída"
-                        } else {
-                            "Verificação falhou"
-                        }
-                    )
-                    .setMessage(result.message)
-                    .setPositiveButton("OK", null)
-                    .show()
-            }
-
-        }.start()
-    }
-
-
-    private fun requestExport() {
 
         val workspace =
             PartitionWorkspace.get(
@@ -923,30 +1081,11 @@ class PartitionSessionActivity : Activity() {
             !workspace.rebuilt.exists() ||
             workspace.rebuilt.length() <= 0L
         ) {
-
-            AlertDialog.Builder(this)
-                .setTitle("Exportação")
-                .setMessage(
-                    "Nenhum arquivo reconstruído disponível."
-                )
-                .setPositiveButton("OK", null)
-                .show()
-
             return
         }
 
         val fileName =
-            when (partition.type) {
-
-                PartitionType.BOOT ->
-                    "${partition.name}_modified.img"
-
-                PartitionType.DTB ->
-                    "${partition.name}_modified.img"
-
-                PartitionType.DTBO ->
-                    "${partition.name}_modified.img"
-            }
+            "${partition.name}_modified.img"
 
         val intent =
             Intent(
@@ -983,8 +1122,10 @@ class PartitionSessionActivity : Activity() {
         )
 
         if (
-            requestCode != REQUEST_EXPORT_REBUILT ||
-            resultCode != RESULT_OK
+            requestCode !=
+            REQUEST_EXPORT_REBUILT ||
+            resultCode !=
+            RESULT_OK
         ) {
             return
         }
@@ -993,7 +1134,7 @@ class PartitionSessionActivity : Activity() {
             data?.data
                 ?: return
 
-        val source =
+        val file =
             PartitionWorkspace.get(
                 this,
                 partition
@@ -1002,11 +1143,12 @@ class PartitionSessionActivity : Activity() {
         try {
 
             contentResolver
-                .openOutputStream(uri)
+                .openOutputStream(
+                    uri
+                )
                 ?.use { output ->
 
-                    source
-                        .inputStream()
+                    file.inputStream()
                         .use { input ->
 
                             input.copyTo(
@@ -1018,12 +1160,14 @@ class PartitionSessionActivity : Activity() {
                     "Não foi possível abrir o destino."
                 )
 
-            AlertDialog.Builder(this)
+            AlertDialog.Builder(
+                this
+            )
                 .setTitle(
-                    "Exportação concluída"
+                    "Imagem exportada"
                 )
                 .setMessage(
-                    "${source.name} exportado com sucesso."
+                    "${partition.name}_modified.img foi exportada com sucesso."
                 )
                 .setPositiveButton(
                     "OK",
@@ -1033,12 +1177,15 @@ class PartitionSessionActivity : Activity() {
 
         } catch (e: Exception) {
 
-            AlertDialog.Builder(this)
+            AlertDialog.Builder(
+                this
+            )
                 .setTitle(
                     "Falha na exportação"
                 )
                 .setMessage(
-                    e.message ?: "Erro desconhecido"
+                    e.message
+                        ?: "Erro desconhecido."
                 )
                 .setPositiveButton(
                     "OK",
@@ -1049,103 +1196,9 @@ class PartitionSessionActivity : Activity() {
     }
 
 
-    private fun openDtbEditor() {
-
-        val workspace =
-            PartitionWorkspace.get(
-                this,
-                partition
-            )
-
-        val entries =
-            PartitionDtbCatalog.load(
-                workspace.extracted.absolutePath
-            )
-
-        if (entries.isEmpty()) {
-
-            AlertDialog.Builder(this)
-                .setTitle(
-                    "Editor"
-                )
-                .setMessage(
-                    "Nenhum Device Tree editável foi encontrado.\n\n" +
-                        "Use Extrair / descompactar primeiro."
-                )
-                .setPositiveButton(
-                    "OK",
-                    null
-                )
-                .show()
-
-            return
-        }
-
-        startActivity(
-            Intent(
-                this,
-                PartitionDtbEditorActivity::class.java
-            )
-        )
-    }
-
-
-    private fun executeValidation() {
-
-        validateButton.isEnabled =
-            false
-
-        validateButton.text =
-            "Validando..."
-
-        Thread {
-
-            val result =
-                PartitionDtsValidator.validate(
-                    this,
-                    partition
-                )
-
-            runOnUiThread {
-
-                validateButton.text =
-                    "Validar alterações"
-
-                if (result.success) {
-
-                    state =
-                        PartitionSessionState.VALIDATED
-
-                    PartitionStateStore.save(
-                        this,
-                        partition,
-                        state
-                    )
-                }
-
-                render()
-
-                AlertDialog.Builder(this)
-                    .setTitle(
-                        if (result.success) {
-                            "Validação concluída"
-                        } else {
-                            "Falha na validação"
-                        }
-                    )
-                    .setMessage(
-                        result.message
-                    )
-                    .setPositiveButton(
-                        "OK",
-                        null
-                    )
-                    .show()
-            }
-
-        }.start()
-    }
-
+    // ============================================================
+    // FLASH
+    // ============================================================
 
     private fun confirmFlash() {
 
@@ -1153,12 +1206,37 @@ class PartitionSessionActivity : Activity() {
             state !=
             PartitionSessionState.VERIFIED
         ) {
-            AlertDialog.Builder(this)
+            return
+        }
+
+        val verification =
+            PartitionVerificationStore.check(
+                this,
+                partition
+            )
+
+        if (!verification.valid) {
+
+            state =
+                PartitionSessionState.BUILT
+
+            PartitionStateStore.save(
+                this,
+                partition,
+                state
+            )
+
+            render()
+
+            AlertDialog.Builder(
+                this
+            )
                 .setTitle(
-                    "Flash bloqueado"
+                    "Instalação bloqueada"
                 )
                 .setMessage(
-                    "A imagem precisa estar reconstruída e verificada antes do flash."
+                    verification.message +
+                        "\n\nAplique as alterações novamente."
                 )
                 .setPositiveButton(
                     "OK",
@@ -1175,48 +1253,46 @@ class PartitionSessionActivity : Activity() {
                 partition
             )
 
-        if (
-            !workspace.rebuilt.exists() ||
-            workspace.rebuilt.length() <= 0L
-        ) {
-            AlertDialog.Builder(this)
-                .setTitle(
-                    "Flash bloqueado"
-                )
-                .setMessage(
-                    "A imagem reconstruída não foi encontrada."
-                )
-                .setPositiveButton(
-                    "OK",
-                    null
-                )
-                .show()
-
-            return
-        }
-
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(
+            this
+        )
             .setTitle(
-                "Gravar ${partition.name}?"
+                "Instalar modificação?"
             )
             .setMessage(
-                "Você está prestes a gravar diretamente uma partição do dispositivo.\n\n" +
-                    "Tipo: ${partition.type.name}\n" +
-                    "Partição: ${partition.name}\n" +
-                    "Destino: ${partition.resolvedPath}\n" +
-                    "Imagem: ${workspace.rebuilt.length()} bytes\n\n" +
-                    "Antes da gravação, o GaspKernel criará um novo backup " +
-                    "da partição atual.\n\n" +
-                    "Após o flash, a partição será lida novamente e comparada " +
-                    "por SHA-256 com a imagem reconstruída.\n\n" +
-                    "O aparelho NÃO será reiniciado automaticamente."
+                buildString {
+
+                    append(
+                        friendlyPartitionName()
+                    )
+
+                    append(
+                        "\n${partition.name}"
+                    )
+
+                    append(
+                        "\n${workspace.rebuilt.length()} bytes"
+                    )
+
+                    append(
+                        "\n\nO GaspKernel criará um backup da partição atual antes da gravação."
+                    )
+
+                    append(
+                        "\n\nDepois do flash, a partição será lida novamente e comparada por SHA-256."
+                    )
+
+                    append(
+                        "\n\nO dispositivo NÃO será reiniciado automaticamente."
+                    )
+                }
             )
             .setNegativeButton(
                 "Cancelar",
                 null
             )
             .setPositiveButton(
-                "GRAVAR"
+                "INSTALAR"
             ) { _, _ ->
 
                 executeFlash()
@@ -1227,14 +1303,10 @@ class PartitionSessionActivity : Activity() {
 
     private fun executeFlash() {
 
-        /*
-         * Revalidar estado inclusive depois do diálogo.
-         */
         if (
             state !=
             PartitionSessionState.VERIFIED
         ) {
-            render()
             return
         }
 
@@ -1242,7 +1314,7 @@ class PartitionSessionActivity : Activity() {
             false
 
         flashButton.text =
-            "Gravando..."
+            "Instalando..."
 
         Thread {
 
@@ -1255,22 +1327,18 @@ class PartitionSessionActivity : Activity() {
             runOnUiThread {
 
                 flashButton.text =
-                    "Flash"
+                    "Instalar modificação"
 
-                /*
-                 * Após sucesso, mantemos VERIFIED.
-                 * A imagem continua sendo exatamente a imagem validada.
-                 *
-                 * Em qualquer falha, também não avançamos estado.
-                 */
                 render()
 
-                AlertDialog.Builder(this)
+                AlertDialog.Builder(
+                    this
+                )
                     .setTitle(
                         if (result.success) {
-                            "Flash concluído"
+                            "Instalação concluída"
                         } else {
-                            "Falha no flash"
+                            "Instalação falhou"
                         }
                     )
                     .setMessage(
@@ -1284,26 +1352,5 @@ class PartitionSessionActivity : Activity() {
             }
 
         }.start()
-    }
-
-
-    private fun showPending(
-        operation: String
-    ) {
-
-        AlertDialog.Builder(
-            this
-        )
-            .setTitle(
-                operation
-            )
-            .setMessage(
-                "Backend ainda não conectado para ${partition.type.name}."
-            )
-            .setPositiveButton(
-                "OK",
-                null
-            )
-            .show()
     }
 }

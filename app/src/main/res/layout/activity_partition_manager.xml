@@ -4,57 +4,63 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="@color/exynos_bg"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:paddingStart="20dp"
+        android:paddingTop="26dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="30dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="PARTIÇÕES"
-            android:textColor="#FFFFFF"
-            android:textSize="28sp"
+            android:text="Partições"
+            android:textColor="@color/exynos_text"
+            android:textSize="30sp"
             android:textStyle="bold"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Boot • Device Tree • Overlays"
-            android:textColor="#7F8996"
+            android:layout_marginTop="3dp"
+            android:text="Selecione o que deseja modificar"
+            android:textColor="@color/exynos_text_secondary"
             android:textSize="13sp"/>
-
-        <Button
-            android:id="@+id/scanPartitionsButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="20dp"
-            android:text="Detectar partições"
-            android:textAllCaps="false"/>
 
         <TextView
             android:id="@+id/partitionStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Aguardando detecção."
-            android:textColor="#919BA7"
-            android:textSize="13sp"/>
+            android:layout_marginTop="18dp"
+            android:text="Detectando partições..."
+            android:textColor="@color/exynos_accent"
+            android:textSize="12sp"/>
+
+        <Button
+            android:id="@+id/scanPartitionsButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:text="Atualizar"
+            android:textAllCaps="false"/>
+
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_marginTop="28dp"
             android:layout_marginBottom="10dp"
             android:text="BOOT"
-            android:textColor="#697586"
-            android:textSize="12sp"
-            android:textStyle="bold"/>
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.10"/>
 
         <LinearLayout
             android:id="@+id/bootPartitionContainer"
@@ -62,15 +68,18 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"/>
 
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_marginTop="22dp"
             android:layout_marginBottom="10dp"
-            android:text="DTB"
-            android:textColor="#697586"
-            android:textSize="12sp"
-            android:textStyle="bold"/>
+            android:text="DEVICE TREE"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.10"/>
 
         <LinearLayout
             android:id="@+id/dtbPartitionContainer"
@@ -78,15 +87,18 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"/>
 
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_marginTop="22dp"
             android:layout_marginBottom="10dp"
-            android:text="DTBO"
-            android:textColor="#697586"
-            android:textSize="12sp"
-            android:textStyle="bold"/>
+            android:text="OVERLAYS"
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.10"/>
 
         <LinearLayout
             android:id="@+id/dtboPartitionContainer"
