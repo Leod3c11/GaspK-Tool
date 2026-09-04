@@ -170,28 +170,24 @@ object InstalledDtbExporter {
                 unpackCommand
             )
 
-        val kernelDtb =
-            File(
-                workspace,
-                "kernel_dtb"
-            )
-
-        val dtb =
-            File(
-                workspace,
-                "dtb"
-            )
-
+        /*
+         * Não confiar no nome gerado pelo magiskboot.
+         *
+         * Dependendo do aparelho/boot, o Device Tree pode aparecer como:
+         *
+         * dtb
+         * kernel_dtb
+         * extra
+         * ou qualquer outro nome.
+         *
+         * A identificação real é feita pelo magic FDT:
+         *
+         * D0 0D FE ED
+         */
         val extracted =
-            when {
-                kernelDtb.exists() &&
-                    kernelDtb.length() > 0L -> kernelDtb
-
-                dtb.exists() &&
-                    dtb.length() > 0L -> dtb
-
-                else -> null
-            }
+            findDtbComponent(
+                workspace
+            )
 
         if (extracted == null) {
             return Result(
@@ -247,6 +243,151 @@ object InstalledDtbExporter {
             message =
                 "DTB extraído da ${partition.name} com sucesso."
         )
+    }
+
+    private fun findDtbComponent(
+        workspace: File
+    ): File? {
+
+        val files =
+            workspace.walkTopDown()
+                .filter {
+                    it.isFile &&
+                        it.length() >= 8L
+                }
+                .toList()
+
+        /*
+         * Nomes conhecidos têm prioridade,
+         * mas qualquer arquivo pode ser aceito
+         * se realmente contiver um FDT.
+         */
+        val ordered =
+            files.sortedWith(
+                compareBy<File> {
+                    when (
+                        it.name.lowercase()
+                    ) {
+                        "dtb" -> 0
+                        "kernel_dtb" -> 1
+                        "extra" -> 2
+                        else ->
+                            if (
+                                it.name.lowercase()
+                                    .contains("dtb")
+                            ) {
+                                3
+                            } else {
+                                4
+                            }
+                    }
+                }.thenBy {
+                    it.name
+                }
+            )
+
+        return ordered.firstOrNull {
+            containsFdtMagic(it)
+        }
+    }
+
+    private fun containsFdtMagic(
+        file: File
+    ): Boolean {
+
+        val magic =
+            byteArrayOf(
+                0xD0.toByte(),
+                0x0D.toByte(),
+                0xFE.toByte(),
+                0xED.toByte()
+            )
+
+        return try {
+
+            file.inputStream()
+                .buffered()
+                .use { input ->
+
+                    val buffer =
+                        ByteArray(
+                            64 * 1024
+                        )
+
+                    var carry =
+                        ByteArray(0)
+
+                    while (true) {
+
+                        val count =
+                            input.read(
+                                buffer
+                            )
+
+                        if (count <= 0) {
+                            break
+                        }
+
+                        val data =
+                            ByteArray(
+                                carry.size + count
+                            )
+
+                        carry.copyInto(
+                            data,
+                            0
+                        )
+
+                        buffer.copyInto(
+                            data,
+                            carry.size,
+                            0,
+                            count
+                        )
+
+                        var i = 0
+
+                        while (
+                            i <=
+                            data.size -
+                                magic.size
+                        ) {
+
+                            if (
+                                data[i] ==
+                                    magic[0] &&
+                                data[i + 1] ==
+                                    magic[1] &&
+                                data[i + 2] ==
+                                    magic[2] &&
+                                data[i + 3] ==
+                                    magic[3]
+                            ) {
+                                return true
+                            }
+
+                            i++
+                        }
+
+                        val keep =
+                            minOf(
+                                3,
+                                data.size
+                            )
+
+                        carry =
+                            data.copyOfRange(
+                                data.size - keep,
+                                data.size
+                            )
+                    }
+
+                    false
+                }
+
+        } catch (_: Exception) {
+            false
+        }
     }
 
     private fun shellEscape(
