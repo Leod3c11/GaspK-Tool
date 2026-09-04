@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:text="Carregando..."
+            android:text="@string/loading"
             android:textColor="@color/exynos_text_secondary"
             android:textSize="12sp"/>
 
@@ -36,14 +36,14 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="18dp"
-            android:text="Editor GPU Mali"
+            android:text="@string/dtb_editor_gpu"
             android:textAllCaps="false"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
-            android:text="DEVICE TREES EXTRAÍDOS"
+            android:text="@string/dtb_editor_extracted"
             android:textColor="@color/exynos_text_secondary"
             android:textSize="10sp"
             android:textStyle="bold"/>

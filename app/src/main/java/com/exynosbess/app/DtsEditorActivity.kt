@@ -249,7 +249,7 @@ class DtsEditorActivity : LocalizedActivity() {
                 false
 
             searchStatus.text =
-                "Digite algo para buscar"
+                getString(R.string.search_type_query)
 
             return
         }
@@ -307,7 +307,7 @@ class DtsEditorActivity : LocalizedActivity() {
                 false
 
             searchStatus.text =
-                "Nenhuma ocorrência encontrada"
+                getString(R.string.search_no_occurrence)
 
             return
         }
@@ -387,14 +387,16 @@ class DtsEditorActivity : LocalizedActivity() {
             )
 
             searchStatus.text =
-                "Resultado " +
-                "${currentSearchIndex + 1} " +
-                "de ${searchResults.size}"
+                getString(
+                    R.string.search_result,
+                    currentSearchIndex + 1,
+                    searchResults.size
+                )
 
         } catch (e: Exception) {
 
             searchStatus.text =
-                "Falha ao selecionar resultado"
+                getString(R.string.search_select_failed)
         }
     }
 
@@ -403,7 +405,7 @@ class DtsEditorActivity : LocalizedActivity() {
         if (!dtsFile.exists()) {
 
             editorStatus.text =
-                "✗ Arquivo DTS não encontrado"
+                getString(R.string.dts_not_found)
 
             saveDtsButton.isEnabled =
                 false
@@ -430,12 +432,12 @@ class DtsEditorActivity : LocalizedActivity() {
             loadingDts = false
 
             editorStatus.text =
-                "✓ DTS carregado"
+                getString(R.string.dts_loaded)
 
         } catch (e: Exception) {
 
             editorStatus.text =
-                "✗ Falha ao carregar DTS\n${e.message}"
+                getString(R.string.dts_load_failed, e.message ?: "")
         }
     }
 
@@ -455,7 +457,7 @@ class DtsEditorActivity : LocalizedActivity() {
                 null
 
             editorStatus.text =
-                "✓ DTS salvo • validação necessária"
+                getString(R.string.dts_saved_needs_validation)
 
 
             if (sessionMode) {
@@ -476,7 +478,7 @@ class DtsEditorActivity : LocalizedActivity() {
         ) {
 
             editorStatus.text =
-                "✗ Falha ao salvar DTS\n${e.message}"
+                getString(R.string.dts_save_failed, e.message ?: "")
         }
     }
 
@@ -486,7 +488,7 @@ class DtsEditorActivity : LocalizedActivity() {
         ensureHexModeBeforePersistence()
 
         editorStatus.text =
-            "Salvando e validando DTS..."
+            getString(R.string.dts_saving_validating)
 
         saveDtsButton.isEnabled =
             false
@@ -506,7 +508,7 @@ class DtsEditorActivity : LocalizedActivity() {
         ) {
 
             editorStatus.text =
-                "✗ Falha ao salvar antes da validação\n${e.message}"
+                getString(R.string.dts_presave_failed, e.message ?: "")
 
             saveDtsButton.isEnabled =
                 true
@@ -533,7 +535,7 @@ class DtsEditorActivity : LocalizedActivity() {
                 runOnUiThread {
 
                     editorStatus.text =
-                        "✗ Falha ao preparar dtc\n${tool.message}"
+                        getString(R.string.dts_prepare_dtc_failed, tool.message)
 
                     saveDtsButton.isEnabled =
                         true
@@ -608,7 +610,7 @@ class DtsEditorActivity : LocalizedActivity() {
                             .toString()
 
                     editorStatus.text =
-                        "✓ DTS salvo e válido"
+                        getString(R.string.dts_saved_valid)
 
 
                     if (sessionMode) {
@@ -648,7 +650,7 @@ class DtsEditorActivity : LocalizedActivity() {
 
 
                     editorStatus.text =
-                        "✗ DTS inválido: $error"
+                        getString(R.string.dts_invalid, error)
                 }
             }
 
@@ -675,7 +677,7 @@ class DtsEditorActivity : LocalizedActivity() {
             null
 
         editorStatus.text =
-            "Alterações não validadas"
+            getString(R.string.dts_unvalidated_changes)
 
 
         if (sessionMode) {
@@ -732,9 +734,9 @@ class DtsEditorActivity : LocalizedActivity() {
 
         editorStatus.text =
             if (decimalMode)
-                "Modo decimal"
+                getString(R.string.mode_decimal)
             else
-                "Modo hexadecimal"
+                getString(R.string.mode_hex)
     }
 
 

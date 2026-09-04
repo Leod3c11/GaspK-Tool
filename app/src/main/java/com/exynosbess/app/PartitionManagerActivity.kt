@@ -89,7 +89,7 @@ class PartitionManagerActivity : LocalizedActivity() {
             false
 
         status.text =
-            "Detectando partições..."
+            getString(R.string.partitions_detecting)
 
         clearContainers()
 
@@ -118,7 +118,7 @@ class PartitionManagerActivity : LocalizedActivity() {
                     buildString {
 
                         append(
-                            "${result.partitions.size} partição(ões) disponível(is)"
+                            getString(R.string.pm_available_count, result.partitions.size)
                         )
 
                         result.activeSlotSuffix
@@ -335,7 +335,7 @@ class PartitionManagerActivity : LocalizedActivity() {
 
                         if (active) {
                             append(
-                                "  •  ATIVA"
+                                "  •  " + getString(R.string.pm_active)
                             )
                         }
                     }
@@ -437,31 +437,31 @@ class PartitionManagerActivity : LocalizedActivity() {
         return when (state) {
 
             PartitionSessionState.DETECTED ->
-                "Toque para preparar"
+                getString(R.string.pm_tap_prepare)
 
             PartitionSessionState.IMPORTED ->
-                "Preparação pendente"
+                getString(R.string.pm_preparation_pending)
 
             PartitionSessionState.EXTRACTED ->
 
                 if (count > 0) {
-                    "Pronta para editar  •  $count item(ns)"
+                    getString(R.string.pm_ready_edit_count, count)
                 } else {
-                    "Pronta para editar"
+                    getString(R.string.pm_ready_edit)
                 }
 
             PartitionSessionState.DIRTY,
             PartitionSessionState.SAVED ->
-                "Alterações pendentes"
+                getString(R.string.pm_changes_pending)
 
             PartitionSessionState.VALIDATED ->
-                "Alterações validadas"
+                getString(R.string.pm_changes_validated)
 
             PartitionSessionState.BUILT ->
-                "Imagem reconstruída"
+                getString(R.string.pm_image_rebuilt)
 
             PartitionSessionState.VERIFIED ->
-                "✓ Pronta para exportar ou instalar"
+                getString(R.string.pm_ready_export_install)
         }
     }
 

@@ -16,7 +16,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Informações do dispositivo"
+            android:text="@string/device_info_title"
             android:textColor="@color/exynos_text"
             android:textSize="25sp"
             android:textStyle="bold"/>
@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:text="Coletando informações..."
+            android:text="@string/device_info_collecting"
             android:textColor="@color/exynos_accent"
             android:textSize="12sp"/>
 
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
             android:layout_marginBottom="9dp"
-            android:text="HARDWARE"
+            android:text="@string/device_info_hardware"
             android:textColor="@color/exynos_text_secondary"
             android:textSize="10sp"
             android:textStyle="bold"
@@ -60,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="9dp"
-            android:text="SISTEMA"
+            android:text="@string/device_info_system"
             android:textColor="@color/exynos_text_secondary"
             android:textSize="10sp"
             android:textStyle="bold"
@@ -84,7 +84,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="9dp"
-            android:text="SEGURANÇA"
+            android:text="@string/device_info_security"
             android:textColor="@color/exynos_text_secondary"
             android:textSize="10sp"
             android:textStyle="bold"

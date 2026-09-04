@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.TextView
 import com.exynosbess.app.dtbfile.DtbFileManager
+import com.exynosbess.app.dtbfile.InstalledDtbExporter
 import com.google.android.material.button.MaterialButton
 import java.io.File
 
@@ -26,6 +27,9 @@ class DtbFileActivity :
 
     private lateinit var exportButton:
         MaterialButton
+
+    private var installedDtbForExport:
+        File? = null
 
 
     private val importRequest =
@@ -97,39 +101,71 @@ class DtbFileActivity :
 
         exportButton.setOnClickListener {
 
-            val source =
-                DtbFileManager.importedFile(
-                    this
-                )
+            status.text =
+                getString(R.string.dtb_reading_installed)
 
-            if (!source.exists()) {
-                status.text =
-                    "Nenhum DTB para exportar."
-                return@setOnClickListener
-            }
+            importButton.isEnabled =
+                false
 
-            val intent =
-                Intent(
-                    Intent.ACTION_CREATE_DOCUMENT
-                ).apply {
+            exportButton.isEnabled =
+                false
 
-                    addCategory(
-                        Intent.CATEGORY_OPENABLE
+            Thread {
+
+                val result =
+                    InstalledDtbExporter.dump(
+                        this
                     )
 
-                    type =
-                        "application/octet-stream"
+                runOnUiThread {
 
-                    putExtra(
-                        Intent.EXTRA_TITLE,
-                        "gaspkernel_export.dtb"
+                    importButton.isEnabled =
+                        true
+
+                    exportButton.isEnabled =
+                        true
+
+                    if (
+                        !result.success ||
+                        result.file == null
+                    ) {
+
+                        status.text =
+                            "✗ ${result.message}"
+
+                        return@runOnUiThread
+                    }
+
+                    installedDtbForExport =
+                        result.file
+
+                    status.text =
+                        getString(R.string.dtb_installed_read_success)
+
+                    val intent =
+                        Intent(
+                            Intent.ACTION_CREATE_DOCUMENT
+                        ).apply {
+
+                            addCategory(
+                                Intent.CATEGORY_OPENABLE
+                            )
+
+                            type =
+                                "application/octet-stream"
+
+                            putExtra(
+                                Intent.EXTRA_TITLE,
+                                "gaspkernel_installed_dtb.dtb"
+                            )
+                        }
+
+                    startActivityForResult(
+                        intent,
+                        exportRequest
                     )
                 }
-
-            startActivityForResult(
-                intent,
-                exportRequest
-            )
+            }.start()
         }
 
         refresh()
@@ -168,7 +204,7 @@ class DtbFileActivity :
             importRequest -> {
 
                 status.text =
-                    "Lendo DTB..."
+                    getString(R.string.dtb_reading)
 
                 importDtb(
                     uri
@@ -223,13 +259,14 @@ class DtbFileActivity :
     ) {
 
         val source =
-            DtbFileManager.importedFile(
-                this
-            )
+            installedDtbForExport
 
-        if (!source.exists()) {
+        if (
+            source == null ||
+            !source.exists()
+        ) {
             status.text =
-                "Nenhum DTB para exportar."
+                getString(R.string.dtb_export_none)
             return
         }
 
@@ -248,18 +285,18 @@ class DtbFileActivity :
                         }
 
                 } ?: throw IllegalStateException(
-                    "Não foi possível abrir o destino."
+                    getString(R.string.dtb_destination_failed)
                 )
 
             status.text =
-                "✓ DTB exportado"
+                getString(R.string.dtb_export_success)
 
         } catch (
             e: Exception
         ) {
 
             status.text =
-                "✗ Falha ao exportar: ${e.message}"
+                getString(R.string.dtb_export_failed, e.message ?: "")
         }
     }
 
@@ -274,22 +311,22 @@ class DtbFileActivity :
         if (!current.exists()) {
 
             status.text =
-                "Selecione um arquivo DTB."
+                getString(R.string.dtb_select_file)
 
             details.text =
-                "A leitura é feita localmente e não requer root."
+                getString(R.string.dtb_local_read)
 
             preview.text =
                 ""
 
             exportButton.isEnabled =
-                false
+                true
 
             return
         }
 
         status.text =
-            "Lendo DTB..."
+            getString(R.string.dtb_reading)
 
         Thread {
 
@@ -315,14 +352,13 @@ class DtbFileActivity :
 
         status.text =
             if (info.valid) {
-                "✓ ${info.message}"
+                getString(R.string.dtb_read_success)
             } else {
-                "✗ ${info.message}"
+                getString(R.string.dtb_read_failed, info.message)
             }
 
         exportButton.isEnabled =
-            info.valid &&
-            info.file != null
+            true
 
 
         details.text =
@@ -333,14 +369,14 @@ class DtbFileActivity :
                 ) {
 
                     append(
-                        "Tamanho: ${formatBytes(info.size)}"
+                        getString(R.string.dtb_size, formatBytes(info.size))
                     )
 
                     info.declaredSize
                         ?.let {
 
                             append(
-                                "\nTamanho declarado: ${formatBytes(it)}"
+                                "\n" + getString(R.string.dtb_declared_size, formatBytes(it))
                             )
                         }
 
@@ -348,7 +384,7 @@ class DtbFileActivity :
                         ?.let {
 
                             append(
-                                "\nModelo: $it"
+                                "\n" + getString(R.string.dtb_model, it)
                             )
                         }
 
@@ -356,7 +392,7 @@ class DtbFileActivity :
                         ?.let {
 
                             append(
-                                "\nCompatible: $it"
+                                "\n" + getString(R.string.dtb_compatible, it)
                             )
                         }
 
@@ -364,7 +400,7 @@ class DtbFileActivity :
                         ?.let {
 
                             append(
-                                "\nSHA-256: $it"
+                                "\n" + getString(R.string.dtb_sha256, it)
                             )
                         }
                 }
@@ -391,7 +427,7 @@ class DtbFileActivity :
                     e: Exception
                 ) {
 
-                    "Falha lendo DTS: ${e.message}"
+                    getString(R.string.dtb_dts_read_failed, e.message ?: "")
                 }
 
             } else {

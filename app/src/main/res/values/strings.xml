@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GaspKernel Editor</string>
+
+    <string name="advanced_tools_title">Ferramentas avançadas</string>
+    <string name="advanced_tools_subtitle">Diagnóstico, arquivos e configurações</string>
+
+    <string name="section_device">DISPOSITIVO</string>
+    <string name="section_files">ARQUIVOS</string>
+    <string name="section_gaspkernel">GASPKERNEL</string>
+    <string name="section_preferences">PREFERÊNCIAS</string>
+
+    <string name="device_info_title">Informações do dispositivo</string>
+    <string name="device_info_description">Hardware, Android, kernel, root, slot e segurança.</string>
+
+    <string name="dtb_file_title">Arquivo DTB</string>
+    <string name="dtb_file_description">Importe e leia um DTB ou exporte o DTB instalado no aparelho.</string>
+
+    <string name="logs_title">Logs do GaspKernel</string>
+    <string name="logs_description">Operações, validações, erros, rebuilds e flashes.</string>
+
+    <string name="language_title">Idioma</string>
+    <string name="language_subtitle">Selecione o idioma da interface</string>
+    <string name="language_portuguese">Português (Brasil)</string>
+    <string name="language_english">English</string>
+    <string name="language_portuguese_description">Interface em Português do Brasil</string>
+    <string name="language_english_description">Interface em inglês</string>
+
+    <string name="dtb_screen_title">Arquivo DTB</string>
+    <string name="dtb_screen_subtitle">Leia arquivos Device Tree ou faça backup do DTB instalado</string>
+    <string name="dtb_import_button">Importar / Ler DTB</string>
+    <string name="dtb_export_installed_button">Exportar DTB instalado</string>
+    <string name="dtb_section_dts">DTS</string>
+
+    <string name="dtb_select_file">Selecione um arquivo DTB.</string>
+    <string name="dtb_local_read">A leitura do arquivo importado é local e não requer root.</string>
+    <string name="dtb_reading">Lendo DTB…</string>
+    <string name="dtb_reading_installed">Lendo DTB instalado…</string>
+    <string name="dtb_export_success">✓ DTB instalado exportado</string>
+    <string name="dtb_export_none">Nenhum DTB instalado preparado para exportação.</string>
+    <string name="dtb_export_failed">✗ Falha ao exportar: %1$s</string>
+    <string name="dtb_destination_failed">Não foi possível abrir o destino.</string>
+    <string name="dtb_dts_read_failed">Falha lendo DTS: %1$s</string>
+
+    <string name="dtb_size">Tamanho: %1$s</string>
+    <string name="dtb_declared_size">Tamanho declarado: %1$s</string>
+    <string name="dtb_model">Modelo: %1$s</string>
+    <string name="dtb_compatible">Compatible: %1$s</string>
+    <string name="dtb_sha256">SHA-256: %1$s</string>
+
+
+    <string name="dashboard_subtitle">Editor de Kernel &amp; Device Tree</string>
+    <string name="dashboard_section_management">GERENCIAMENTO</string>
+    <string name="dashboard_manage_partitions">Gerenciar Partições</string>
+    <string name="dashboard_partition_description">Detecte, extraia, edite, reconstrua e instale partições do dispositivo.</string>
+    <string name="dashboard_section_system">SISTEMA</string>
+    <string name="dashboard_advanced_description">Informações do dispositivo e logs do GaspKernel.</string>
+
+
+    <string name="dtb_read_success">✓ DTB lido com sucesso</string>
+    <string name="dtb_read_failed">✗ Falha ao ler DTB: %1$s</string>
+    <string name="dtb_installed_read_success">✓ DTB instalado lido com sucesso</string>
+
+
+    <string name="action_save">Salvar</string>
+    <string name="action_validate">Validar</string>
+    <string name="action_go">Ir</string>
+    <string name="action_next">Próx.</string>
+    <string name="action_refresh">Atualizar</string>
+    <string name="action_copy">Copiar</string>
+    <string name="action_clear">Limpar</string>
+
+    <string name="loading">Carregando…</string>
+
+    <string name="dtb_editor_gpu">Editor GPU Mali</string>
+    <string name="dtb_editor_extracted">DEVICE TREES EXTRAÍDOS</string>
+
+    <string name="partitions_title">Partições</string>
+    <string name="partitions_subtitle">Selecione o que deseja modificar</string>
+    <string name="partitions_detecting">Detectando partições…</string>
+
+    <string name="session_status">STATUS</string>
+    <string name="session_partition_found">Partição encontrada</string>
+    <string name="session_editing">EDIÇÃO</string>
+    <string name="session_prepare">Preparar partição</string>
+    <string name="session_edit_device_trees">Editar Device Trees</string>
+    <string name="session_apply_changes">Aplicar alterações</string>
+    <string name="session_modified_image">IMAGEM MODIFICADA</string>
+    <string name="session_export_image">Exportar imagem</string>
+    <string name="session_install_modification">Instalar modificação</string>
+    <string name="session_details">DETALHES</string>
+    <string name="session_partition">Partição</string>
+
+    <string name="device_info_collecting">Coletando informações…</string>
+    <string name="device_info_hardware">HARDWARE</string>
+    <string name="device_info_system">SISTEMA</string>
+    <string name="device_info_security">SEGURANÇA</string>
+
+    <string name="logs_screen_subtitle">Histórico técnico das operações realizadas pelo app</string>
+    <string name="logs_empty">Nenhum registro disponível.</string>
+
+
+    <string name="action_cancel">Cancelar</string>
+
+    <string name="pm_available_count">%1$d partição(ões) disponível(is)</string>
+    <string name="pm_active">ATIVA</string>
+    <string name="pm_tap_prepare">Toque para preparar</string>
+    <string name="pm_preparation_pending">Preparação pendente</string>
+    <string name="pm_ready_edit_count">Pronta para editar • %1$d item(ns)</string>
+    <string name="pm_ready_edit">Pronta para editar</string>
+    <string name="pm_changes_pending">Alterações pendentes</string>
+    <string name="pm_changes_validated">Alterações validadas</string>
+    <string name="pm_image_rebuilt">Imagem reconstruída</string>
+    <string name="pm_ready_export_install">✓ Pronta para exportar ou instalar</string>
+
+    <string name="info_manufacturer">Fabricante</string>
+    <string name="info_model">Modelo</string>
+    <string name="info_product">Produto</string>
+    <string name="info_architecture">Arquitetura</string>
+    <string name="info_security_patch">Patch de segurança</string>
+    <string name="info_active_slot">Slot ativo</string>
+    <string name="info_ab_device">Dispositivo A/B</string>
+    <string name="info_storage">Armazenamento</string>
+    <string name="info_updated">✓ Informações atualizadas</string>
+    <string name="info_collect_failed">Falha ao coletar informações</string>
+
+    <string name="logs_copied">Logs copiados</string>
+    <string name="logs_clear_title">Limpar logs?</string>
+    <string name="logs_clear_message">O histórico local do GaspKernel será apagado.</string>
+
+    <string name="dtb_partition_title">Device Trees • %1$s</string>
+    <string name="dtb_none_editable">Nenhum Device Tree editável encontrado.</string>
+    <string name="dtb_available_count">%1$d Device Tree(s) disponível(is)</string>
+    <string name="dtb_source">Origem: %1$s</string>
+    <string name="dtb_entry_size">Tamanho: %1$s</string>
+    <string name="dtb_edit_full">Editar DTS completo</string>
+
+    <string name="gpu_not_found">GPU Mali não encontrada</string>
+    <string name="gpu_node_none">Nenhum nó mali@… encontrado</string>
+    <string name="gpu_node_not_found">✗ Nó Mali não encontrado em %1$s</string>
+    <string name="gpu_loaded">✓ Bloco completo da GPU carregado</string>
+    <string name="gpu_unsaved_title">Alterações não salvas</string>
+    <string name="gpu_unsaved_message">Deseja trocar de DTB e descartar as alterações atuais?</string>
+    <string name="gpu_original_node_missing">✗ Nó Mali original não encontrado</string>
+    <string name="gpu_root_changed">✗ O nó raiz da GPU foi alterado</string>
+    <string name="gpu_invalid_structure">✗ Estrutura do nó GPU inválida</string>
+    <string name="gpu_saved">✓ GPU salva em %1$s</string>
+    <string name="gpu_saving_before_validation">Salvando antes da validação…</string>
+    <string name="gpu_validating">Validando %1$s…</string>
+    <string name="gpu_dtc_unavailable">✗ dtc indisponível: %1$s</string>
+    <string name="gpu_valid_session">✓ GPU salva e DTS válido • sessão atualizada</string>
+    <string name="gpu_valid">✓ GPU salva e DTS válido</string>
+    <string name="gpu_invalid_dts">✗ DTS inválido: %1$s</string>
+    <string name="search_type_query">Digite algo para buscar</string>
+    <string name="search_no_results">Nenhum resultado</string>
+    <string name="view_decimal">Visualização decimal</string>
+    <string name="view_hex">Visualização hexadecimal</string>
+
+    <string name="search_no_occurrence">Nenhuma ocorrência encontrada</string>
+    <string name="search_result">Resultado %1$d de %2$d</string>
+    <string name="search_select_failed">Falha ao selecionar resultado</string>
+    <string name="dts_not_found">✗ Arquivo DTS não encontrado</string>
+    <string name="dts_loaded">✓ DTS carregado</string>
+    <string name="dts_load_failed">✗ Falha ao carregar DTS\n%1$s</string>
+    <string name="dts_saved_needs_validation">✓ DTS salvo • validação necessária</string>
+    <string name="dts_save_failed">✗ Falha ao salvar DTS\n%1$s</string>
+    <string name="dts_saving_validating">Salvando e validando DTS…</string>
+    <string name="dts_presave_failed">✗ Falha ao salvar antes da validação\n%1$s</string>
+    <string name="dts_prepare_dtc_failed">✗ Falha ao preparar dtc\n%1$s</string>
+    <string name="dts_saved_valid">✓ DTS salvo e válido</string>
+    <string name="dts_invalid">✗ DTS inválido: %1$s</string>
+    <string name="dts_unvalidated_changes">Alterações não validadas</string>
+    <string name="mode_decimal">Modo decimal</string>
+    <string name="mode_hex">Modo hexadecimal</string>
+
+
+    <string name="session_preparing">Preparando…</string>
+    <string name="session_prepare_again">Preparar novamente</string>
+    <string name="session_edit_count">Editar Device Trees (%1$d)</string>
+    <string name="session_applying">Aplicando alterações…</string>
+    <string name="session_apply_again">Aplicar alterações novamente</string>
+
+    <string name="session_state_detected">● Detectada</string>
+    <string name="session_state_imported">● Importada</string>
+    <string name="session_state_extracted">● Preparada para edição</string>
+    <string name="session_state_dirty">● Alterações pendentes</string>
+    <string name="session_state_saved">● Alterações salvas</string>
+    <string name="session_state_validated">● Alterações validadas</string>
+    <string name="session_state_built">● Imagem reconstruída</string>
+    <string name="session_state_verified">✓ Imagem pronta para exportar ou instalar</string>
+
+    <string name="session_prepare_title">Preparar %1$s</string>
+    <string name="session_prepare_message">Será criada uma cópia local da partição para edição. Nenhuma gravação será feita no dispositivo durante esta etapa.</string>
+    <string name="session_prepare_success">Preparação concluída</string>
+    <string name="session_prepare_failed">Falha na preparação</string>
+
+    <string name="session_editor_title">Editor</string>
+    <string name="session_editor_empty">Nenhum Device Tree editável foi encontrado.</string>
+
+    <string name="session_apply_success">Alterações aplicadas</string>
+    <string name="session_apply_failed">Falha ao aplicar alterações</string>
+
+    <string name="session_export_title">Exportação</string>
+    <string name="session_export_unavailable">Nenhuma imagem modificada está disponível para exportação.</string>
+    <string name="session_export_success_title">Exportação concluída</string>
+    <string name="session_export_success_message">%1$s exportado com sucesso.</string>
+    <string name="session_export_failed">Falha na exportação</string>
+    <string name="session_export_destination_failed">Não foi possível abrir o destino.</string>
+
+    <string name="session_install_blocked">Instalação bloqueada</string>
+    <string name="session_install_not_verified">A imagem precisa estar reconstruída e verificada antes da instalação.</string>
+    <string name="session_install_image_missing">A imagem reconstruída não foi encontrada.</string>
+    <string name="session_install_title">Instalar %1$s?</string>
+    <string name="session_install_confirm">INSTALAR</string>
+    <string name="session_installing">Instalando…</string>
+    <string name="session_install_success">Instalação concluída</string>
+    <string name="session_install_failed">Falha na instalação</string>
+
+    <string name="session_install_warning">Você está prestes a gravar diretamente uma partição do dispositivo.\n\nTipo: %1$s\nPartição: %2$s\nDestino: %3$s\nImagem: %4$d bytes\n\nAntes da gravação, o GaspKernel criará um novo backup da partição atual.\n\nApós a instalação, a partição será lida novamente e comparada por SHA-256 com a imagem reconstruída.\n\nO aparelho NÃO será reiniciado automaticamente.</string>
+
+    <string name="session_unknown_error">Erro desconhecido</string>
+
+
+    <string name="session_finish_preparation">Concluir preparação</string>
+    <string name="session_edit_overlay">Editar overlay</string>
+    <string name="session_edit_overlays_count">Editar overlays (%1$d)</string>
+
+    <string name="session_found_message">Partição encontrada\nPrepare-a para começar.</string>
+    <string name="session_local_copy_message">Cópia local criada\nConclua a preparação.</string>
+    <string name="session_ready_edit">Pronta para editar</string>
+    <string name="session_dtb_count">%1$d Device Tree(s) disponível(is)</string>
+    <string name="session_changes_detected">Alterações detectadas\nAplique quando terminar.</string>
+    <string name="session_changes_saved_apply">Alterações salvas\nProntas para aplicar.</string>
+    <string name="session_validated_rebuild_pending">Alterações validadas\nReconstrução pendente.</string>
+    <string name="session_rebuilt_verify_pending">Imagem reconstruída\nVerificação pendente.</string>
+    <string name="session_verified_summary">✓ Alterações prontas\n✓ Estrutura validada\n✓ Imagem reconstruída\n✓ Verificação concluída\n✓ SHA-256 confirmado</string>
+
+    <string name="session_existing_copy_message">A cópia local já existe.\n\nO GaspKernel vai extrair e preparar o conteúdo para edição.</string>
+    <string name="session_new_copy_message">O GaspKernel criará uma cópia local da partição e preparará seu conteúdo para edição.\n\nNenhuma gravação será feita na partição.</string>
+    <string name="session_prepare_named">Preparar %1$s</string>
+    <string name="session_prepare_action">Preparar</string>
+    <string name="session_prepare_failed_title">Não foi possível preparar</string>
+    <string name="session_prepared_title">Partição preparada</string>
+    <string name="session_prepared_message">%1$s está pronta para edição.</string>
+    <string name="session_edit_action">Editar</string>
+    <string name="session_later_action">Depois</string>
+
+    <string name="session_no_editable_dtb">Nenhum Device Tree editável foi encontrado.</string>
+
+    <string name="session_validating">Validando…</string>
+    <string name="session_validation_failed">Validação falhou</string>
+    <string name="session_rebuilding">Reconstruindo…</string>
+    <string name="session_rebuild_failed">Reconstrução falhou</string>
+    <string name="session_verifying">Verificando…</string>
+    <string name="session_verification_failed">Verificação falhou</string>
+    <string name="session_verification_incomplete">Verificação incompleta</string>
+
+    <string name="session_changes_ready">Alterações prontas</string>
+    <string name="session_rebuild_verify_success">%1$s foi reconstruída e verificada com sucesso.</string>
+    <string name="session_now_export_install">Agora você pode exportar ou instalar a imagem.</string>
+
+    <string name="session_export_blocked">Exportação bloqueada</string>
+    <string name="session_image_exported">Imagem exportada</string>
+    <string name="session_image_exported_message">%1$s foi exportada com sucesso.</string>
+    <string name="session_unknown_error_period">Erro desconhecido.</string>
+
+    <string name="session_install_modification_title">Instalar modificação?</string>
+    <string name="session_install_backup_notice">O GaspKernel criará um backup da partição atual antes da gravação.</string>
+    <string name="session_install_verify_notice">Depois do flash, a partição será lida novamente e comparada por SHA-256.</string>
+    <string name="session_install_reboot_notice">O dispositivo NÃO será reiniciado automaticamente.</string>
+    <string name="session_install_modification">Instalar modificação</string>
+
+    <string name="session_apply_again_notice">Aplique as alterações novamente.</string>
+</resources>

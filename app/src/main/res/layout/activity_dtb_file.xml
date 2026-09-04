@@ -13,7 +13,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Arquivo DTB"
+        android:text="@string/dtb_screen_title"
         android:textColor="@color/exynos_text"
         android:textSize="30sp"
         android:textStyle="bold"/>
@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="3dp"
-        android:text="Importe, leia e exporte Device Trees"
+        android:text="@string/dtb_screen_subtitle"
         android:textColor="@color/exynos_text_secondary"
         android:textSize="13sp"/>
 
@@ -59,7 +59,7 @@
             android:layout_width="0dp"
             android:layout_height="52dp"
             android:layout_weight="1"
-            android:text="Importar DTB"/>
+            android:text="@string/dtb_import_button"/>
 
 
         <com.google.android.material.button.MaterialButton
@@ -69,7 +69,7 @@
             android:layout_height="52dp"
             android:layout_weight="1"
             android:layout_marginStart="10dp"
-            android:text="Exportar DTB"/>
+            android:text="@string/dtb_export_installed_button"/>
 
     </LinearLayout>
 
@@ -78,7 +78,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="DTS"
+        android:text="@string/dtb_section_dts"
         android:textColor="@color/exynos_text_secondary"
         android:textSize="10sp"
         android:textStyle="bold"

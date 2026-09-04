@@ -7,7 +7,8 @@
         android:allowBackup="false"
         android:label="GaspKernel Editor"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ExynosBess">
+        android:theme="@style/Theme.ExynosBess"
+        android:localeConfig="@xml/locales_config">
 
         <activity
             android:name=".DtbFileActivity"

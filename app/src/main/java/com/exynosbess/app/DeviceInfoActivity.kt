@@ -55,7 +55,7 @@ class DeviceInfoActivity : LocalizedActivity() {
     private fun load() {
 
         status.text =
-            "Coletando informações..."
+            getString(R.string.device_info_collecting)
 
         Thread {
 
@@ -76,7 +76,7 @@ class DeviceInfoActivity : LocalizedActivity() {
                     hardware.text =
                         buildString {
                             appendLine(
-                                "Fabricante"
+                                getString(R.string.info_manufacturer)
                             )
                             appendLine(
                                 info.manufacturer
@@ -84,7 +84,7 @@ class DeviceInfoActivity : LocalizedActivity() {
 
                             appendLine()
                             appendLine(
-                                "Modelo"
+                                getString(R.string.info_model)
                             )
                             appendLine(
                                 info.model
@@ -100,7 +100,7 @@ class DeviceInfoActivity : LocalizedActivity() {
 
                             appendLine()
                             appendLine(
-                                "Produto"
+                                getString(R.string.info_product)
                             )
                             appendLine(
                                 info.product
@@ -132,7 +132,7 @@ class DeviceInfoActivity : LocalizedActivity() {
 
                             appendLine()
                             appendLine(
-                                "Arquitetura"
+                                getString(R.string.info_architecture)
                             )
                             append(
                                 info.architecture
@@ -151,7 +151,7 @@ class DeviceInfoActivity : LocalizedActivity() {
 
                             appendLine()
                             appendLine(
-                                "Patch de segurança"
+                                getString(R.string.info_security_patch)
                             )
                             appendLine(
                                 info.securityPatch
@@ -175,7 +175,7 @@ class DeviceInfoActivity : LocalizedActivity() {
 
                             appendLine()
                             appendLine(
-                                "Slot ativo"
+                                getString(R.string.info_active_slot)
                             )
                             appendLine(
                                 info.slot
@@ -183,7 +183,7 @@ class DeviceInfoActivity : LocalizedActivity() {
 
                             appendLine()
                             appendLine(
-                                "Dispositivo A/B"
+                                getString(R.string.info_ab_device)
                             )
                             appendLine(
                                 info.abDevice
@@ -191,7 +191,7 @@ class DeviceInfoActivity : LocalizedActivity() {
 
                             appendLine()
                             appendLine(
-                                "Armazenamento"
+                                getString(R.string.info_storage)
                             )
                             append(
                                 info.storage
@@ -234,7 +234,7 @@ class DeviceInfoActivity : LocalizedActivity() {
                         }
 
                     status.text =
-                        "✓ Informações atualizadas"
+                        getString(R.string.info_updated)
                 }
 
             } catch (e: Exception) {
@@ -248,7 +248,7 @@ class DeviceInfoActivity : LocalizedActivity() {
                 runOnUiThread {
 
                     status.text =
-                        "Falha ao coletar informações"
+                        getString(R.string.info_collect_failed)
                 }
             }
 

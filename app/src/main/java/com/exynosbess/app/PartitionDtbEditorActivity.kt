@@ -70,7 +70,7 @@ class PartitionDtbEditorActivity : LocalizedActivity() {
             )
 
         titleView.text =
-            "Device Trees • ${partition.name}"
+            getString(R.string.dtb_partition_title, partition.name)
 
         gpuButton.setOnClickListener {
             openGpuEditor()
@@ -110,7 +110,7 @@ class PartitionDtbEditorActivity : LocalizedActivity() {
         if (entries.isEmpty()) {
 
             statusView.text =
-                "Nenhum Device Tree editável encontrado."
+                getString(R.string.dtb_none_editable)
 
             gpuButton.visibility =
                 View.GONE
@@ -119,7 +119,7 @@ class PartitionDtbEditorActivity : LocalizedActivity() {
         }
 
         statusView.text =
-            "${entries.size} Device Tree(s) disponível(is)"
+            getString(R.string.dtb_available_count, entries.size)
 
         gpuButton.visibility =
             View.VISIBLE
@@ -177,7 +177,7 @@ class PartitionDtbEditorActivity : LocalizedActivity() {
                         buildString {
 
                             append(
-                                "Origem: ${entry.sourceFile}"
+                                getString(R.string.dtb_source, entry.sourceFile)
                             )
 
                             append(
@@ -191,12 +191,9 @@ class PartitionDtbEditorActivity : LocalizedActivity() {
                             )
 
                             append(
-                                "\nTamanho: "
-                            )
-
-                            append(
-                                formatBytes(
-                                    entry.size
+                                "\n" + getString(
+                                    R.string.dtb_entry_size,
+                                    formatBytes(entry.size)
                                 )
                             )
                         }
@@ -222,7 +219,7 @@ class PartitionDtbEditorActivity : LocalizedActivity() {
                 Button(this).apply {
 
                     text =
-                        "Editar DTS completo"
+                        getString(R.string.dtb_edit_full)
 
                     isAllCaps =
                         false

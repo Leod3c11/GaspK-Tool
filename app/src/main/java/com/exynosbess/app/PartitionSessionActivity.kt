@@ -315,9 +315,9 @@ class PartitionSessionActivity : LocalizedActivity() {
                 state ==
                 PartitionSessionState.IMPORTED
             ) {
-                "Concluir preparação"
+                getString(R.string.session_finish_preparation)
             } else {
-                "Preparar partição"
+                getString(R.string.session_prepare)
             }
 
 
@@ -341,20 +341,20 @@ class PartitionSessionActivity : LocalizedActivity() {
                     PartitionType.DTBO &&
                     dtbs.size == 1 ->
 
-                    "Editar overlay"
+                    getString(R.string.session_edit_overlay)
 
                 partition.type ==
                     PartitionType.DTBO ->
 
-                    "Editar overlays (${dtbs.size})"
+                    getString(R.string.session_edit_overlays_count, dtbs.size)
 
                 dtbs.size == 1 ->
 
-                    "Editar Device Tree"
+                    getString(R.string.session_edit_device_trees)
 
                 else ->
 
-                    "Editar Device Trees (${dtbs.size})"
+                    getString(R.string.session_edit_count, dtbs.size)
             }
 
 
@@ -388,7 +388,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             canApply
 
         applyButton.text =
-            "Aplicar alterações"
+            getString(R.string.session_apply_changes)
 
 
         /*
@@ -428,49 +428,39 @@ class PartitionSessionActivity : LocalizedActivity() {
         return when (state) {
 
             PartitionSessionState.DETECTED ->
-                "Partição encontrada\n" +
-                    "Prepare-a para começar."
+                getString(R.string.session_found_message)
 
             PartitionSessionState.IMPORTED ->
-                "Cópia local criada\n" +
-                    "Conclua a preparação."
+                getString(R.string.session_local_copy_message)
 
             PartitionSessionState.EXTRACTED ->
                 buildString {
 
                     append(
-                        "Pronta para editar"
+                        getString(R.string.session_ready_edit)
                     )
 
                     if (dtbCount > 0) {
                         append(
-                            "\n$dtbCount Device Tree(s) disponível(is)"
+                            "\n" + getString(R.string.session_dtb_count, dtbCount)
                         )
                     }
                 }
 
             PartitionSessionState.DIRTY ->
-                "Alterações detectadas\n" +
-                    "Aplique quando terminar."
+                getString(R.string.session_changes_detected)
 
             PartitionSessionState.SAVED ->
-                "Alterações salvas\n" +
-                    "Prontas para aplicar."
+                getString(R.string.session_changes_saved_apply)
 
             PartitionSessionState.VALIDATED ->
-                "Alterações validadas\n" +
-                    "Reconstrução pendente."
+                getString(R.string.session_validated_rebuild_pending)
 
             PartitionSessionState.BUILT ->
-                "Imagem reconstruída\n" +
-                    "Verificação pendente."
+                getString(R.string.session_rebuilt_verify_pending)
 
             PartitionSessionState.VERIFIED ->
-                "✓ Alterações prontas\n" +
-                    "✓ Estrutura validada\n" +
-                    "✓ Imagem reconstruída\n" +
-                    "✓ Verificação concluída\n" +
-                    "✓ SHA-256 confirmado"
+                getString(R.string.session_verified_summary)
         }
     }
 
@@ -514,30 +504,26 @@ class PartitionSessionActivity : LocalizedActivity() {
                 state ==
                 PartitionSessionState.IMPORTED
             ) {
-                "A cópia local já existe.\n\n" +
-                    "O GaspKernel vai extrair e preparar " +
-                    "o conteúdo para edição."
+                getString(R.string.session_existing_copy_message)
             } else {
-                "O GaspKernel criará uma cópia local da " +
-                    "partição e preparará seu conteúdo para edição.\n\n" +
-                    "Nenhuma gravação será feita na partição."
+                getString(R.string.session_new_copy_message)
             }
 
         AlertDialog.Builder(
             this
         )
             .setTitle(
-                "Preparar ${friendlyPartitionName()}"
+                getString(R.string.session_prepare_named, friendlyPartitionName())
             )
             .setMessage(
                 message
             )
             .setNegativeButton(
-                "Cancelar",
+                getString(R.string.action_cancel),
                 null
             )
             .setPositiveButton(
-                "Preparar"
+                getString(R.string.session_prepare_action)
             ) { _, _ ->
 
                 executePrepare()
@@ -552,7 +538,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             false
 
         prepareButton.text =
-            "Preparando..."
+            getString(R.string.session_preparing)
 
         Thread {
 
@@ -648,7 +634,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             runOnUiThread {
 
                 prepareButton.text =
-                    "Preparar partição"
+                    getString(R.string.session_prepare)
 
                 render()
 
@@ -658,7 +644,7 @@ class PartitionSessionActivity : LocalizedActivity() {
                         this
                     )
                         .setTitle(
-                            "Não foi possível preparar"
+                            getString(R.string.session_prepare_failed_title)
                         )
                         .setMessage(
                             failure
@@ -675,19 +661,19 @@ class PartitionSessionActivity : LocalizedActivity() {
                         this
                     )
                         .setTitle(
-                            "Partição preparada"
+                            getString(R.string.session_prepared_title)
                         )
                         .setMessage(
-                            "${friendlyPartitionName()} está pronta para edição."
+                            getString(R.string.session_prepared_message, friendlyPartitionName())
                         )
                         .setPositiveButton(
-                            "Editar"
+                            getString(R.string.session_edit_action)
                         ) { _, _ ->
 
                             openDtbEditor()
                         }
                         .setNegativeButton(
-                            "Depois",
+                            getString(R.string.session_later_action),
                             null
                         )
                         .show()
@@ -713,10 +699,10 @@ class PartitionSessionActivity : LocalizedActivity() {
                 this
             )
                 .setTitle(
-                    "Editor"
+                    getString(R.string.session_editor_title)
                 )
                 .setMessage(
-                    "Nenhum Device Tree editável foi encontrado."
+                    getString(R.string.session_no_editable_dtb)
                 )
                 .setPositiveButton(
                     "OK",
@@ -784,7 +770,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             false
 
         applyButton.text =
-            "Validando..."
+            getString(R.string.session_validating)
 
         Thread {
 
@@ -800,7 +786,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             if (!validation.success) {
 
                 showApplyFailure(
-                    "Validação falhou",
+                    getString(R.string.session_validation_failed),
                     validation.message
                 )
 
@@ -818,7 +804,7 @@ class PartitionSessionActivity : LocalizedActivity() {
 
             runOnUiThread {
                 applyButton.text =
-                    "Reconstruindo..."
+                    getString(R.string.session_rebuilding)
             }
 
 
@@ -868,7 +854,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             if (!rebuildResult.first) {
 
                 showApplyFailure(
-                    "Reconstrução falhou",
+                    getString(R.string.session_rebuild_failed),
                     rebuildResult.second
                 )
 
@@ -886,7 +872,7 @@ class PartitionSessionActivity : LocalizedActivity() {
 
             runOnUiThread {
                 applyButton.text =
-                    "Verificando..."
+                    getString(R.string.session_verifying)
             }
 
 
@@ -929,7 +915,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             if (!verifyResult.first) {
 
                 showApplyFailure(
-                    "Verificação falhou",
+                    getString(R.string.session_verification_failed),
                     verifyResult.second
                 )
 
@@ -949,7 +935,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             if (!seal.valid) {
 
                 showApplyFailure(
-                    "Verificação incompleta",
+                    getString(R.string.session_verification_incomplete),
                     seal.message
                 )
 
@@ -968,7 +954,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             runOnUiThread {
 
                 applyButton.text =
-                    "Aplicar alterações"
+                    getString(R.string.session_apply_changes)
 
                 render()
 
@@ -976,13 +962,13 @@ class PartitionSessionActivity : LocalizedActivity() {
                     this
                 )
                     .setTitle(
-                        "Alterações prontas"
+                        getString(R.string.session_changes_ready)
                     )
                     .setMessage(
                         buildString {
 
                             append(
-                                "${friendlyPartitionName()} foi reconstruída e verificada com sucesso."
+                                getString(R.string.session_rebuild_verify_success, friendlyPartitionName())
                             )
 
                             seal.expectedHash
@@ -994,7 +980,7 @@ class PartitionSessionActivity : LocalizedActivity() {
                                 }
 
                             append(
-                                "\n\nAgora você pode exportar ou instalar a imagem."
+                                "\n\n" + getString(R.string.session_now_export_install)
                             )
                         }
                     )
@@ -1017,7 +1003,7 @@ class PartitionSessionActivity : LocalizedActivity() {
         runOnUiThread {
 
             applyButton.text =
-                "Aplicar alterações"
+                getString(R.string.session_apply_changes)
 
             render()
 
@@ -1057,7 +1043,7 @@ class PartitionSessionActivity : LocalizedActivity() {
                 this
             )
                 .setTitle(
-                    "Exportação bloqueada"
+                    getString(R.string.session_export_blocked)
                 )
                 .setMessage(
                     verification.message
@@ -1157,17 +1143,17 @@ class PartitionSessionActivity : LocalizedActivity() {
                         }
                 }
                 ?: throw IllegalStateException(
-                    "Não foi possível abrir o destino."
+                    getString(R.string.session_export_destination_failed)
                 )
 
             AlertDialog.Builder(
                 this
             )
                 .setTitle(
-                    "Imagem exportada"
+                    getString(R.string.session_image_exported)
                 )
                 .setMessage(
-                    "${partition.name}_modified.img foi exportada com sucesso."
+                    getString(R.string.session_image_exported_message, "${partition.name}_modified.img")
                 )
                 .setPositiveButton(
                     "OK",
@@ -1181,11 +1167,11 @@ class PartitionSessionActivity : LocalizedActivity() {
                 this
             )
                 .setTitle(
-                    "Falha na exportação"
+                    getString(R.string.session_export_failed)
                 )
                 .setMessage(
                     e.message
-                        ?: "Erro desconhecido."
+                        ?: getString(R.string.session_unknown_error_period)
                 )
                 .setPositiveButton(
                     "OK",
@@ -1232,11 +1218,11 @@ class PartitionSessionActivity : LocalizedActivity() {
                 this
             )
                 .setTitle(
-                    "Instalação bloqueada"
+                    getString(R.string.session_install_blocked)
                 )
                 .setMessage(
                     verification.message +
-                        "\n\nAplique as alterações novamente."
+                        "\n\n" + getString(R.string.session_apply_again_notice)
                 )
                 .setPositiveButton(
                     "OK",
@@ -1257,7 +1243,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             this
         )
             .setTitle(
-                "Instalar modificação?"
+                getString(R.string.session_install_modification_title)
             )
             .setMessage(
                 buildString {
@@ -1275,24 +1261,24 @@ class PartitionSessionActivity : LocalizedActivity() {
                     )
 
                     append(
-                        "\n\nO GaspKernel criará um backup da partição atual antes da gravação."
+                        "\n\n" + getString(R.string.session_install_backup_notice)
                     )
 
                     append(
-                        "\n\nDepois do flash, a partição será lida novamente e comparada por SHA-256."
+                        "\n\n" + getString(R.string.session_install_verify_notice)
                     )
 
                     append(
-                        "\n\nO dispositivo NÃO será reiniciado automaticamente."
+                        "\n\n" + getString(R.string.session_install_reboot_notice)
                     )
                 }
             )
             .setNegativeButton(
-                "Cancelar",
+                getString(R.string.action_cancel),
                 null
             )
             .setPositiveButton(
-                "INSTALAR"
+                getString(R.string.session_install_confirm)
             ) { _, _ ->
 
                 executeFlash()
@@ -1314,7 +1300,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             false
 
         flashButton.text =
-            "Instalando..."
+            getString(R.string.session_installing)
 
         Thread {
 
@@ -1327,7 +1313,7 @@ class PartitionSessionActivity : LocalizedActivity() {
             runOnUiThread {
 
                 flashButton.text =
-                    "Instalar modificação"
+                    getString(R.string.session_install_modification)
 
                 render()
 
@@ -1336,9 +1322,9 @@ class PartitionSessionActivity : LocalizedActivity() {
                 )
                     .setTitle(
                         if (result.success) {
-                            "Instalação concluída"
+                            getString(R.string.session_install_success)
                         } else {
-                            "Instalação falhou"
+                            getString(R.string.session_install_failed)
                         }
                     )
                     .setMessage(

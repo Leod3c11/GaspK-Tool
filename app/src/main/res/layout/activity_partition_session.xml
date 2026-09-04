@@ -51,7 +51,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="STATUS"
+                android:text="@string/session_status"
                 android:textColor="@color/exynos_text_secondary"
                 android:textSize="10sp"
                 android:textStyle="bold"
@@ -62,7 +62,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Partição encontrada"
+                android:text="@string/session_partition_found"
                 android:textColor="@color/exynos_text"
                 android:textSize="15sp"
                 android:lineSpacingExtra="3dp"/>
@@ -78,7 +78,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginTop="28dp"
             android:layout_marginBottom="10dp"
-            android:text="EDIÇÃO"
+            android:text="@string/session_editing"
             android:textColor="@color/exynos_text_secondary"
             android:textSize="10sp"
             android:textStyle="bold"
@@ -90,7 +90,7 @@
             style="@style/Widget.GaspKernel.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:text="Preparar partição"
+            android:text="@string/session_prepare"
             android:textAllCaps="false"
             android:textSize="15sp"/>
 
@@ -101,7 +101,7 @@
             android:layout_width="match_parent"
             android:layout_height="54dp"
             android:layout_marginTop="10dp"
-            android:text="Editar Device Trees"
+            android:text="@string/session_edit_device_trees"
             android:textAllCaps="false"
             android:textSize="15sp"
             android:visibility="gone"/>
@@ -113,7 +113,7 @@
             android:layout_width="match_parent"
             android:layout_height="54dp"
             android:layout_marginTop="10dp"
-            android:text="Aplicar alterações"
+            android:text="@string/session_apply_changes"
             android:textAllCaps="false"
             android:textSize="15sp"
             android:visibility="gone"/>
@@ -133,7 +133,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_marginBottom="10dp"
-                android:text="IMAGEM MODIFICADA"
+                android:text="@string/session_modified_image"
                 android:textColor="@color/exynos_text_secondary"
                 android:textSize="10sp"
                 android:textStyle="bold"
@@ -145,7 +145,7 @@
                 style="@style/Widget.GaspKernel.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:text="Exportar imagem"
+                android:text="@string/session_export_image"
                 android:textAllCaps="false"
                 android:textSize="15sp"
                 android:visibility="gone"/>
@@ -157,7 +157,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="10dp"
-                android:text="Instalar modificação"
+                android:text="@string/session_install_modification"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="15sp"
@@ -175,7 +175,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginTop="30dp"
             android:layout_marginBottom="10dp"
-            android:text="DETALHES"
+            android:text="@string/session_details"
             android:textColor="@color/exynos_text_secondary"
             android:textSize="10sp"
             android:textStyle="bold"
@@ -192,7 +192,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Partição"
+                android:text="@string/session_partition"
                 android:textColor="@color/exynos_text_secondary"
                 android:textSize="11sp"/>
 

@@ -85,7 +85,7 @@ class GaspLogsActivity : LocalizedActivity() {
 
         Toast.makeText(
             this,
-            "Logs copiados",
+            getString(R.string.logs_copied),
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -94,17 +94,17 @@ class GaspLogsActivity : LocalizedActivity() {
 
         AlertDialog.Builder(this)
             .setTitle(
-                "Limpar logs?"
+                getString(R.string.logs_clear_title)
             )
             .setMessage(
-                "O histórico local do GaspKernel será apagado."
+                getString(R.string.logs_clear_message)
             )
             .setNegativeButton(
-                "Cancelar",
+                getString(R.string.action_cancel),
                 null
             )
             .setPositiveButton(
-                "Limpar"
+                getString(R.string.action_clear)
             ) { _, _ ->
 
                 GaspLog.clear(

@@ -33,7 +33,7 @@
                 android:id="@+id/gpuEditorSubtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Carregando..."
+                android:text="@string/loading"
                 android:textColor="@color/exynos_text_secondary"
                 android:textSize="10sp"
                 android:maxLines="1"
@@ -105,7 +105,7 @@
             android:layout_height="34dp"
             android:layout_marginStart="5dp"
             android:background="@drawable/bg_button_secondary"
-            android:text="Ir"
+            android:text="@string/action_go"
             android:textAllCaps="false"
             android:textColor="@color/exynos_text"
             android:textSize="11sp" />
@@ -116,7 +116,7 @@
             android:layout_height="34dp"
             android:layout_marginStart="4dp"
             android:background="@drawable/bg_button_secondary"
-            android:text="Próx."
+            android:text="@string/action_next"
             android:textAllCaps="false"
             android:textColor="@color/exynos_text"
             android:textSize="11sp" />
@@ -174,7 +174,7 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Salvar"/>
+            android:text="@string/action_save"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/gpuValidateButton"
@@ -183,7 +183,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="Validar"/>
+            android:text="@string/action_validate"/>
 
     </LinearLayout>
 

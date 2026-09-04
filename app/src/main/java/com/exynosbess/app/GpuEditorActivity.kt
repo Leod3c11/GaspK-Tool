@@ -264,10 +264,10 @@ class GpuEditorActivity : LocalizedActivity() {
         if (gpuDtsFiles.isEmpty()) {
 
             subtitle.text =
-                "GPU Mali não encontrada"
+                getString(R.string.gpu_not_found)
 
             status.text =
-                "Nenhum nó mali@... encontrado"
+                getString(R.string.gpu_node_none)
 
             setEditorEnabled(false)
 
@@ -303,7 +303,7 @@ class GpuEditorActivity : LocalizedActivity() {
         if (node == null) {
 
             status.text =
-                "✗ Nó Mali não encontrado em ${file.name}"
+                getString(R.string.gpu_node_not_found, file.name)
 
             return
         }
@@ -333,7 +333,7 @@ class GpuEditorActivity : LocalizedActivity() {
             "${file.name} • ${node.name}"
 
         status.text =
-            "✓ Bloco completo da GPU carregado"
+            getString(R.string.gpu_loaded)
 
         searchInput.setText("")
         searchStatus.text = ""
@@ -365,13 +365,13 @@ class GpuEditorActivity : LocalizedActivity() {
 
             AlertDialog.Builder(this)
                 .setTitle(
-                    "Alterações não salvas"
+                    getString(R.string.gpu_unsaved_title)
                 )
                 .setMessage(
-                    "Deseja trocar de DTB e descartar as alterações atuais?"
+                    getString(R.string.gpu_unsaved_message)
                 )
                 .setNegativeButton(
-                    "Cancelar",
+                    getString(R.string.action_cancel),
                     null
                 )
                 .setPositiveButton(
@@ -451,7 +451,7 @@ class GpuEditorActivity : LocalizedActivity() {
         if (originalNode == null) {
 
             status.text =
-                "✗ Nó Mali original não encontrado"
+                getString(R.string.gpu_original_node_missing)
 
             return
         }
@@ -468,7 +468,7 @@ class GpuEditorActivity : LocalizedActivity() {
         ) {
 
             status.text =
-                "✗ O nó raiz da GPU foi alterado"
+                getString(R.string.gpu_root_changed)
 
             return
         }
@@ -479,7 +479,7 @@ class GpuEditorActivity : LocalizedActivity() {
         if (editedNode == null) {
 
             status.text =
-                "✗ Estrutura do nó GPU inválida"
+                getString(R.string.gpu_invalid_structure)
 
             return
         }
@@ -514,7 +514,7 @@ class GpuEditorActivity : LocalizedActivity() {
                     replacement.length
 
             status.text =
-                "✓ GPU salva em ${file.name}"
+                getString(R.string.gpu_saved, file.name)
 
             if (sessionMode) {
 
@@ -551,7 +551,7 @@ class GpuEditorActivity : LocalizedActivity() {
         if (hasUnsavedChanges()) {
 
             status.text =
-                "Salvando antes da validação..."
+                getString(R.string.gpu_saving_before_validation)
 
             saveGpuNode()
 
@@ -573,7 +573,7 @@ class GpuEditorActivity : LocalizedActivity() {
         )
 
         status.text =
-            "Validando ${file.name}..."
+            getString(R.string.gpu_validating, file.name)
 
 
         Thread {
@@ -591,7 +591,7 @@ class GpuEditorActivity : LocalizedActivity() {
                 runOnUiThread {
 
                     status.text =
-                        "✗ dtc indisponível: ${tool.message}"
+                        getString(R.string.gpu_dtc_unavailable, tool.message)
 
                     setBusy(
                         false
@@ -646,9 +646,9 @@ class GpuEditorActivity : LocalizedActivity() {
 
                     status.text =
                         if (sessionMode) {
-                            "✓ GPU salva e DTS válido • sessão atualizada"
+                            getString(R.string.gpu_valid_session)
                         } else {
-                            "✓ GPU salva e DTS válido"
+                            getString(R.string.gpu_valid)
                         }
 
 
@@ -682,7 +682,7 @@ class GpuEditorActivity : LocalizedActivity() {
                             ?: "Erro de compilação"
 
                     status.text =
-                        "✗ DTS inválido: $error"
+                        getString(R.string.gpu_invalid_dts, error)
                 }
 
 
@@ -703,7 +703,7 @@ class GpuEditorActivity : LocalizedActivity() {
         if (query.isBlank()) {
 
             searchStatus.text =
-                "Digite algo para buscar"
+                getString(R.string.search_type_query)
 
             return
         }
@@ -728,7 +728,7 @@ class GpuEditorActivity : LocalizedActivity() {
             searchPosition = -1
 
             searchStatus.text =
-                "Nenhum resultado"
+                getString(R.string.search_no_results)
 
             return
         }
@@ -843,9 +843,9 @@ class GpuEditorActivity : LocalizedActivity() {
 
         status.text =
             if (decimalMode) {
-                "Visualização decimal"
+                getString(R.string.view_decimal)
             } else {
-                "Visualização hexadecimal"
+                getString(R.string.view_hex)
             }
     }
 
