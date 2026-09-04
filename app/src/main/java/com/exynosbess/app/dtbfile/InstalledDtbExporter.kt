@@ -5,6 +5,7 @@ import com.exynosbess.app.boot.ShellExecutor
 import com.exynosbess.app.partition.PartitionInfo
 import com.exynosbess.app.partition.PartitionScanner
 import com.exynosbess.app.partition.PartitionType
+import com.exynosbess.app.tools.ToolManager
 import java.io.File
 
 object InstalledDtbExporter {
@@ -30,16 +31,24 @@ object InstalledDtbExporter {
             )
         }
 
+        /*
+         * IMPORTANTE:
+         *
+         * Esta ferramenta NÃO exporta a partição DTB separada.
+         *
+         * Ela lê a BOOT atualmente instalada e extrai
+         * o Device Tree contido nela.
+         */
         val candidates =
             scan.partitions.filter {
-                it.type == PartitionType.DTB
+                it.type == PartitionType.BOOT
             }
 
         if (candidates.isEmpty()) {
             return Result(
                 success = false,
                 message =
-                    "Nenhuma partição DTB encontrada no aparelho."
+                    "Nenhuma partição BOOT encontrada no aparelho."
             )
         }
 
@@ -62,109 +71,172 @@ object InstalledDtbExporter {
         val dir =
             File(
                 context.cacheDir,
-                "installed_dtb"
+                "installed_boot_dtb"
             )
 
-        if (!dir.exists()) {
-            dir.mkdirs()
+        if (dir.exists()) {
+            dir.deleteRecursively()
         }
 
-        val output =
+        dir.mkdirs()
+
+        val bootImage =
             File(
                 dir,
-                "installed_dtb.img"
+                "boot_installed.img"
             )
-
-        if (output.exists()) {
-            output.delete()
-        }
 
         val uid =
             android.os.Process.myUid()
 
-        val alias =
-            shellEscape(
-                partition.aliasPath
-            )
+        /*
+         * 1. Ler a BOOT real instalada.
+         */
+        val dumpCommand =
+            "dd if='${shellEscape(partition.resolvedPath)}' " +
+                "of='${shellEscape(bootImage.absolutePath)}' " +
+                "bs=1048576 2>/dev/null"
 
-        val fallback =
-            shellEscape(
-                partition.resolvedPath
-            )
-
-        val destination =
-            shellEscape(
-                output.absolutePath
-            )
-
-        val command =
-            """
-            set +e
-
-            SRC="$(
-                readlink -f '$alias' 2>/dev/null
-            )"
-
-            if [ -z "${'$'}SRC" ] || [ ! -e "${'$'}SRC" ]; then
-                SRC='$fallback'
-            fi
-
-            [ -e "${'$'}SRC" ] || {
-                echo "Partição DTB não encontrada."
-                return 20 2>/dev/null || true
-            }
-
-            dd if="${'$'}SRC" of='$destination' bs=1048576 2>/dev/null
-            RESULT=$?
-
-            if [ "${'$'}RESULT" -ne 0 ]; then
-                echo "Falha lendo partição DTB."
-            else
-                chown $uid:$uid '$destination' 2>/dev/null
-                chmod 600 '$destination' 2>/dev/null
-            fi
-            """.trimIndent()
-
-        val result =
+        val dumpResult =
             ShellExecutor.root(
-                command
+                dumpCommand
             )
 
         if (
-            !result.success ||
-            !output.exists() ||
-            output.length() <= 0L
+            !dumpResult.success ||
+            !bootImage.exists() ||
+            bootImage.length() <= 0L
         ) {
-
-            output.delete()
+            bootImage.delete()
 
             return Result(
                 success = false,
                 partition = partition,
                 message =
-                    "Falha ao ler a partição DTB instalada.\n\n" +
-                        result.output
+                    "Falha ao ler a BOOT instalada.\n\n" +
+                        dumpResult.output
             )
         }
 
+        ShellExecutor.root(
+            "chown $uid:$uid '${shellEscape(bootImage.absolutePath)}' 2>/dev/null; " +
+                "chmod 600 '${shellEscape(bootImage.absolutePath)}' 2>/dev/null"
+        )
+
+        /*
+         * 2. Preparar o mesmo magiskboot já usado pelo app.
+         */
+        val tool =
+            ToolManager.installMagiskBoot(
+                context
+            )
+
         if (
-            partition.sizeBytes != null &&
-            partition.sizeBytes > 0L &&
-            output.length() != partition.sizeBytes
+            !tool.success ||
+            tool.path == null
         ) {
+            return Result(
+                success = false,
+                partition = partition,
+                message =
+                    "Falha preparando magiskboot.\n\n" +
+                        tool.message
+            )
+        }
 
-            val actual =
-                output.length()
+        val workspace =
+            File(
+                dir,
+                "unpack"
+            )
 
+        workspace.mkdirs()
+
+        /*
+         * 3. Extrair a BOOT.
+         *
+         * Quando o Device Tree está anexado ao kernel,
+         * magiskboot gera kernel_dtb.
+         *
+         * Também aceitamos dtb como fallback.
+         */
+        val unpackCommand =
+            "cd '${shellEscape(workspace.absolutePath)}'; " +
+                "'${shellEscape(tool.path)}' unpack " +
+                "'${shellEscape(bootImage.absolutePath)}'"
+
+        val unpackResult =
+            ShellExecutor.root(
+                unpackCommand
+            )
+
+        val kernelDtb =
+            File(
+                workspace,
+                "kernel_dtb"
+            )
+
+        val dtb =
+            File(
+                workspace,
+                "dtb"
+            )
+
+        val extracted =
+            when {
+                kernelDtb.exists() &&
+                    kernelDtb.length() > 0L -> kernelDtb
+
+                dtb.exists() &&
+                    dtb.length() > 0L -> dtb
+
+                else -> null
+            }
+
+        if (extracted == null) {
+            return Result(
+                success = false,
+                partition = partition,
+                message =
+                    "Nenhum DTB foi encontrado dentro da BOOT instalada.\n\n" +
+                        "BOOT: ${partition.name}\n\n" +
+                        unpackResult.output
+            )
+        }
+
+        /*
+         * 4. Copiar o DTB extraído para um arquivo acessível
+         * pelo app.
+         */
+        val output =
+            File(
+                dir,
+                "installed_boot_dtb.dtb"
+            )
+
+        val copyResult =
+            ShellExecutor.root(
+                "cp '${shellEscape(extracted.absolutePath)}' " +
+                    "'${shellEscape(output.absolutePath)}'"
+            )
+
+        ShellExecutor.root(
+            "chown $uid:$uid '${shellEscape(output.absolutePath)}' 2>/dev/null; " +
+                "chmod 600 '${shellEscape(output.absolutePath)}' 2>/dev/null"
+        )
+
+        if (
+            !copyResult.success ||
+            !output.exists() ||
+            output.length() <= 0L
+        ) {
             output.delete()
 
             return Result(
                 success = false,
                 partition = partition,
                 message =
-                    "O dump da partição ficou incompleto.\n\n" +
-                        "Esperado: ${partition.sizeBytes} bytes\n" +
-                        "Obtido: $actual bytes"
+                    "Falha ao preparar o DTB extraído da BOOT."
             )
         }
 
@@ -173,14 +245,13 @@ object InstalledDtbExporter {
             file = output,
             partition = partition,
             message =
-                "Partição ${partition.name} lida com sucesso."
+                "DTB extraído da ${partition.name} com sucesso."
         )
     }
 
     private fun shellEscape(
         value: String
     ): String {
-
         return value.replace(
             "'",
             "'\\''"
