@@ -584,34 +584,95 @@ object DtbFileManager {
             return null
         }
 
-        val matches =
+        var depth = 0
+        var rootFound = false
+
+        val propertyRegex =
             Regex(
-                """(?m)^\s*${Regex.escape(property)}\s*=\s*([^;]+);"""
+                """^\s*${Regex.escape(property)}\s*=\s*(.+);"""
             )
-                .findAll(text)
 
-        val values =
-            matches.flatMap { match ->
+        for (line in text.lineSequence()) {
 
-                Regex(
-                    "\"([^\"]+)\""
-                )
-                    .findAll(
+            val trimmed =
+                line.trim()
+
+            /*
+             * O DTS gerado pelo dtc começa normalmente com:
+             *
+             * /dts-v1/;
+             *
+             * / {
+             *
+             * Queremos apenas propriedades diretamente
+             * dentro desse nó raiz.
+             */
+            if (
+                !rootFound &&
+                trimmed.startsWith("/ {")
+            ) {
+                rootFound = true
+                depth = 1
+                continue
+            }
+
+            if (!rootFound) {
+                continue
+            }
+
+            /*
+             * Só lê propriedades enquanto estamos
+             * diretamente no nó raiz.
+             */
+            if (depth == 1) {
+
+                val match =
+                    propertyRegex.find(line)
+
+                if (match != null) {
+
+                    val raw =
                         match.groupValues[1]
-                    )
-                    .map {
-                        it.groupValues[1]
-                    }
-            }
-                .distinct()
-                .toList()
 
-        return values
-            .takeIf {
-                it.isNotEmpty()
+                    val values =
+                        Regex(
+                            "\"([^\"]+)\""
+                        )
+                            .findAll(raw)
+                            .map {
+                                it.groupValues[1]
+                            }
+                            .toList()
+
+                    if (values.isNotEmpty()) {
+                        return values.joinToString(", ")
+                    }
+                }
             }
-            ?.joinToString(", ")
+
+            /*
+             * Atualiza profundidade depois da tentativa
+             * de leitura para não confundir propriedades
+             * do root com propriedades dos filhos.
+             */
+            depth +=
+                line.count {
+                    it == '{'
+                }
+
+            depth -=
+                line.count {
+                    it == '}'
+                }
+
+            if (depth <= 0) {
+                break
+            }
+        }
+
+        return null
     }
+
 
     private fun sha256(
         file: File
