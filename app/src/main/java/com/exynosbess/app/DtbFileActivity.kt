@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import com.exynosbess.app.dtbfile.DtbFileManager
 import com.exynosbess.app.dtbfile.InstalledDtbExporter
@@ -27,6 +28,12 @@ class DtbFileActivity :
 
     private lateinit var exportButton:
         MaterialButton
+
+    private lateinit var selectorButton:
+        MaterialButton
+
+    private var selectedDtsIndex =
+        0
 
     private var installedDtbForExport:
         File? = null
@@ -75,6 +82,15 @@ class DtbFileActivity :
             findViewById(
                 R.id.dtbFileExportButton
             )
+
+        selectorButton =
+            findViewById(
+                R.id.dtbFileSelectorButton
+            )
+
+        selectorButton.setOnClickListener {
+            showDtsSelector()
+        }
 
 
         importButton.setOnClickListener {
@@ -419,9 +435,6 @@ class DtbFileActivity :
                 try {
 
                     dts.readText()
-                        .take(
-                            30000
-                        )
 
                 } catch (
                     e: Exception
@@ -434,6 +447,69 @@ class DtbFileActivity :
 
                 ""
             }
+    }
+
+
+    private fun showDtsSelector() {
+
+        val parts =
+            DtbFileManager.dtsParts(
+                this
+            )
+
+        if (parts.isEmpty()) {
+            return
+        }
+
+        val labels =
+            parts.mapIndexed {
+                    index,
+                    file ->
+
+                "Device Tree ${index + 1}  •  ${formatBytes(file.length())}"
+            }
+                .toTypedArray()
+
+        androidx.appcompat.app.AlertDialog.Builder(
+            this
+        )
+            .setTitle(
+                "Selecionar Device Tree"
+            )
+            .setSingleChoiceItems(
+                labels,
+                selectedDtsIndex
+            ) {
+                    dialog,
+                    which ->
+
+                selectedDtsIndex =
+                    which
+
+                val selected =
+                    parts[which]
+
+                try {
+                    preview.text =
+                        selected.readText()
+
+                    selectorButton.text =
+                        "Device Tree ${which + 1} / ${parts.size}"
+
+                } catch (
+                    e: Exception
+                ) {
+                    preview.text =
+                        "Falha lendo DTS: ${e.message}"
+                }
+
+                dialog.dismiss()
+            }
+            .setNegativeButton(
+                "Cancelar",
+                null
+            )
+            .show()
     }
 
 

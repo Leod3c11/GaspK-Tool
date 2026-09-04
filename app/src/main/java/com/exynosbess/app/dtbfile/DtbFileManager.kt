@@ -54,6 +54,39 @@ object DtbFileManager {
         )
     }
 
+    fun dtsParts(
+        context: Context
+    ): List<File> {
+
+        val dir =
+            File(
+                workspace(context),
+                "fdt_blocks"
+            )
+
+        if (!dir.exists()) {
+            return emptyList()
+        }
+
+        return dir.listFiles()
+            ?.filter {
+                it.isFile &&
+                    it.name.matches(
+                        Regex("fdt_\\d+\\.dts")
+                    ) &&
+                    it.length() > 0L
+            }
+            ?.sortedBy {
+                it.name
+                    .removePrefix("fdt_")
+                    .removeSuffix(".dts")
+                    .toIntOrNull()
+                    ?: Int.MAX_VALUE
+            }
+            ?: emptyList()
+    }
+
+
     fun import(
         context: Context,
         uri: Uri
