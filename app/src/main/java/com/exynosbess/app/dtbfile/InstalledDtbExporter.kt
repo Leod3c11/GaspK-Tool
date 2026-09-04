@@ -105,19 +105,19 @@ object InstalledDtbExporter {
                 readlink -f '$alias' 2>/dev/null
             )"
 
-            if [ -z "$SRC" ] || [ ! -e "$SRC" ]; then
+            if [ -z "${'$'}SRC" ] || [ ! -e "${'$'}SRC" ]; then
                 SRC='$fallback'
             fi
 
-            [ -e "$SRC" ] || {
+            [ -e "${'$'}SRC" ] || {
                 echo "Partição DTB não encontrada."
                 return 20 2>/dev/null || true
             }
 
-            dd if="$SRC" of='$destination' bs=1048576 2>/dev/null
+            dd if="${'$'}SRC" of='$destination' bs=1048576 2>/dev/null
             RESULT=$?
 
-            if [ "$RESULT" -ne 0 ]; then
+            if [ "${'$'}RESULT" -ne 0 ]; then
                 echo "Falha lendo partição DTB."
             else
                 chown $uid:$uid '$destination' 2>/dev/null
