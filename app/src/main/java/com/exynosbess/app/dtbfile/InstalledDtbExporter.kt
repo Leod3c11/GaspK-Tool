@@ -185,8 +185,9 @@ object InstalledDtbExporter {
          * D0 0D FE ED
          */
         val extracted =
-            findDtbComponent(
-                workspace
+            extractDtbFromWorkspace(
+                workspace,
+                dir
             )
 
         if (extracted == null) {
@@ -245,8 +246,9 @@ object InstalledDtbExporter {
         )
     }
 
-    private fun findDtbComponent(
-        workspace: File
+    private fun extractDtbFromWorkspace(
+        workspace: File,
+        outputDir: File
     ): File? {
 
         val files =
@@ -256,138 +258,120 @@ object InstalledDtbExporter {
                         it.length() >= 8L
                 }
                 .toList()
-
-        /*
-         * Nomes conhecidos têm prioridade,
-         * mas qualquer arquivo pode ser aceito
-         * se realmente contiver um FDT.
-         */
-        val ordered =
-            files.sortedWith(
-                compareBy<File> {
-                    when (
-                        it.name.lowercase()
-                    ) {
-                        "dtb" -> 0
-                        "kernel_dtb" -> 1
-                        "extra" -> 2
-                        else ->
-                            if (
-                                it.name.lowercase()
-                                    .contains("dtb")
-                            ) {
-                                3
-                            } else {
-                                4
-                            }
-                    }
-                }.thenBy {
-                    it.name
-                }
-            )
-
-        return ordered.firstOrNull {
-            containsFdtMagic(it)
-        }
-    }
-
-    private fun containsFdtMagic(
-        file: File
-    ): Boolean {
-
-        val magic =
-            byteArrayOf(
-                0xD0.toByte(),
-                0x0D.toByte(),
-                0xFE.toByte(),
-                0xED.toByte()
-            )
-
-        return try {
-
-            file.inputStream()
-                .buffered()
-                .use { input ->
-
-                    val buffer =
-                        ByteArray(
-                            64 * 1024
-                        )
-
-                    var carry =
-                        ByteArray(0)
-
-                    while (true) {
-
-                        val count =
-                            input.read(
-                                buffer
-                            )
-
-                        if (count <= 0) {
-                            break
-                        }
-
-                        val data =
-                            ByteArray(
-                                carry.size + count
-                            )
-
-                        carry.copyInto(
-                            data,
-                            0
-                        )
-
-                        buffer.copyInto(
-                            data,
-                            carry.size,
-                            0,
-                            count
-                        )
-
-                        var i = 0
-
-                        while (
-                            i <=
-                            data.size -
-                                magic.size
+                .sortedWith(
+                    compareBy<File> {
+                        when (
+                            it.name.lowercase()
                         ) {
-
-                            if (
-                                data[i] ==
-                                    magic[0] &&
-                                data[i + 1] ==
-                                    magic[1] &&
-                                data[i + 2] ==
-                                    magic[2] &&
-                                data[i + 3] ==
-                                    magic[3]
-                            ) {
-                                return true
-                            }
-
-                            i++
+                            "dtb" -> 0
+                            "kernel_dtb" -> 1
+                            "extra" -> 2
+                            else ->
+                                if (
+                                    it.name.lowercase()
+                                        .contains("dtb")
+                                ) {
+                                    3
+                                } else {
+                                    4
+                                }
                         }
-
-                        val keep =
-                            minOf(
-                                3,
-                                data.size
-                            )
-
-                        carry =
-                            data.copyOfRange(
-                                data.size - keep,
-                                data.size
-                            )
+                    }.thenBy {
+                        it.name
                     }
+                )
 
-                    false
+        for (file in files) {
+
+            val data =
+                try {
+                    file.readBytes()
+                } catch (_: Exception) {
+                    continue
                 }
 
-        } catch (_: Exception) {
-            false
+            var offset = 0
+
+            while (
+                offset <=
+                data.size - 8
+            ) {
+
+                if (
+                    data[offset] ==
+                        0xD0.toByte() &&
+                    data[offset + 1] ==
+                        0x0D.toByte() &&
+                    data[offset + 2] ==
+                        0xFE.toByte() &&
+                    data[offset + 3] ==
+                        0xED.toByte()
+                ) {
+
+                    val totalSize =
+                        (
+                            (
+                                data[offset + 4]
+                                    .toInt() and 0xFF
+                            ) shl 24
+                        ) or
+                        (
+                            (
+                                data[offset + 5]
+                                    .toInt() and 0xFF
+                            ) shl 16
+                        ) or
+                        (
+                            (
+                                data[offset + 6]
+                                    .toInt() and 0xFF
+                            ) shl 8
+                        ) or
+                        (
+                            data[offset + 7]
+                                .toInt() and 0xFF
+                        )
+
+                    if (
+                        totalSize >= 40 &&
+                        offset + totalSize <= data.size
+                    ) {
+
+                        val carved =
+                            File(
+                                outputDir,
+                                "carved_boot_dtb.dtb"
+                            )
+
+                        try {
+                            carved.outputStream()
+                                .use {
+                                    it.write(
+                                        data,
+                                        offset,
+                                        totalSize
+                                    )
+                                }
+
+                            if (
+                                carved.exists() &&
+                                carved.length() ==
+                                    totalSize.toLong()
+                            ) {
+                                return carved
+                            }
+
+                        } catch (_: Exception) {
+                            carved.delete()
+                        }
+                    }
+                }
+
+                offset++
+            }
         }
+
+        return null
     }
 
     private fun shellEscape(
