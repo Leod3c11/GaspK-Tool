@@ -20,11 +20,14 @@ object DtbFileManager {
         val message: String
     )
 
+    private data class FdtBlock(
+        val offset: Int,
+        val size: Int
+    )
 
     private fun workspace(
         context: Context
     ): File {
-
         return File(
             context.filesDir,
             "offline_dtb"
@@ -33,28 +36,23 @@ object DtbFileManager {
         }
     }
 
-
     fun importedFile(
         context: Context
     ): File {
-
         return File(
             workspace(context),
             "imported.dtb"
         )
     }
 
-
     fun dtsFile(
         context: Context
     ): File {
-
         return File(
             workspace(context),
             "imported.dts"
         )
     }
-
 
     fun import(
         context: Context,
@@ -64,9 +62,7 @@ object DtbFileManager {
         return try {
 
             val target =
-                importedFile(
-                    context
-                )
+                importedFile(context)
 
             val temp =
                 File(
@@ -84,13 +80,10 @@ object DtbFileManager {
 
                     temp.outputStream()
                         .use { output ->
-
-                            input.copyTo(
-                                output
-                            )
+                            input.copyTo(output)
                         }
-
-                } ?: return Info(
+                }
+                ?: return Info(
                     false,
                     null,
                     null,
@@ -102,7 +95,10 @@ object DtbFileManager {
                     "Não foi possível abrir o arquivo."
                 )
 
-            if (!validateMagic(temp)) {
+            val blocks =
+                scanFdtBlocks(temp)
+
+            if (blocks.isEmpty()) {
 
                 temp.delete()
 
@@ -115,33 +111,7 @@ object DtbFileManager {
                     null,
                     null,
                     null,
-                    "O arquivo não possui o magic FDT 0xD00DFEED."
-                )
-            }
-
-            val declared =
-                readDeclaredSize(
-                    temp
-                )
-
-            if (
-                declared == null ||
-                declared < 40L ||
-                declared > temp.length()
-            ) {
-
-                temp.delete()
-
-                return Info(
-                    false,
-                    null,
-                    null,
-                    0,
-                    declared,
-                    null,
-                    null,
-                    null,
-                    "Header DTB inválido ou incompleto."
+                    "O arquivo não possui nenhum FDT válido."
                 )
             }
 
@@ -159,13 +129,9 @@ object DtbFileManager {
                 temp.delete()
             }
 
-            decompile(
-                context
-            )
+            decompile(context)
 
-        } catch (
-            e: Exception
-        ) {
+        } catch (e: Exception) {
 
             Info(
                 false,
@@ -182,21 +148,17 @@ object DtbFileManager {
         }
     }
 
-
     fun inspect(
         context: Context
     ): Info {
 
         val dtb =
-            importedFile(
-                context
-            )
+            importedFile(context)
 
         if (
             !dtb.exists() ||
             dtb.length() == 0L
         ) {
-
             return Info(
                 false,
                 null,
@@ -210,7 +172,7 @@ object DtbFileManager {
             )
         }
 
-        if (!validateMagic(dtb)) {
+        if (scanFdtBlocks(dtb).isEmpty()) {
 
             return Info(
                 false,
@@ -221,44 +183,34 @@ object DtbFileManager {
                 null,
                 null,
                 null,
-                "DTB inválido."
+                "Nenhum FDT válido encontrado."
             )
         }
 
-        return decompile(
-            context
-        )
+        return decompile(context)
     }
-
 
     private fun decompile(
         context: Context
     ): Info {
 
         val dtb =
-            importedFile(
-                context
-            )
+            importedFile(context)
 
         val dts =
-            dtsFile(
-                context
-            )
+            dtsFile(context)
 
         if (dts.exists()) {
             dts.delete()
         }
 
         val tool =
-            ToolManager.installDtc(
-                context
-            )
+            ToolManager.installDtc(context)
 
         if (
             !tool.success ||
             tool.path == null
         ) {
-
             return baseInfo(
                 dtb,
                 null,
@@ -266,40 +218,274 @@ object DtbFileManager {
             )
         }
 
-        val result =
-            execute(
-                listOf(
-                    tool.path,
-                    "-I",
-                    "dtb",
-                    "-O",
-                    "dts",
-                    "-o",
-                    dts.absolutePath,
-                    dtb.absolutePath
-                )
-            )
+        val blocks =
+            scanFdtBlocks(dtb)
 
-        if (
-            !result.first ||
-            !dts.exists() ||
-            dts.length() == 0L
-        ) {
-
+        if (blocks.isEmpty()) {
             return baseInfo(
                 dtb,
                 null,
-                "DTB válido, mas não foi possível decompilar.\n${result.second}"
+                "Nenhum FDT válido encontrado."
             )
         }
+
+        val splitDir =
+            File(
+                workspace(context),
+                "fdt_blocks"
+            )
+
+        if (splitDir.exists()) {
+            splitDir.deleteRecursively()
+        }
+
+        splitDir.mkdirs()
+
+        val source =
+            try {
+                dtb.readBytes()
+            } catch (e: Exception) {
+                return baseInfo(
+                    dtb,
+                    null,
+                    e.message
+                        ?: "Falha lendo DTB."
+                )
+            }
+
+        val combined =
+            StringBuilder()
+
+        var successCount = 0
+
+        blocks.forEachIndexed {
+                index,
+                block ->
+
+            val part =
+                File(
+                    splitDir,
+                    "fdt_${index + 1}.dtb"
+                )
+
+            try {
+
+                part.outputStream()
+                    .use { output ->
+                        output.write(
+                            source,
+                            block.offset,
+                            block.size
+                        )
+                    }
+
+            } catch (_: Exception) {
+                return@forEachIndexed
+            }
+
+            val partDts =
+                File(
+                    splitDir,
+                    "fdt_${index + 1}.dts"
+                )
+
+            val result =
+                execute(
+                    listOf(
+                        tool.path,
+                        "-I",
+                        "dtb",
+                        "-O",
+                        "dts",
+                        "-o",
+                        partDts.absolutePath,
+                        part.absolutePath
+                    )
+                )
+
+            if (
+                result.first &&
+                partDts.exists() &&
+                partDts.length() > 0L
+            ) {
+
+                if (combined.isNotEmpty()) {
+                    combined.append("\n\n")
+                }
+
+                combined.append(
+                    "/* ========================================\n"
+                )
+
+                combined.append(
+                    " * FDT ${index + 1} / ${blocks.size}\n"
+                )
+
+                combined.append(
+                    " * Offset: 0x${block.offset.toString(16).uppercase()}\n"
+                )
+
+                combined.append(
+                    " * Size: ${block.size} bytes\n"
+                )
+
+                combined.append(
+                    " * ======================================== */\n\n"
+                )
+
+                combined.append(
+                    partDts.readText()
+                )
+
+                successCount++
+            }
+        }
+
+        if (
+            successCount == 0 ||
+            combined.isEmpty()
+        ) {
+            return baseInfo(
+                dtb,
+                null,
+                "Foram encontrados ${blocks.size} FDT(s), mas nenhum pôde ser decompilado."
+            )
+        }
+
+        dts.writeText(
+            combined.toString()
+        )
 
         return baseInfo(
             dtb,
             dts,
-            "DTB lido e decompilado com sucesso."
+            if (blocks.size == 1) {
+                "DTB lido e decompilado com sucesso."
+            } else {
+                "$successCount de ${blocks.size} Device Trees foram lidos e decompilados."
+            }
         )
     }
 
+    private fun scanFdtBlocks(
+        file: File
+    ): List<FdtBlock> {
+
+        if (
+            !file.exists() ||
+            file.length() < 40L
+        ) {
+            return emptyList()
+        }
+
+        val data =
+            try {
+                file.readBytes()
+            } catch (_: Exception) {
+                return emptyList()
+            }
+
+        val result =
+            mutableListOf<FdtBlock>()
+
+        var offset = 0
+
+        while (
+            offset <=
+            data.size - 8
+        ) {
+
+            if (
+                data[offset] ==
+                    0xD0.toByte() &&
+                data[offset + 1] ==
+                    0x0D.toByte() &&
+                data[offset + 2] ==
+                    0xFE.toByte() &&
+                data[offset + 3] ==
+                    0xED.toByte()
+            ) {
+
+                val totalSize =
+                    readBe32(
+                        data,
+                        offset + 4
+                    )
+
+                if (
+                    totalSize >= 40 &&
+                    totalSize <=
+                        data.size - offset
+                ) {
+
+                    result.add(
+                        FdtBlock(
+                            offset,
+                            totalSize
+                        )
+                    )
+
+                    /*
+                     * Não precisamos percorrer byte por byte
+                     * dentro de um FDT já validado.
+                     */
+                    offset += totalSize
+
+                    continue
+                }
+            }
+
+            offset++
+        }
+
+        return result
+    }
+
+    private fun readBe32(
+        data: ByteArray,
+        offset: Int
+    ): Int {
+
+        if (
+            offset < 0 ||
+            offset + 4 > data.size
+        ) {
+            return -1
+        }
+
+        val value =
+            (
+                (
+                    data[offset]
+                        .toLong() and 0xFF
+                ) shl 24
+            ) or
+            (
+                (
+                    data[offset + 1]
+                        .toLong() and 0xFF
+                ) shl 16
+            ) or
+            (
+                (
+                    data[offset + 2]
+                        .toLong() and 0xFF
+                ) shl 8
+            ) or
+            (
+                data[offset + 3]
+                    .toLong() and 0xFF
+            )
+
+        if (
+            value <= 0L ||
+            value > Int.MAX_VALUE
+        ) {
+            return -1
+        }
+
+        return value.toInt()
+    }
 
     private fun baseInfo(
         dtb: File,
@@ -315,9 +501,12 @@ object DtbFileManager {
                 ""
             }
 
+        val blocks =
+            scanFdtBlocks(dtb)
+
         return Info(
             valid =
-                validateMagic(dtb),
+                blocks.isNotEmpty(),
 
             file =
                 dtb,
@@ -329,14 +518,12 @@ object DtbFileManager {
                 dtb.length(),
 
             declaredSize =
-                readDeclaredSize(
-                    dtb
-                ),
+                blocks.firstOrNull()
+                    ?.size
+                    ?.toLong(),
 
             sha256 =
-                sha256(
-                    dtb
-                ),
+                sha256(dtb),
 
             model =
                 findQuotedProperty(
@@ -355,7 +542,6 @@ object DtbFileManager {
         )
     }
 
-
     private fun findQuotedProperty(
         text: String,
         property: String
@@ -365,23 +551,26 @@ object DtbFileManager {
             return null
         }
 
-        val match =
+        val matches =
             Regex(
                 """(?m)^\s*${Regex.escape(property)}\s*=\s*([^;]+);"""
             )
-                .find(text)
-                ?.groupValues
-                ?.getOrNull(1)
-                ?: return null
+                .findAll(text)
 
         val values =
-            Regex(
-                "\"([^\"]+)\""
-            )
-                .findAll(match)
-                .map {
-                    it.groupValues[1]
-                }
+            matches.flatMap { match ->
+
+                Regex(
+                    "\"([^\"]+)\""
+                )
+                    .findAll(
+                        match.groupValues[1]
+                    )
+                    .map {
+                        it.groupValues[1]
+                    }
+            }
+                .distinct()
                 .toList()
 
         return values
@@ -390,107 +579,6 @@ object DtbFileManager {
             }
             ?.joinToString(", ")
     }
-
-
-    private fun validateMagic(
-        file: File
-    ): Boolean {
-
-        if (
-            !file.exists() ||
-            file.length() < 8L
-        ) {
-            return false
-        }
-
-        return try {
-
-            file.inputStream()
-                .use { input ->
-
-                    val bytes =
-                        ByteArray(4)
-
-                    if (
-                        input.read(bytes) !=
-                        4
-                    ) {
-                        return false
-                    }
-
-                    bytes[0].toInt()
-                        .and(0xFF) == 0xD0 &&
-                    bytes[1].toInt()
-                        .and(0xFF) == 0x0D &&
-                    bytes[2].toInt()
-                        .and(0xFF) == 0xFE &&
-                    bytes[3].toInt()
-                        .and(0xFF) == 0xED
-                }
-
-        } catch (_: Exception) {
-
-            false
-        }
-    }
-
-
-    private fun readDeclaredSize(
-        file: File
-    ): Long? {
-
-        if (
-            !file.exists() ||
-            file.length() < 8L
-        ) {
-            return null
-        }
-
-        return try {
-
-            file.inputStream()
-                .use { input ->
-
-                    val header =
-                        ByteArray(8)
-
-                    if (
-                        input.read(header) !=
-                        8
-                    ) {
-                        return null
-                    }
-
-                    (
-                        (
-                            header[4].toLong()
-                                .and(0xFF)
-                        ) shl 24
-                    ) or
-                    (
-                        (
-                            header[5].toLong()
-                                .and(0xFF)
-                        ) shl 16
-                    ) or
-                    (
-                        (
-                            header[6].toLong()
-                                .and(0xFF)
-                        ) shl 8
-                    ) or
-                    (
-                        header[7].toLong()
-                            .and(0xFF)
-                    )
-                }
-
-        } catch (_: Exception) {
-
-            null
-        }
-    }
-
 
     private fun sha256(
         file: File
@@ -514,9 +602,7 @@ object DtbFileManager {
                     while (true) {
 
                         val read =
-                            input.read(
-                                buffer
-                            )
+                            input.read(buffer)
 
                         if (read <= 0) {
                             break
@@ -536,11 +622,9 @@ object DtbFileManager {
                 }
 
         } catch (_: Exception) {
-
             null
         }
     }
-
 
     private fun execute(
         command: List<String>
@@ -549,12 +633,8 @@ object DtbFileManager {
         return try {
 
             val process =
-                ProcessBuilder(
-                    command
-                )
-                    .redirectErrorStream(
-                        true
-                    )
+                ProcessBuilder(command)
+                    .redirectErrorStream(true)
                     .start()
 
             val output =
@@ -571,9 +651,7 @@ object DtbFileManager {
                 output
             )
 
-        } catch (
-            e: Exception
-        ) {
+        } catch (e: Exception) {
 
             Pair(
                 false,
