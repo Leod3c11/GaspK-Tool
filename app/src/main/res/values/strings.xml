@@ -269,7 +269,6 @@
     <string name="session_install_backup_notice">O GaspKernel criará um backup da partição atual antes da gravação.</string>
     <string name="session_install_verify_notice">Depois do flash, a partição será lida novamente e comparada por SHA-256.</string>
     <string name="session_install_reboot_notice">O dispositivo NÃO será reiniciado automaticamente.</string>
-    <string name="session_install_modification">Instalar modificação</string>
 
     <string name="session_apply_again_notice">Aplique as alterações novamente.</string>
 </resources>

@@ -269,7 +269,6 @@
     <string name="session_install_backup_notice">GaspKernel will create a backup of the current partition before writing.</string>
     <string name="session_install_verify_notice">After flashing, the partition will be read again and compared by SHA-256.</string>
     <string name="session_install_reboot_notice">The device will NOT reboot automatically.</string>
-    <string name="session_install_modification">Install modification</string>
 
     <string name="session_apply_again_notice">Apply the changes again.</string>
 </resources>
