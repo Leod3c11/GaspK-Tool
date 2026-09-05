@@ -15,6 +15,7 @@ import android.widget.EditText
 import android.widget.TextView
 import com.exynosbess.app.boot.ShellExecutor
 import com.exynosbess.app.editor.CodeEditorView
+import com.exynosbess.app.editor.DtcErrorParser
 import com.exynosbess.app.gpu.MaliGpuParser
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
@@ -758,8 +759,79 @@ class GpuEditorActivity : LocalizedActivity() {
                             )
                             ?: "Erro de compilação"
 
+                    val location =
+                        DtcErrorParser.findLocation(
+                            result.output
+                        )
+
+                    var jumped =
+                        false
+
+                    if (
+                        location != null
+                    ) {
+
+                        val fullSource =
+                            try {
+                                file.readText()
+                            } catch (_: Exception) {
+                                ""
+                            }
+
+                        if (
+                            fullSource.isNotEmpty() &&
+                            loadedNodeStart >= 0 &&
+                            loadedNodeStart <= fullSource.length
+                        ) {
+
+                            val nodeStartLine =
+                                fullSource
+                                    .substring(
+                                        0,
+                                        loadedNodeStart
+                                    )
+                                    .count {
+                                        it == '\n'
+                                    } + 1
+
+                            val localLine =
+                                location.line -
+                                    nodeStartLine +
+                                    1
+
+                            if (
+                                localLine >= 1
+                            ) {
+
+                                jumped =
+                                    editor.goToLine(
+                                        localLine,
+                                        location.column
+                                    )
+                            }
+                        }
+                    }
+
                     status.text =
-                        getString(R.string.gpu_invalid_dts, error)
+                        if (
+                            jumped &&
+                            location != null
+                        ) {
+
+                            getString(
+                                R.string.gpu_invalid_dts_line,
+                                location.line,
+                                location.column,
+                                error
+                            )
+
+                        } else {
+
+                            getString(
+                                R.string.gpu_invalid_dts,
+                                error
+                            )
+                        }
                 }
 
 
@@ -1074,11 +1146,8 @@ class GpuEditorActivity : LocalizedActivity() {
 
         loadingEditor = true
 
-        editor.setText(
-            converted
-        )
-
-        editor.setSelection(
+        editor.replaceTextWithoutHistory(
+            converted,
             selection.coerceAtMost(
                 converted.length
             )

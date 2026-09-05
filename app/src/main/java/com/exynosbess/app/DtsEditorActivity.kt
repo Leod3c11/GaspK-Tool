@@ -16,6 +16,7 @@ import android.widget.EditText
 import android.widget.TextView
 import com.exynosbess.app.boot.ShellExecutor
 import com.exynosbess.app.editor.CodeEditorView
+import com.exynosbess.app.editor.DtcErrorParser
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
 import java.math.BigInteger
@@ -928,8 +929,35 @@ class DtsEditorActivity : LocalizedActivity() {
                             ?: "Erro de compilação"
 
 
-                    editorStatus.text =
-                        getString(R.string.dts_invalid, error)
+                    val location =
+                        DtcErrorParser.findLocation(
+                            result.output
+                        )
+
+                    if (
+                        location != null &&
+                        dtsEditor.goToLine(
+                            location.line,
+                            location.column
+                        )
+                    ) {
+
+                        editorStatus.text =
+                            getString(
+                                R.string.dts_invalid_line,
+                                location.line,
+                                location.column,
+                                error
+                            )
+
+                    } else {
+
+                        editorStatus.text =
+                            getString(
+                                R.string.dts_invalid,
+                                error
+                            )
+                    }
                 }
             }
 
@@ -991,9 +1019,8 @@ class DtsEditorActivity : LocalizedActivity() {
 
         loadingDts = true
 
-        dtsEditor.setText(converted)
-
-        dtsEditor.setSelection(
+        dtsEditor.replaceTextWithoutHistory(
+            converted,
             minOf(
                 cursor,
                 converted.length
@@ -1040,11 +1067,8 @@ class DtsEditorActivity : LocalizedActivity() {
         loadingDts =
             true
 
-        dtsEditor.setText(
-            converted
-        )
-
-        dtsEditor.setSelection(
+        dtsEditor.replaceTextWithoutHistory(
+            converted,
             minOf(
                 cursor,
                 converted.length

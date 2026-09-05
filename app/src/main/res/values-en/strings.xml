@@ -290,4 +290,8 @@
     <string name="editor_unsaved_message">There are changes that have not been saved yet.</string>
     <string name="editor_discard">Discard</string>
 
+
+    <string name="dts_invalid_line">✗ Invalid DTS — line %1$d, column %2$d: %3$s</string>
+    <string name="gpu_invalid_dts_line">✗ Invalid DTS — line %1$d, column %2$d: %3$s</string>
+
 </resources>
