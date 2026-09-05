@@ -399,18 +399,16 @@ class GpuEditorActivity : LocalizedActivity() {
 
         loadingEditor = true
 
-        editor.setText(
-            node.text
+        editor.replaceTextWithoutHistory(
+            node.text,
+            0
         )
-
-        editor.setSelection(0)
 
         loadingEditor = false
 
         loadedNodeSnapshot =
             editor.text.toString()
 
-        editor.clearEditHistory()
 
         updateGpuEditorTools()
         updateGpuEditorMeta()

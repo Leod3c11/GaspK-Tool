@@ -690,13 +690,15 @@ class DtsEditorActivity : LocalizedActivity() {
                 dtsFile.readText()
 
             loadingDts = true
-            dtsEditor.setText(content)
+            dtsEditor.replaceTextWithoutHistory(
+            content,
+            0
+        )
             loadingDts = false
 
             lastSavedContent =
                 content
 
-            dtsEditor.clearEditHistory()
 
             updateEditorTools()
             updateEditorMeta()

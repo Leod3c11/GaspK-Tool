@@ -1096,13 +1096,20 @@ class CodeEditorView @JvmOverloads constructor(
         var index =
             position
 
+        var scanned =
+            0
+
         while (
+            scanned <
+            MAX_PAIR_SCAN &&
             if (forward) {
                 index < source.length
             } else {
                 index >= 0
             }
         ) {
+
+            scanned++
 
             val current =
                 source[index]
@@ -1252,13 +1259,16 @@ class CodeEditorView @JvmOverloads constructor(
             100
 
         private const val HIGHLIGHT_DELAY =
-            180L
+            300L
 
         private const val MAX_FULL_HIGHLIGHT =
-            500_000
+            100_000
 
         private const val EXTRA_HIGHLIGHT_CHARS =
             3000
+
+        private const val MAX_PAIR_SCAN =
+            50_000
 
         private val COLOR_DIRECTIVE =
             Color.rgb(
