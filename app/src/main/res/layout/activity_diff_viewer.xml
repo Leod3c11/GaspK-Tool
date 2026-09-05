@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/exynos_background"
+    android:background="@drawable/bg_editor_panel"
     android:padding="12dp">
 
     <TextView

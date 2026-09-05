@@ -3,7 +3,6 @@ package com.exynosbess.app
 import android.os.Bundle
 import android.widget.TextView
 import com.exynosbess.app.editor.TextDiffEngine
-import com.exynosbess.app.localization.LocalizedActivity
 import java.io.File
 
 class DiffViewerActivity :
