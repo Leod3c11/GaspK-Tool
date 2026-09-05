@@ -278,4 +278,16 @@
     <string name="session_reboot_failed">Falha ao reiniciar</string>
     <string name="session_reboot_failed_message">Não foi possível reiniciar o dispositivo.</string>
 
+
+    <string name="editor_goto">Linha</string>
+    <string name="editor_position">Ln %1$d  Col %2$d</string>
+    <string name="editor_modified">• Alterado</string>
+    <string name="editor_saved">✓ Salvo</string>
+    <string name="editor_line_number">Número da linha</string>
+    <string name="editor_goto_line_title">Ir para linha</string>
+    <string name="editor_line_not_found">Linha inexistente.</string>
+    <string name="editor_unsaved_title">Alterações não salvas</string>
+    <string name="editor_unsaved_message">Existem alterações que ainda não foram salvas.</string>
+    <string name="editor_discard">Descartar</string>
+
 </resources>

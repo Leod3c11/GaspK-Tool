@@ -9,10 +9,12 @@ import android.app.AlertDialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.text.InputType
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import com.exynosbess.app.boot.ShellExecutor
+import com.exynosbess.app.editor.CodeEditorView
 import com.exynosbess.app.gpu.MaliGpuParser
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
@@ -23,7 +25,7 @@ class GpuEditorActivity : LocalizedActivity() {
     private lateinit var subtitle: TextView
     private lateinit var status: TextView
 
-    private lateinit var editor: EditText
+    private lateinit var editor: CodeEditorView
 
     private lateinit var searchInput: EditText
     private lateinit var searchStatus: TextView
@@ -34,6 +36,18 @@ class GpuEditorActivity : LocalizedActivity() {
 
     private lateinit var saveButton: Button
     private lateinit var validateButton: Button
+
+
+    private lateinit var gpuEditorUndoButton: Button
+    private lateinit var gpuEditorRedoButton: Button
+    private lateinit var gpuEditorGotoButton: Button
+    private lateinit var gpuEditorFontDownButton: Button
+    private lateinit var gpuEditorFontUpButton: Button
+    private lateinit var gpuEditorPositionStatus: TextView
+    private lateinit var gpuEditorDirtyStatus: TextView
+
+    private var loadedNodeSnapshot =
+        ""
 
     private var gpuDtsFiles =
         emptyList<File>()
@@ -143,6 +157,42 @@ class GpuEditorActivity : LocalizedActivity() {
             findViewById(
                 R.id.gpuValidateButton
             )
+
+
+        gpuEditorUndoButton =
+            findViewById(
+                R.id.gpuEditorUndoButton
+            )
+
+        gpuEditorRedoButton =
+            findViewById(
+                R.id.gpuEditorRedoButton
+            )
+
+        gpuEditorGotoButton =
+            findViewById(
+                R.id.gpuEditorGotoButton
+            )
+
+        gpuEditorFontDownButton =
+            findViewById(
+                R.id.gpuEditorFontDownButton
+            )
+
+        gpuEditorFontUpButton =
+            findViewById(
+                R.id.gpuEditorFontUpButton
+            )
+
+        gpuEditorPositionStatus =
+            findViewById(
+                R.id.gpuEditorPositionStatus
+            )
+
+        gpuEditorDirtyStatus =
+            findViewById(
+                R.id.gpuEditorDirtyStatus
+            )
     }
 
 
@@ -171,6 +221,37 @@ class GpuEditorActivity : LocalizedActivity() {
         validateButton.setOnClickListener {
             validateCurrentDts()
         }
+
+
+        gpuEditorUndoButton.setOnClickListener {
+            editor.undoEdit()
+        }
+
+        gpuEditorRedoButton.setOnClickListener {
+            editor.redoEdit()
+        }
+
+        gpuEditorGotoButton.setOnClickListener {
+            showGpuGoToLineDialog()
+        }
+
+        gpuEditorFontDownButton.setOnClickListener {
+            editor.decreaseEditorTextSize()
+        }
+
+        gpuEditorFontUpButton.setOnClickListener {
+            editor.increaseEditorTextSize()
+        }
+
+        editor.onCursorPositionChanged = {
+            updateGpuEditorMeta()
+        }
+
+        editor.onHistoryChanged = {
+            updateGpuEditorTools()
+        }
+
+        updateGpuEditorTools()
 
 
         findViewById<Button>(
@@ -207,6 +288,7 @@ class GpuEditorActivity : LocalizedActivity() {
 
                     if (!loadingEditor) {
                         invalidateBootState()
+                        updateGpuEditorMeta()
                     }
                 }
 
@@ -324,6 +406,15 @@ class GpuEditorActivity : LocalizedActivity() {
 
         loadingEditor = false
 
+        loadedNodeSnapshot =
+            editor.text.toString()
+
+        editor.clearEditHistory()
+
+        updateGpuEditorTools()
+        updateGpuEditorMeta()
+
+
         decimalMode = false
 
         numericBaseButton.text =
@@ -400,26 +491,7 @@ class GpuEditorActivity : LocalizedActivity() {
     private fun hasUnsavedChanges():
         Boolean {
 
-        if (gpuDtsFiles.isEmpty())
-            return false
-
-        val file =
-            gpuDtsFiles[currentFileIndex]
-
-        val dts =
-            try {
-                file.readText()
-            } catch (_: Exception) {
-                return false
-            }
-
-        val node =
-            extractMaliNode(dts)
-                ?: return false
-
-        return editor.text
-            .toString() !=
-            node.text
+        return gpuEditorHasUnsavedChanges()
     }
 
 
@@ -505,6 +577,11 @@ class GpuEditorActivity : LocalizedActivity() {
             file.writeText(
                 modified
             )
+
+            loadedNodeSnapshot =
+                editor.text.toString()
+
+            updateGpuEditorMeta()
 
             loadedNodeStart =
                 originalNode.start
@@ -693,6 +770,184 @@ class GpuEditorActivity : LocalizedActivity() {
 
         }.start()
     }
+
+
+    private fun updateGpuEditorTools() {
+
+        gpuEditorUndoButton.isEnabled =
+            editor.canUndoEdit()
+
+        gpuEditorRedoButton.isEnabled =
+            editor.canRedoEdit()
+    }
+
+
+    private fun updateGpuEditorMeta() {
+
+        if (
+            !::editor.isInitialized ||
+            !::gpuEditorPositionStatus.isInitialized
+        ) {
+            return
+        }
+
+        val position =
+            editor.currentLineColumn()
+
+        gpuEditorPositionStatus.text =
+            getString(
+                R.string.editor_position,
+                position.first,
+                position.second
+            )
+
+        gpuEditorDirtyStatus.text =
+            if (
+                gpuEditorHasUnsavedChanges()
+            ) {
+                getString(
+                    R.string.editor_modified
+                )
+            } else {
+                getString(
+                    R.string.editor_saved
+                )
+            }
+    }
+
+
+    private fun gpuEditorHasUnsavedChanges():
+        Boolean {
+
+        if (
+            !::editor.isInitialized
+        ) {
+            return false
+        }
+
+        return editor.text
+            .toString() !=
+            loadedNodeSnapshot
+    }
+
+
+    private fun showGpuGoToLineDialog() {
+
+        val input =
+            EditText(this).apply {
+
+                inputType =
+                    InputType.TYPE_CLASS_NUMBER
+
+                hint =
+                    getString(
+                        R.string.editor_line_number
+                    )
+            }
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                getString(
+                    R.string.editor_goto_line_title
+                )
+            )
+            .setView(input)
+            .setNegativeButton(
+                getString(
+                    R.string.action_cancel
+                ),
+                null
+            )
+            .setPositiveButton(
+                getString(
+                    R.string.action_go
+                )
+            ) {
+                _,
+                _ ->
+
+                val line =
+                    input.text
+                        .toString()
+                        .toIntOrNull()
+
+                if (
+                    line == null ||
+                    !editor.goToLine(
+                        line
+                    )
+                ) {
+
+                    status.text =
+                        getString(
+                            R.string.editor_line_not_found
+                        )
+
+                } else {
+
+                    updateGpuEditorMeta()
+                }
+            }
+            .show()
+    }
+
+
+    override fun onBackPressed() {
+
+        if (
+            !gpuEditorHasUnsavedChanges()
+        ) {
+
+            super.onBackPressed()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                getString(
+                    R.string.editor_unsaved_title
+                )
+            )
+            .setMessage(
+                getString(
+                    R.string.editor_unsaved_message
+                )
+            )
+            .setNegativeButton(
+                getString(
+                    R.string.action_cancel
+                ),
+                null
+            )
+            .setNeutralButton(
+                getString(
+                    R.string.editor_discard
+                )
+            ) {
+                _,
+                _ ->
+
+                super.onBackPressed()
+            }
+            .setPositiveButton(
+                getString(
+                    R.string.action_save
+                )
+            ) {
+                _,
+                _ ->
+
+                saveGpuNode()
+
+                if (
+                    !gpuEditorHasUnsavedChanges()
+                ) {
+                    super.onBackPressed()
+                }
+            }
+            .show()
+    }
+
 
     private fun startSearch() {
 

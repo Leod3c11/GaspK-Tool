@@ -134,7 +134,106 @@
         android:textSize="9sp" />
 
 
-    <EditText
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:layout_marginBottom="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/gpuEditorUndoButton"
+            android:layout_width="42dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="↶"
+            android:textColor="@color/exynos_text"
+            android:textSize="17sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/gpuEditorRedoButton"
+            android:layout_width="42dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="↷"
+            android:textColor="@color/exynos_text"
+            android:textSize="17sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/gpuEditorGotoButton"
+            android:layout_width="46dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="@string/editor_goto"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="9sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/gpuEditorFontDownButton"
+            android:layout_width="38dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="A−"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="9sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/gpuEditorFontUpButton"
+            android:layout_width="38dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="A+"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="9sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <TextView
+            android:id="@+id/gpuEditorPositionStatus"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical|end"
+            android:text=""
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="9sp"
+            android:maxLines="1"/>
+
+        <TextView
+            android:id="@+id/gpuEditorDirtyStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:gravity="center_vertical"
+            android:text=""
+            android:textColor="@color/exynos_accent"
+            android:textSize="9sp"
+            android:maxLines="1"/>
+
+    </LinearLayout>
+
+    <com.exynosbess.app.editor.CodeEditorView
         android:id="@+id/gpuNodeEditor"
         android:layout_width="match_parent"
         android:layout_height="0dp"

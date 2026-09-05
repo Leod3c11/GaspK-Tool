@@ -278,4 +278,16 @@
     <string name="session_reboot_failed">Reboot failed</string>
     <string name="session_reboot_failed_message">The device could not be rebooted.</string>
 
+
+    <string name="editor_goto">Line</string>
+    <string name="editor_position">Ln %1$d  Col %2$d</string>
+    <string name="editor_modified">• Modified</string>
+    <string name="editor_saved">✓ Saved</string>
+    <string name="editor_line_number">Line number</string>
+    <string name="editor_goto_line_title">Go to line</string>
+    <string name="editor_line_not_found">Line does not exist.</string>
+    <string name="editor_unsaved_title">Unsaved changes</string>
+    <string name="editor_unsaved_message">There are changes that have not been saved yet.</string>
+    <string name="editor_discard">Discard</string>
+
 </resources>

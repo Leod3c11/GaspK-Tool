@@ -5,6 +5,8 @@ import com.exynosbess.app.partition.PartitionStateStore
 import com.exynosbess.app.partition.PartitionSessionState
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.text.InputType
 import android.os.Bundle
 import android.os.Process
 import android.text.Editable
@@ -13,6 +15,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import com.exynosbess.app.boot.ShellExecutor
+import com.exynosbess.app.editor.CodeEditorView
 import com.exynosbess.app.tools.ToolManager
 import java.io.File
 import java.math.BigInteger
@@ -21,7 +24,7 @@ class DtsEditorActivity : LocalizedActivity() {
 
     private lateinit var editorTitle: TextView
     private lateinit var editorPath: TextView
-    private lateinit var dtsEditor: EditText
+    private lateinit var dtsEditor: CodeEditorView
 
     private lateinit var searchInput: EditText
     private lateinit var searchButton: Button
@@ -33,6 +36,17 @@ class DtsEditorActivity : LocalizedActivity() {
     private lateinit var editorStatus: TextView
 
     private lateinit var numericBaseButton: Button
+
+    private lateinit var editorUndoButton: Button
+    private lateinit var editorRedoButton: Button
+    private lateinit var editorGotoButton: Button
+    private lateinit var editorFontDownButton: Button
+    private lateinit var editorFontUpButton: Button
+    private lateinit var editorPositionStatus: TextView
+    private lateinit var editorDirtyStatus: TextView
+
+    private var lastSavedContent =
+        ""
 
     private var decimalMode = false
 
@@ -124,6 +138,42 @@ class DtsEditorActivity : LocalizedActivity() {
             )
 
 
+        editorUndoButton =
+            findViewById(
+                R.id.EditorUndoButton
+            )
+
+        editorRedoButton =
+            findViewById(
+                R.id.EditorRedoButton
+            )
+
+        editorGotoButton =
+            findViewById(
+                R.id.EditorGotoButton
+            )
+
+        editorFontDownButton =
+            findViewById(
+                R.id.EditorFontDownButton
+            )
+
+        editorFontUpButton =
+            findViewById(
+                R.id.EditorFontUpButton
+            )
+
+        editorPositionStatus =
+            findViewById(
+                R.id.EditorPositionStatus
+            )
+
+        editorDirtyStatus =
+            findViewById(
+                R.id.EditorDirtyStatus
+            )
+
+
         dtbIndex =
             intent.getIntExtra(
                 "dtb_index",
@@ -199,6 +249,38 @@ class DtsEditorActivity : LocalizedActivity() {
         }
 
 
+        editorUndoButton.setOnClickListener {
+            dtsEditor.undoEdit()
+        }
+
+        editorRedoButton.setOnClickListener {
+            dtsEditor.redoEdit()
+        }
+
+        editorGotoButton.setOnClickListener {
+            showGoToLineDialog()
+        }
+
+        editorFontDownButton.setOnClickListener {
+            dtsEditor.decreaseEditorTextSize()
+        }
+
+        editorFontUpButton.setOnClickListener {
+            dtsEditor.increaseEditorTextSize()
+        }
+
+        dtsEditor.onCursorPositionChanged = {
+            updateEditorMeta()
+        }
+
+        dtsEditor.onHistoryChanged = {
+            updateEditorTools()
+        }
+
+        updateEditorTools()
+        updateEditorMeta()
+
+
         dtsEditor.addTextChangedListener(
             object : TextWatcher {
 
@@ -219,6 +301,7 @@ class DtsEditorActivity : LocalizedActivity() {
 
                     if (!loadingDts) {
                         invalidateBootFlowIfNeeded()
+                        updateEditorMeta()
                     }
                 }
 
@@ -229,6 +312,184 @@ class DtsEditorActivity : LocalizedActivity() {
             }
         )
     }
+
+
+    private fun updateEditorTools() {
+
+        editorUndoButton.isEnabled =
+            dtsEditor.canUndoEdit()
+
+        editorRedoButton.isEnabled =
+            dtsEditor.canRedoEdit()
+    }
+
+
+    private fun updateEditorMeta() {
+
+        if (
+            !::dtsEditor.isInitialized ||
+            !::editorPositionStatus.isInitialized
+        ) {
+            return
+        }
+
+        val position =
+            dtsEditor.currentLineColumn()
+
+        editorPositionStatus.text =
+            getString(
+                R.string.editor_position,
+                position.first,
+                position.second
+            )
+
+        editorDirtyStatus.text =
+            if (
+                hasUnsavedDts()
+            ) {
+                getString(
+                    R.string.editor_modified
+                )
+            } else {
+                getString(
+                    R.string.editor_saved
+                )
+            }
+    }
+
+
+    private fun hasUnsavedDts():
+        Boolean {
+
+        if (
+            !::dtsEditor.isInitialized
+        ) {
+            return false
+        }
+
+        return dtsEditor.text
+            .toString() !=
+            lastSavedContent
+    }
+
+
+    private fun showGoToLineDialog() {
+
+        val input =
+            EditText(this).apply {
+
+                inputType =
+                    InputType.TYPE_CLASS_NUMBER
+
+                hint =
+                    getString(
+                        R.string.editor_line_number
+                    )
+            }
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                getString(
+                    R.string.editor_goto_line_title
+                )
+            )
+            .setView(input)
+            .setNegativeButton(
+                getString(
+                    R.string.action_cancel
+                ),
+                null
+            )
+            .setPositiveButton(
+                getString(
+                    R.string.action_go
+                )
+            ) {
+                _,
+                _ ->
+
+                val line =
+                    input.text
+                        .toString()
+                        .toIntOrNull()
+
+                if (
+                    line == null ||
+                    !dtsEditor.goToLine(
+                        line
+                    )
+                ) {
+
+                    editorStatus.text =
+                        getString(
+                            R.string.editor_line_not_found
+                        )
+
+                } else {
+
+                    updateEditorMeta()
+                }
+            }
+            .show()
+    }
+
+
+    override fun onBackPressed() {
+
+        if (
+            !hasUnsavedDts()
+        ) {
+
+            super.onBackPressed()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(
+                getString(
+                    R.string.editor_unsaved_title
+                )
+            )
+            .setMessage(
+                getString(
+                    R.string.editor_unsaved_message
+                )
+            )
+            .setNegativeButton(
+                getString(
+                    R.string.action_cancel
+                ),
+                null
+            )
+            .setNeutralButton(
+                getString(
+                    R.string.editor_discard
+                )
+            ) {
+                _,
+                _ ->
+
+                super.onBackPressed()
+            }
+            .setPositiveButton(
+                getString(
+                    R.string.action_save
+                )
+            ) {
+                _,
+                _ ->
+
+                saveDts()
+
+                if (
+                    !hasUnsavedDts()
+                ) {
+                    super.onBackPressed()
+                }
+            }
+            .show()
+    }
+
 
     private fun startSearch() {
 
@@ -431,6 +692,14 @@ class DtsEditorActivity : LocalizedActivity() {
             dtsEditor.setText(content)
             loadingDts = false
 
+            lastSavedContent =
+                content
+
+            dtsEditor.clearEditHistory()
+
+            updateEditorTools()
+            updateEditorMeta()
+
             editorStatus.text =
                 getString(R.string.dts_loaded)
 
@@ -452,6 +721,11 @@ class DtsEditorActivity : LocalizedActivity() {
             dtsFile.writeText(
                 dtsEditor.text.toString()
             )
+
+            lastSavedContent =
+                dtsEditor.text.toString()
+
+            updateEditorMeta()
 
             validatedContent =
                 null
@@ -502,6 +776,11 @@ class DtsEditorActivity : LocalizedActivity() {
             dtsFile.writeText(
                 dtsEditor.text.toString()
             )
+
+            lastSavedContent =
+                dtsEditor.text.toString()
+
+            updateEditorMeta()
 
         } catch (
             e: Exception

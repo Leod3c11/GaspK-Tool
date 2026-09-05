@@ -176,7 +176,106 @@
 
     <!-- Editor: ocupa todo o espaço disponível -->
 
-    <EditText
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:layout_marginBottom="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/EditorUndoButton"
+            android:layout_width="42dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="↶"
+            android:textColor="@color/exynos_text"
+            android:textSize="17sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/EditorRedoButton"
+            android:layout_width="42dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="↷"
+            android:textColor="@color/exynos_text"
+            android:textSize="17sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/EditorGotoButton"
+            android:layout_width="46dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="@string/editor_goto"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="9sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/EditorFontDownButton"
+            android:layout_width="38dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="A−"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="9sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/EditorFontUpButton"
+            android:layout_width="38dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="A+"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="9sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
+        <TextView
+            android:id="@+id/EditorPositionStatus"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical|end"
+            android:text=""
+            android:textColor="@color/exynos_text_secondary"
+            android:textSize="9sp"
+            android:maxLines="1"/>
+
+        <TextView
+            android:id="@+id/EditorDirtyStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:gravity="center_vertical"
+            android:text=""
+            android:textColor="@color/exynos_accent"
+            android:textSize="9sp"
+            android:maxLines="1"/>
+
+    </LinearLayout>
+
+    <com.exynosbess.app.editor.CodeEditorView
         android:id="@+id/dtsEditor"
         android:layout_width="match_parent"
         android:layout_height="0dp"
