@@ -4,11 +4,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:label="GaspK-Tool"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExynosBess"
-        android:localeConfig="@xml/locales_config">
+        android:localeConfig="@xml/locales_config"
+        android:roundIcon="@mipmap/ic_launcher_round">
 
         <activity
             android:name=".DtbFileActivity"
