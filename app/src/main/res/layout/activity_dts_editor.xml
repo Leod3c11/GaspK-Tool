@@ -251,6 +251,20 @@
             android:minHeight="0dp"
             android:padding="0dp"/>
 
+        <Button
+            android:id="@+id/EditorDiffButton"
+            android:layout_width="42dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_button_secondary"
+            android:text="@string/diff_button"
+            android:textAllCaps="false"
+            android:textColor="@color/exynos_text"
+            android:textSize="9sp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"/>
+
         <TextView
             android:id="@+id/EditorPositionStatus"
             android:layout_width="0dp"

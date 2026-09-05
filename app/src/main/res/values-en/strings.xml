@@ -294,4 +294,14 @@
     <string name="dts_invalid_line">✗ Invalid DTS — line %1$d, column %2$d: %3$s</string>
     <string name="gpu_invalid_dts_line">✗ Invalid DTS — line %1$d, column %2$d: %3$s</string>
 
+
+    <string name="diff_button">Diff</string>
+    <string name="diff_title">Original × Modified</string>
+    <string name="diff_summary">+ %1$d added   − %2$d removed</string>
+    <string name="diff_no_changes">No changes found.</string>
+    <string name="diff_error">Unable to open comparison.</string>
+    <string name="diff_error_detail">Comparison failed: %1$s</string>
+
+    <string name="diff_original_missing">Original DTS is unavailable. Extract the partition again to create the original reference.</string>
+
 </resources>

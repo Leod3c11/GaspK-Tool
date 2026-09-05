@@ -66,6 +66,10 @@
             android:name=".GpuEditorActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".DiffViewerActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

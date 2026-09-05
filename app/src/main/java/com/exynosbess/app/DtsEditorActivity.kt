@@ -6,6 +6,7 @@ import com.exynosbess.app.partition.PartitionSessionState
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
 import android.text.InputType
 import android.os.Bundle
 import android.os.Process
@@ -41,6 +42,7 @@ class DtsEditorActivity : LocalizedActivity() {
     private lateinit var editorUndoButton: Button
     private lateinit var editorRedoButton: Button
     private lateinit var editorGotoButton: Button
+    private lateinit var editorDiffButton: Button
     private lateinit var editorFontDownButton: Button
     private lateinit var editorFontUpButton: Button
     private lateinit var editorPositionStatus: TextView
@@ -164,6 +166,11 @@ class DtsEditorActivity : LocalizedActivity() {
                 R.id.EditorFontUpButton
             )
 
+        editorDiffButton =
+            findViewById(
+                R.id.EditorDiffButton
+            )
+
         editorPositionStatus =
             findViewById(
                 R.id.EditorPositionStatus
@@ -256,6 +263,10 @@ class DtsEditorActivity : LocalizedActivity() {
 
         editorRedoButton.setOnClickListener {
             dtsEditor.redoEdit()
+        }
+
+        editorDiffButton.setOnClickListener {
+            openDiff()
         }
 
         editorGotoButton.setOnClickListener {
@@ -661,6 +672,63 @@ class DtsEditorActivity : LocalizedActivity() {
                 getString(R.string.search_select_failed)
         }
     }
+
+    private fun openDiff() {
+
+        try {
+
+            val original =
+                File(
+                    dtsFile.parentFile,
+                    "originals/${dtsFile.name}"
+                )
+
+            if (!original.exists()) {
+                editorStatus.text =
+                    getString(
+                        R.string.diff_original_missing
+                    )
+                return
+            }
+
+            val preview =
+                File(
+                    cacheDir,
+                    "diff_${dtsFile.name}"
+                )
+
+            preview.writeText(
+                dtsEditor.text.toString()
+            )
+
+            startActivity(
+                Intent(
+                    this,
+                    DiffViewerActivity::class.java
+                ).apply {
+
+                    putExtra(
+                        DiffViewerActivity.EXTRA_ORIGINAL,
+                        original.absolutePath
+                    )
+
+                    putExtra(
+                        DiffViewerActivity.EXTRA_MODIFIED,
+                        preview.absolutePath
+                    )
+                }
+            )
+
+        } catch (e: Exception) {
+
+            editorStatus.text =
+                getString(
+                    R.string.diff_error_detail,
+                    e.message ?: "?"
+                )
+        }
+    }
+
 
     private fun loadDts() {
 

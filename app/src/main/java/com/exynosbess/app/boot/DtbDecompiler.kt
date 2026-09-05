@@ -134,6 +134,36 @@ object DtbDecompiler {
                 )
             }
 
+            val originalsDir =
+                File(
+                    dtbDir,
+                    "originals"
+                )
+
+            if (
+                !originalsDir.exists() &&
+                !originalsDir.mkdirs()
+            ) {
+                return DecompileResult(
+                    false,
+                    outputFiles,
+                    "Não foi possível criar o diretório de DTS originais"
+                )
+            }
+
+            val originalDts =
+                File(
+                    originalsDir,
+                    dts.name
+                )
+
+            if (!originalDts.exists()) {
+                dts.copyTo(
+                    originalDts,
+                    overwrite = false
+                )
+            }
+
             outputFiles.add(
                 DecompiledFile(
                     index = index,
