@@ -271,4 +271,11 @@
     <string name="session_install_reboot_notice">The device will NOT reboot automatically.</string>
 
     <string name="session_apply_again_notice">Apply the changes again.</string>
+
+    <string name="session_reboot_prompt">The partition was written and verified successfully. Would you like to reboot the device now?</string>
+    <string name="session_reboot_now">Reboot now</string>
+    <string name="session_reboot_later">Later</string>
+    <string name="session_reboot_failed">Reboot failed</string>
+    <string name="session_reboot_failed_message">The device could not be rebooted.</string>
+
 </resources>

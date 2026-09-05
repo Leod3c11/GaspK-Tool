@@ -271,4 +271,11 @@
     <string name="session_install_reboot_notice">O dispositivo NÃO será reiniciado automaticamente.</string>
 
     <string name="session_apply_again_notice">Aplique as alterações novamente.</string>
+
+    <string name="session_reboot_prompt">A partição foi gravada e verificada com sucesso. Deseja reiniciar o dispositivo agora?</string>
+    <string name="session_reboot_now">Reiniciar agora</string>
+    <string name="session_reboot_later">Mais tarde</string>
+    <string name="session_reboot_failed">Falha ao reiniciar</string>
+    <string name="session_reboot_failed_message">Não foi possível reiniciar o dispositivo.</string>
+
 </resources>

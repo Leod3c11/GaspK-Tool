@@ -477,8 +477,7 @@ object PartitionFlashManager {
                         "Imagem:\n${rebuilt.absolutePath}\n\n" +
                         "SHA-256:\n$expectedHash\n\n" +
                         "Backup pré-flash:\n" +
-                        backup.absolutePath +
-                        "\n\nNenhum reboot foi executado."
+                        backup.absolutePath
             )
 
         } catch (e: Exception) {

@@ -1287,6 +1287,70 @@ class PartitionSessionActivity : LocalizedActivity() {
     }
 
 
+    private fun rebootDevice() {
+
+        Thread {
+
+            val result =
+                com.exynosbess.app.boot.ShellExecutor.root(
+                    "reboot"
+                )
+
+            if (!result.success) {
+
+                runOnUiThread {
+
+                    AlertDialog.Builder(
+                        this
+                    )
+                        .setTitle(
+                            getString(
+                                R.string.session_reboot_failed
+                            )
+                        )
+                        .setMessage(
+                            buildString {
+
+                                append(
+                                    getString(
+                                        R.string.session_reboot_failed_message
+                                    )
+                                )
+
+                                if (
+                                    result.output.isNotBlank()
+                                ) {
+
+                                    append(
+                                        "\n\n"
+                                    )
+
+                                    append(
+                                        result.output
+                                    )
+                                }
+
+                                append(
+                                    "\n\nExit code: "
+                                )
+
+                                append(
+                                    result.exitCode
+                                )
+                            }
+                        )
+                        .setPositiveButton(
+                            "OK",
+                            null
+                        )
+                        .show()
+                }
+            }
+
+        }.start()
+    }
+
+
     private fun executeFlash() {
 
         if (
@@ -1317,24 +1381,58 @@ class PartitionSessionActivity : LocalizedActivity() {
 
                 render()
 
-                AlertDialog.Builder(
-                    this
-                )
-                    .setTitle(
-                        if (result.success) {
-                            getString(R.string.session_install_success)
-                        } else {
-                            getString(R.string.session_install_failed)
+                if (result.success) {
+
+                    AlertDialog.Builder(
+                        this
+                    )
+                        .setTitle(
+                            getString(
+                                R.string.session_install_success
+                            )
+                        )
+                        .setMessage(
+                            result.message +
+                                "\n\n" +
+                                getString(
+                                    R.string.session_reboot_prompt
+                                )
+                        )
+                        .setPositiveButton(
+                            getString(
+                                R.string.session_reboot_now
+                            )
+                        ) { _, _ ->
+
+                            rebootDevice()
                         }
+                        .setNegativeButton(
+                            getString(
+                                R.string.session_reboot_later
+                            ),
+                            null
+                        )
+                        .show()
+
+                } else {
+
+                    AlertDialog.Builder(
+                        this
                     )
-                    .setMessage(
-                        result.message
-                    )
-                    .setPositiveButton(
-                        "OK",
-                        null
-                    )
-                    .show()
+                        .setTitle(
+                            getString(
+                                R.string.session_install_failed
+                            )
+                        )
+                        .setMessage(
+                            result.message
+                        )
+                        .setPositiveButton(
+                            "OK",
+                            null
+                        )
+                        .show()
+                }
             }
 
         }.start()
