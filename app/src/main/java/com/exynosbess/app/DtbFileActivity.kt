@@ -172,7 +172,7 @@ class DtbFileActivity :
 
                             putExtra(
                                 Intent.EXTRA_TITLE,
-                                "gaspkernel_installed_dtb.dtb"
+                                "gaspk_tool_installed_dtb.dtb"
                             )
                         }
 

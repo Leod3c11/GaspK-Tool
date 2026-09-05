@@ -78,7 +78,7 @@ class GaspLogsActivity : LocalizedActivity() {
 
         clipboard.setPrimaryClip(
             ClipData.newPlainText(
-                "GaspKernel Logs",
+                "GaspK-Tool Logs",
                 text
             )
         )

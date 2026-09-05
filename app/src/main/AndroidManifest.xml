@@ -5,7 +5,7 @@
 
     <application
         android:allowBackup="false"
-        android:label="GaspKernel Editor"
+        android:label="GaspK-Tool"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExynosBess"
         android:localeConfig="@xml/locales_config">

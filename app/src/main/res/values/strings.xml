@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">GaspKernel Editor</string>
+    <string name="app_name">GaspK-Tool</string>
 
     <string name="advanced_tools_title">Ferramentas avançadas</string>
     <string name="advanced_tools_subtitle">Diagnóstico, arquivos e configurações</string>
 
     <string name="section_device">DISPOSITIVO</string>
     <string name="section_files">ARQUIVOS</string>
-    <string name="section_gaspkernel">GASPKERNEL</string>
+    <string name="section_gaspkernel">GASPK-TOOL</string>
     <string name="section_preferences">PREFERÊNCIAS</string>
 
     <string name="device_info_title">Informações do dispositivo</string>
@@ -17,7 +17,7 @@
     <string name="dtb_file_title">Arquivo DTB</string>
     <string name="dtb_file_description">Importe e leia um DTB ou exporte o DTB instalado no aparelho.</string>
 
-    <string name="logs_title">Logs do GaspKernel</string>
+    <string name="logs_title">Logs do GaspK-Tool</string>
     <string name="logs_description">Operações, validações, erros, rebuilds e flashes.</string>
 
     <string name="language_title">Idioma</string>
@@ -55,7 +55,7 @@
     <string name="dashboard_manage_partitions">Gerenciar Partições</string>
     <string name="dashboard_partition_description">Detecte, extraia, edite, reconstrua e instale partições do dispositivo.</string>
     <string name="dashboard_section_system">SISTEMA</string>
-    <string name="dashboard_advanced_description">Informações do dispositivo e logs do GaspKernel.</string>
+    <string name="dashboard_advanced_description">Informações do dispositivo e logs do GaspK-Tool.</string>
 
 
     <string name="dtb_read_success">✓ DTB lido com sucesso</string>
@@ -127,7 +127,7 @@
 
     <string name="logs_copied">Logs copiados</string>
     <string name="logs_clear_title">Limpar logs?</string>
-    <string name="logs_clear_message">O histórico local do GaspKernel será apagado.</string>
+    <string name="logs_clear_message">O histórico local do GaspK-Tool será apagado.</string>
 
     <string name="dtb_partition_title">Device Trees • %1$s</string>
     <string name="dtb_none_editable">Nenhum Device Tree editável encontrado.</string>
@@ -217,7 +217,7 @@
     <string name="session_install_success">Instalação concluída</string>
     <string name="session_install_failed">Falha na instalação</string>
 
-    <string name="session_install_warning">Você está prestes a gravar diretamente uma partição do dispositivo.\n\nTipo: %1$s\nPartição: %2$s\nDestino: %3$s\nImagem: %4$d bytes\n\nAntes da gravação, o GaspKernel criará um novo backup da partição atual.\n\nApós a instalação, a partição será lida novamente e comparada por SHA-256 com a imagem reconstruída.\n\nO aparelho NÃO será reiniciado automaticamente.</string>
+    <string name="session_install_warning">Você está prestes a gravar diretamente uma partição do dispositivo.\n\nTipo: %1$s\nPartição: %2$s\nDestino: %3$s\nImagem: %4$d bytes\n\nAntes da gravação, o GaspK-Tool criará um novo backup da partição atual.\n\nApós a instalação, a partição será lida novamente e comparada por SHA-256 com a imagem reconstruída.\n\nO aparelho NÃO será reiniciado automaticamente.</string>
 
     <string name="session_unknown_error">Erro desconhecido</string>
 
@@ -236,8 +236,8 @@
     <string name="session_rebuilt_verify_pending">Imagem reconstruída\nVerificação pendente.</string>
     <string name="session_verified_summary">✓ Alterações prontas\n✓ Estrutura validada\n✓ Imagem reconstruída\n✓ Verificação concluída\n✓ SHA-256 confirmado</string>
 
-    <string name="session_existing_copy_message">A cópia local já existe.\n\nO GaspKernel vai extrair e preparar o conteúdo para edição.</string>
-    <string name="session_new_copy_message">O GaspKernel criará uma cópia local da partição e preparará seu conteúdo para edição.\n\nNenhuma gravação será feita na partição.</string>
+    <string name="session_existing_copy_message">A cópia local já existe.\n\nO GaspK-Tool vai extrair e preparar o conteúdo para edição.</string>
+    <string name="session_new_copy_message">O GaspK-Tool criará uma cópia local da partição e preparará seu conteúdo para edição.\n\nNenhuma gravação será feita na partição.</string>
     <string name="session_prepare_named">Preparar %1$s</string>
     <string name="session_prepare_action">Preparar</string>
     <string name="session_prepare_failed_title">Não foi possível preparar</string>
@@ -266,7 +266,7 @@
     <string name="session_unknown_error_period">Erro desconhecido.</string>
 
     <string name="session_install_modification_title">Instalar modificação?</string>
-    <string name="session_install_backup_notice">O GaspKernel criará um backup da partição atual antes da gravação.</string>
+    <string name="session_install_backup_notice">O GaspK-Tool criará um backup da partição atual antes da gravação.</string>
     <string name="session_install_verify_notice">Depois do flash, a partição será lida novamente e comparada por SHA-256.</string>
     <string name="session_install_reboot_notice">O dispositivo NÃO será reiniciado automaticamente.</string>
 

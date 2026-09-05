@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "GaspKernel-Editor"
+rootProject.name = "GaspK-Tool"
 include(":app")
